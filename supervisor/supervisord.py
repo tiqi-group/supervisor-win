@@ -78,6 +78,7 @@ class Supervisor(object):
                 info_messages.extend(rlimit_messages)
             except NotImplementedError:
                 pass
+        info_messages.extend(self.options.parse_infos)
         warn_messages.extend(self.options.parse_warnings)
 
         # this sets the options.logger object
