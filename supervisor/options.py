@@ -99,6 +99,7 @@ class Options:
         require_configfile -- whether we should fail on no config file.
         """
         self.names_list = []
+        self.process_running = {}
         self.short_options = []
         self.long_options = []
         self.options_map = {}
@@ -1265,7 +1266,8 @@ class ServerOptions(Options):
                 pass
 
     def kill(self, pid, signal):
-        os.kill(pid, signal)
+        process = self.process_running[pid]
+        process.kill()
 
     def set_uid(self):
         if self.uid is None:
@@ -1472,6 +1474,7 @@ class ServerOptions(Options):
 
     def execve(self, filename, argv, env):
         process = subprocess.Popen(argv, executable=filename, env=env)
+        self.process_running[process.pid] = process
         return process.pid
 
     def mktempfile(self, suffix, prefix, dir):
