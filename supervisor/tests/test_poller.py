@@ -308,9 +308,9 @@ class PollerPollTests(PollerPollTestsBase):
         self.assertEqual(select_poll.unregistered, [6])
 
 class DummySelect(object):
-    '''
+    """
     Fake implementation of select.select()
-    '''
+    """
     def __init__(self, result=None, error=None):
         result = result or {}
         self.readables = result.get('readables', [])
@@ -323,9 +323,9 @@ class DummySelect(object):
         return self.readables, self.writables, []
 
 class DummySelectPoll(object):
-    '''
+    """
     Fake implementation of select.poll()
-    '''
+    """
     def __init__(self, result=None, error=None):
         self.result = result or []
         self.error = error
@@ -351,9 +351,9 @@ class DummySelectPoll(object):
 
 
 class DummyKQueue(object):
-    '''
+    """
     Fake implementation of select.kqueue()
-    '''
+    """
     def __init__(self, result=None, raise_errno_poll=None, raise_errno_register=None):
         self.result = result or []
         self.errno_poll = raise_errno_poll

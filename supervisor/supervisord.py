@@ -34,13 +34,13 @@ import os
 import time
 import signal
 
-from supervisor.medusa import asyncore_25 as asyncore
+from medusa import asyncore_25 as asyncore
 
-from supervisor.options import ServerOptions
-from supervisor.options import signame
+from options import ServerOptions
+from options import signame
 from supervisor import events
-from supervisor.states import SupervisorStates
-from supervisor.states import getProcessStateDescription
+from states import SupervisorStates
+from states import getProcessStateDescription
 
 class Supervisor:
     stopping = False # set after we detect that we are handling a stop request
@@ -96,6 +96,8 @@ class Supervisor:
             # will be wrong
             self.options.write_pidfile()
             self.runforever()
+        except:
+            raise
         finally:
             self.options.cleanup()
 
@@ -205,44 +207,44 @@ class Supervisor:
                     raise asyncore.ExitNow
 
             for fd, dispatcher in combined_map.items():
+                if not hasattr(dispatcher, 'socket'):
+                    continue
                 if dispatcher.readable():
-                    self.options.poller.register_readable(fd)
+                    self.options.poller.register_readable(dispatcher)
                 if dispatcher.writable():
-                    self.options.poller.register_writable(fd)
+                    self.options.poller.register_writable(dispatcher)
 
             r, w = self.options.poller.poll(timeout)
 
-            for fd in r:
-                if fd in combined_map:
-                    try:
-                        dispatcher = combined_map[fd]
-                        self.options.logger.blather(
-                            'read event caused by %(dispatcher)r',
-                            dispatcher=dispatcher)
-                        dispatcher.handle_read_event()
-                        if (not dispatcher.readable()
-                                and not dispatcher.writable()):
-                            self.options.poller.unregister(fd)
-                    except asyncore.ExitNow:
-                        raise
-                    except:
-                        combined_map[fd].handle_error()
+            dispatchers = combined_map.values()
 
-            for fd in w:
-                if fd in combined_map:
-                    try:
-                        dispatcher = combined_map[fd]
-                        self.options.logger.blather(
-                            'write event caused by %(dispatcher)r',
-                            dispatcher=dispatcher)
-                        dispatcher.handle_write_event()
-                        if (not dispatcher.readable()
-                                and not dispatcher.writable()):
-                            self.options.poller.unregister(fd)
-                    except asyncore.ExitNow:
-                        raise
-                    except:
-                        combined_map[fd].handle_error()
+            for dispatcher in r:
+                if dispatcher not in dispatchers:
+                    continue
+                try:
+                    self.options.logger.blather('read event caused by %(dispatcher)r',
+                                                dispatcher=dispatcher)
+                    dispatcher.handle_read_event()
+                    if not dispatcher.readable() and not dispatcher.writable():
+                        self.options.poller.unregister(fd)
+                except asyncore.ExitNow:
+                    raise
+                except:
+                    dispatcher.handle_error()
+
+            for dispatcher in w:
+                if dispatcher not in dispatchers:
+                    continue
+                try:
+                    self.options.logger.blather('write event caused by %(dispatcher)r',
+                                                dispatcher=dispatcher)
+                    dispatcher.handle_write_event()
+                    if not dispatcher.readable() and not dispatcher.writable():
+                        self.options.poller.unregister(fd)
+                except asyncore.ExitNow:
+                    raise
+                except:
+                    dispatcher.handle_error()
 
             for group in pgroups:
                 group.transition()
@@ -345,7 +347,9 @@ def profile(cmd, globals, locals, sort_order, callers): # pragma: no cover
 
 # Main program
 def main(args=None, test=False):
-    assert os.name == "posix", "This code makes Unix-specific assumptions"
+
+    # assert os.name == "posix", "This code makes Unix-specific assumptions"
+
     # if we hup, restart by making a new Supervisor()
     first = True
     while 1:
@@ -369,7 +373,7 @@ def go(options): # pragma: no cover
     try:
         d.main()
     except asyncore.ExitNow:
-        pass
+        raise
 
 if __name__ == "__main__": # pragma: no cover
     main()

@@ -13,17 +13,17 @@ import sys
 import time
 
 # async modules
-import supervisor.medusa.asyncore_25 as asyncore
-import supervisor.medusa.asynchat_25 as asynchat
+import asyncore_25 as asyncore
+import asynchat_25 as asynchat
 
 # medusa modules
-import supervisor.medusa.http_date as http_date
-import supervisor.medusa.producers as producers
-import supervisor.medusa.logger as logger
+import http_date
+import producers
+import logger
 
 VERSION_STRING = RCS_ID.split()[2]
 
-from supervisor.medusa.counter import counter
+from counter import counter
 try:
     from urllib import unquote, splitquery
 except ImportError:
@@ -130,7 +130,6 @@ class http_request:
              self.reply_headers[name] == value)):
             del self.reply_headers[name]
             found_it = 1
-
 
         removed_headers = []
         if not value is None:
@@ -660,7 +659,7 @@ class http_server (asyncore.dispatcher):
             logger_object = logger.file_logger (sys.stdout)
 
         self.set_reuse_addr()
-        self.bind ((ip, port))
+        self.bind((ip, port))
 
         # lower this to 5 if your OS complains
         self.listen (1024)

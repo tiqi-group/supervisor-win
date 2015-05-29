@@ -4,21 +4,21 @@ import time
 import sys
 import socket
 import errno
-import pwd
+#import pwd
 import weakref
 
-from supervisor.compat import urllib
-from supervisor.compat import sha1
-from supervisor.compat import as_bytes
-from supervisor.medusa import asyncore_25 as asyncore
-from supervisor.medusa import http_date
-from supervisor.medusa import http_server
-from supervisor.medusa import producers
-from supervisor.medusa import filesys
-from supervisor.medusa import default_handler
-from supervisor.medusa import text_socket
+from compat import urllib
+from compat import sha1
+from compat import as_bytes
+from medusa import asyncore_25 as asyncore
+from medusa import http_date
+from medusa import http_server
+from medusa import producers
+from medusa import filesys
+from medusa import default_handler
+from medusa import text_socket
 
-from supervisor.medusa.auth_handler import auth_handler
+from medusa.auth_handler import auth_handler
 
 class NOT_DONE_YET:
     pass
@@ -473,7 +473,7 @@ class supervisor_http_server(http_server.http_server):
     def prebind(self, sock, logger_object):
         """ Override __init__ to do logger setup earlier so it can
         go to our logger object instead of stdout """
-        from supervisor.medusa import logger
+        from medusa import logger
 
         if not logger_object:
             logger_object = logger.file_logger(sys.stdout)
@@ -481,7 +481,6 @@ class supervisor_http_server(http_server.http_server):
         logger_object = logger.unresolving_logger(logger_object)
         self.logger = logger_object
 
-        asyncore.dispatcher.__init__ (self)
         self.set_socket(sock)
 
         self.handlers = []
@@ -490,8 +489,8 @@ class supervisor_http_server(http_server.http_server):
         self.set_reuse_addr()
 
     def postbind(self):
-        from supervisor.medusa.counter import counter
-        from supervisor.medusa.http_server import VERSION_STRING
+        from medusa.counter import counter
+        from medusa.http_server import VERSION_STRING
 
         self.listen(1024)
 
@@ -523,6 +522,7 @@ class supervisor_af_inet_http_server(supervisor_http_server):
     """ AF_INET version of supervisor HTTP server """
 
     def __init__(self, ip, port, logger_object):
+        super(supervisor_af_inet_http_server, self).__init__(ip, port)
         self.ip = ip
         self.port = port
         sock = text_socket.text_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -605,9 +605,9 @@ class supervisor_af_unix_http_server(supervisor_http_server):
                                    'current user (%s) can successfully chown')
                             raise ValueError(msg % (socketname,
                                                     repr(sockchown),
-                                                    pwd.getpwuid(
-                                                        os.geteuid())[0],
-                                                    ),
+                                                    #pwd.getpwuid(
+                                                    #    os.geteuid())[0],
+                                                    0),
                                              )
                         else:
                             raise
@@ -799,8 +799,9 @@ def make_http_servers(options, supervisord):
 
         if family == socket.AF_INET:
             host, port = config['host'], config['port']
-            hs = supervisor_af_inet_http_server(host, port,
-                                                logger_object=wrapper)
+
+            hs = supervisor_af_inet_http_server(host, port, logger_object=wrapper)
+
         elif family == socket.AF_UNIX:
             socketname = config['file']
             sockchmod = config['chmod']

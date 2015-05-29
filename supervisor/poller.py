@@ -120,9 +120,9 @@ class PollPoller(BasePoller):
         return False
 
 class KQueuePoller(BasePoller):
-    '''
+    """
     Wrapper for select.kqueue()/kevent()
-    '''
+    """
 
     max_events = 1000
 

@@ -282,74 +282,74 @@ class Subprocess(object):
 
     def _spawn_as_child(self, filename, argv):
         options = self.config.options
+        #try:
+        # prevent child from receiving signals sent to the
+        # parent by calling os.setpgrp to create a new process
+        # group for the child; this prevents, for instance,
+        # the case of child processes being sent a SIGINT when
+        # running supervisor in foreground mode and Ctrl-C in
+        # the terminal window running supervisord is pressed.
+        # Presumably it also prevents HUP, etc received by
+        # supervisord from being sent to children.
+        options.setpgrp()
+
+        self._prepare_child_fds()
+        # sending to fd 2 will put this output in the stderr log
+
+        # set user
+        setuid_msg = self.set_uid()
+        if setuid_msg:
+            uid = self.config.uid
+            msg = "couldn't setuid to %s: %s\n" % (uid, setuid_msg)
+            options.write(2, "supervisor: " + msg)
+            return # finally clause will exit the child process
+
+        # set environment
+        env = os.environ.copy()
+        env['SUPERVISOR_ENABLED'] = '1'
+        serverurl = self.config.serverurl
+        if serverurl is None: # unset
+            serverurl = self.config.options.serverurl # might still be None
+        if serverurl:
+            env['SUPERVISOR_SERVER_URL'] = serverurl
+        env['SUPERVISOR_PROCESS_NAME'] = self.config.name
+        if self.group:
+            env['SUPERVISOR_GROUP_NAME'] = self.group.config.name
+        if self.config.environment is not None:
+            env.update(self.config.environment)
+
+        # change directory
+        cwd = self.config.directory
         try:
-            # prevent child from receiving signals sent to the
-            # parent by calling os.setpgrp to create a new process
-            # group for the child; this prevents, for instance,
-            # the case of child processes being sent a SIGINT when
-            # running supervisor in foreground mode and Ctrl-C in
-            # the terminal window running supervisord is pressed.
-            # Presumably it also prevents HUP, etc received by
-            # supervisord from being sent to children.
-            options.setpgrp()
+            if cwd is not None:
+                options.chdir(cwd)
+        except OSError as why:
+            code = errno.errorcode.get(why.args[0], why.args[0])
+            msg = "couldn't chdir to %s: %s\n" % (cwd, code)
+            options.write(2, "supervisor: " + msg)
+            return # finally clause will exit the child process
 
-            self._prepare_child_fds()
-            # sending to fd 2 will put this output in the stderr log
+        # set umask, then execve
+        try:
+            if self.config.umask is not None:
+                options.setumask(self.config.umask)
+            options.execve(filename, argv, env)
+        except OSError as why:
+            code = errno.errorcode.get(why.args[0], why.args[0])
+            msg = "couldn't exec %s: %s\n" % (argv[0], code)
+            options.write(2, "supervisor: " + msg)
+        except:
+            (file, fun, line), t,v,tbinfo = asyncore.compact_traceback()
+            error = '%s, %s: file: %s line: %s' % (t, v, file, line)
+            msg = "couldn't exec %s: %s\n" % (filename, error)
+            options.write(2, "supervisor: " + msg)
 
-            # set user
-            setuid_msg = self.set_uid()
-            if setuid_msg:
-                uid = self.config.uid
-                msg = "couldn't setuid to %s: %s\n" % (uid, setuid_msg)
-                options.write(2, "supervisor: " + msg)
-                return # finally clause will exit the child process
-
-            # set environment
-            env = os.environ.copy()
-            env['SUPERVISOR_ENABLED'] = '1'
-            serverurl = self.config.serverurl
-            if serverurl is None: # unset
-                serverurl = self.config.options.serverurl # might still be None
-            if serverurl:
-                env['SUPERVISOR_SERVER_URL'] = serverurl
-            env['SUPERVISOR_PROCESS_NAME'] = self.config.name
-            if self.group:
-                env['SUPERVISOR_GROUP_NAME'] = self.group.config.name
-            if self.config.environment is not None:
-                env.update(self.config.environment)
-
-            # change directory
-            cwd = self.config.directory
-            try:
-                if cwd is not None:
-                    options.chdir(cwd)
-            except OSError as why:
-                code = errno.errorcode.get(why.args[0], why.args[0])
-                msg = "couldn't chdir to %s: %s\n" % (cwd, code)
-                options.write(2, "supervisor: " + msg)
-                return # finally clause will exit the child process
-
-            # set umask, then execve
-            try:
-                if self.config.umask is not None:
-                    options.setumask(self.config.umask)
-                options.execve(filename, argv, env)
-            except OSError as why:
-                code = errno.errorcode.get(why.args[0], why.args[0])
-                msg = "couldn't exec %s: %s\n" % (argv[0], code)
-                options.write(2, "supervisor: " + msg)
-            except:
-                (file, fun, line), t,v,tbinfo = asyncore.compact_traceback()
-                error = '%s, %s: file: %s line: %s' % (t, v, file, line)
-                msg = "couldn't exec %s: %s\n" % (filename, error)
-                options.write(2, "supervisor: " + msg)
-
-            # this point should only be reached if execve failed.
-            # the finally clause will exit the child process.
-
-        finally:
-            options.write(2, "supervisor: child process was not spawned\n")
-            options._exit(127) # exit process with code for spawn failure
+        #     # this point should only be reached if execve failed.
+        #     # the finally clause will exit the child process.
+        #
+        # finally:
+        #     options.write(2, "supervisor: child process was not spawned\n")
+        #     options._exit(127) # exit process with code for spawn failure
 
     def stop(self):
         """ Administrative stop """
@@ -608,10 +608,12 @@ class Subprocess(object):
                 self.backoff = 0
                 self._assertInState(ProcessStates.STARTING)
                 self.change_state(ProcessStates.RUNNING)
-                msg = (
-                    'entered RUNNING state, process has stayed up for '
-                    '> than %s seconds (startsecs)' % self.config.startsecs)
-                logger.info('success: %s %s' % (self.config.name, msg))
+                # TODO: BUG crash on log
+                # msg = (
+                #     'entered RUNNING state, process has stayed up for '
+                #     '> than %s seconds (startsecs)' % self.config.startsecs)
+                #
+                # logger.info('success: %s %s' % (self.config.name, msg))
 
         if state == ProcessStates.BACKOFF:
             if self.backoff > self.config.startretries:

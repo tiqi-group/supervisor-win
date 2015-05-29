@@ -55,8 +55,7 @@ import os
 from errno import EALREADY, EINPROGRESS, EWOULDBLOCK, ECONNRESET, \
      ENOTCONN, ESHUTDOWN, EINTR, EISCONN, errorcode
 
-from supervisor.compat import as_string, as_bytes
-from supervisor.medusa import text_socket
+from medusa import text_socket
 
 try:
     socket_map
@@ -198,7 +197,7 @@ def loop(timeout=30.0, use_poll=False, map=None, count=None):
             poll_fun(timeout, map)
             count -= 1
 
-class dispatcher:
+class dispatcher(object):
 
     debug = False
     connected = False
@@ -521,9 +520,11 @@ if os.name == 'posix':
             self.fd = fd
 
         def recv(self, buffersize):
+            from supervisor.compat import as_string
             return as_string(os.read(self.fd, buffersize))
 
         def send(self, s):
+            from supervisor.compat import as_bytes
             return os.write(self.fd, as_bytes(s))
 
         read = recv

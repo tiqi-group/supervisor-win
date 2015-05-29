@@ -499,7 +499,8 @@ class SupervisorTransport(xmlrpclib.Transport):
 
 class UnixStreamHTTPConnection(httplib.HTTPConnection):
     def connect(self): # pragma: no cover
-        self.sock = text_socket.text_socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.sock = text_socket.text_socket(socket.AF_INET if sys.platform.startswith('win') else socket.AF_INET,
+                                            socket.SOCK_STREAM)
         # we abuse the host parameter as the socketname
         self.sock.connect(self.socketfile)
 

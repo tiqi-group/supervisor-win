@@ -6,16 +6,16 @@ import tempfile
 import errno
 import signal
 import re
-import pwd
-import grp
-import resource
+#import pwd
+#import grp
+#import resource
 import stat
 import pkg_resources
 import glob
 import platform
 import warnings
-import fcntl
-
+#import fcntl
+import subprocess
 from supervisor.compat import PY3
 from supervisor.compat import ConfigParser
 from supervisor.compat import as_bytes, as_string
@@ -302,7 +302,7 @@ class Options:
                     self._set(name, value, 1)
 
         if self.configfile is None:
-            uid = os.getuid()
+            uid = 0 #os.getuid()
             if uid == 0 and "supervisord" in self.progname: # pragma: no cover
                 self.warnings.warn(
                     'Supervisord is running as root and it is searching '
@@ -506,16 +506,16 @@ class ServerOptions(Options):
         # we need to set a fallback serverurl that process.spawn can use
 
         # prefer a unix domain socket
-        for config in [ config for config in sconfigs if
-                        config['family'] is socket.AF_UNIX ]:
-            path = config['file']
-            self.serverurl = 'unix://%s' % path
-            break
+        if sys.platform.startswith('linux'):
+            for config in [config for config in sconfigs if config['family'] is
+                          (socket.AF_INET if sys.platform.startswith('win') else socket.AF_UNIX)]:
+                path = config['file']
+                self.serverurl = 'unix://%s' % path
+                break
 
         # fall back to an inet socket
         if self.serverurl is None:
-            for config in [ config for config in sconfigs if
-                            config['family'] is socket.AF_INET]:
+            for config in [config for config in sconfigs if config['family'] is socket.AF_INET]:
                 host = config['host']
                 port = config['port']
                 if not host:
@@ -805,7 +805,7 @@ class ServerOptions(Options):
                                  path)
             path = normalize_path(path)
 
-            if socket_owner is None:
+            if socket_owner is None and False:
                 uid = os.getuid()
                 if proc_uid is not None and proc_uid != uid:
                     socket_owner = (proc_uid, gid_for_uid(proc_uid))
@@ -1036,7 +1036,7 @@ class ServerOptions(Options):
                 raise ValueError('section [%s] has no file value' % section)
             sfile = sfile.strip()
             config['name'] = name
-            config['family'] = socket.AF_UNIX
+            config['family'] = socket.AF_INET if sys.platform.startswith('win') else socket.AF_UNIX
             sfile = expand(sfile, {'here':self.here}, 'socket file')
             config['file'] = normalize_path(sfile)
             config.update(self._parse_username_and_password(parser, section))
@@ -1090,7 +1090,7 @@ class ServerOptions(Options):
         # This explanation was (gratefully) garnered from
         # http://www.hawklord.uklinux.net/system/daemons/d3.htm
 
-        pid = os.fork()
+        pid = 0#os.fork()
         if pid != 0:
             # Parent
             self.logger.blather("supervisord forked; parent exiting")
@@ -1107,12 +1107,18 @@ class ServerOptions(Options):
                 self.logger.info("set current directory: %r"
                                  % self.directory)
         os.close(0)
-        self.stdin = sys.stdin = sys.__stdin__ = open("/dev/null")
+
+        # TODO: check this code
+        tmp_dir = 'C:/Users/alex/PycharmProjects/supervisor/supervisord-env/tmp'
+
+        self.stdin = sys.stdin = sys.__stdin__ = open(os.path.join(tmp_dir, 'dev.stdin.dev'), 'w+') #"/dev/null")
         os.close(1)
-        self.stdout = sys.stdout = sys.__stdout__ = open("/dev/null", "w")
+        self.stdout = sys.stdout = sys.__stdout__ = open(os.path.join(tmp_dir, 'dev.stdout.dev'), 'w') #open("/dev/null", "w")
         os.close(2)
-        self.stderr = sys.stderr = sys.__stderr__ = open("/dev/null", "w")
-        os.setsid()
+        self.stderr = sys.stderr = sys.__stderr__ = open(os.path.join(tmp_dir, 'dev.stderr.dev'), 'w') #open("/dev/null", "w")
+
+        #os.setsid()
+
         os.umask(self.umask)
         # XXX Stevens, in his Advanced Unix book, section 13.3 (page
         # 417) recommends calling umask(0) and closing unused
@@ -1132,8 +1138,8 @@ class ServerOptions(Options):
 
     def cleanup(self):
         for config, server in self.httpservers:
-            if config['family'] == socket.AF_UNIX:
-                if self.unlink_socketfiles:
+            if config['family'] == socket.AF_INET if sys.platform.startswith('win') else socket.AF_UNIX:
+                if self.unlink_socketfiles and sys.platform.startswith('linux'):
                     socketname = config['file']
                     self._try_unlink(socketname)
         self._try_unlink(self.pidfile)
@@ -1174,10 +1180,12 @@ class ServerOptions(Options):
         receive = self.signal_receiver.receive
         signal.signal(signal.SIGTERM, receive)
         signal.signal(signal.SIGINT, receive)
-        signal.signal(signal.SIGQUIT, receive)
-        signal.signal(signal.SIGHUP, receive)
-        signal.signal(signal.SIGCHLD, receive)
-        signal.signal(signal.SIGUSR2, receive)
+
+        if sys.platform.startswith('linux'):
+            signal.signal(signal.SIGQUIT, receive)
+            signal.signal(signal.SIGHUP, receive)
+            signal.signal(signal.SIGCHLD, receive)
+            signal.signal(signal.SIGUSR2, receive)
 
     def get_signal(self):
         return self.signal_receiver.get_signal()
@@ -1246,7 +1254,7 @@ class ServerOptions(Options):
 
     def set_uid(self):
         if self.uid is None:
-            if os.getuid() == 0:
+            if False and os.getuid() == 0:
                 return 'Supervisor running as root (no user in config file)'
             return None
         msg = self.dropPrivileges(self.uid)
@@ -1255,6 +1263,9 @@ class ServerOptions(Options):
         return msg
 
     def dropPrivileges(self, user):
+        return
+
+    def _dropPrivileges(self, user):
         # Drop root privileges if we have them
         if user is None:
             return "No user specified to setuid to!"
@@ -1309,6 +1320,9 @@ class ServerOptions(Options):
         os.setuid(uid)
 
     def waitpid(self):
+        return None, None
+
+    def _waitpid(self):
         # Need pthread_sigmask here to avoid concurrent sigchild, but Python
         # doesn't offer in Python < 3.4.  There is still a race condition here;
         # we can get a sigchild while we're sitting in the waitpid call.
@@ -1331,6 +1345,9 @@ class ServerOptions(Options):
         return pid, sts
 
     def set_rlimits(self):
+        return []
+
+    def _set_rlimits(self):
         limits = []
         if hasattr(resource, 'RLIMIT_NOFILE'):
             limits.append(
@@ -1423,13 +1440,13 @@ class ServerOptions(Options):
             pass
 
     def fork(self):
-        return os.fork()
+        return 0 # os.fork()
 
     def dup2(self, frm, to):
         return os.dup2(frm, to)
 
     def setpgrp(self):
-        return os.setpgrp()
+        return None #os.setpgrp()
 
     def stat(self, filename):
         return os.stat(filename)
@@ -1438,7 +1455,8 @@ class ServerOptions(Options):
         return os.write(fd, as_bytes(data))
 
     def execve(self, filename, argv, env):
-        return os.execve(filename, argv, env)
+        return subprocess.Popen([filename])
+        # return os.execve(filename, argv, env)
 
     def mktempfile(self, suffix, prefix, dir):
         # set os._urandomfd as a hack around bad file descriptor bug
@@ -1525,10 +1543,10 @@ class ServerOptions(Options):
             if stderr:
                 stderr, child_stderr = os.pipe()
                 pipes['stderr'], pipes['child_stderr'] = stderr, child_stderr
-            for fd in (pipes['stdout'], pipes['stderr'], pipes['stdin']):
-                if fd is not None:
-                    flags = fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NDELAY
-                    fcntl.fcntl(fd, fcntl.F_SETFL, flags)
+            # for fd in (pipes['stdout'], pipes['stderr'], pipes['stdin']):
+            #     if fd is not None:
+            #         flags = fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NDELAY
+            #         fcntl.fcntl(fd, fcntl.F_SETFL, flags)
             return pipes
         except OSError:
             for fd in pipes.values():

@@ -1,6 +1,6 @@
-import grp
+#import grp
 import os
-import pwd
+#import pwd
 import signal
 import socket
 import shlex
