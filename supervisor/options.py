@@ -600,7 +600,7 @@ class ServerOptions(Options):
                         raise ValueError(str(why))
 
         sections = parser.sections()
-        if not 'supervisord' in sections:
+        if 'supervisord' not in sections:
             raise ValueError('.ini file does not include supervisord section')
 
         common_expansions = {'here': self.here}
@@ -692,8 +692,7 @@ class ServerOptions(Options):
 
         # process "normal" homogeneous groups
         for section in all_sections:
-            if ((not section.startswith('program:'))
-                or section in homogeneous_exclude):
+            if not section.startswith('program:') or section in homogeneous_exclude:
                 continue
             program_name = process_or_group_name(section.split(':', 1)[1])
             priority = integer(get(section, 'priority', 999))
@@ -755,8 +754,7 @@ class ServerOptions(Options):
 
         # process fastcgi homogeneous groups
         for section in all_sections:
-            if ((not section.startswith('fcgi-program:'))
-                or section in homogeneous_exclude):
+            if not section.startswith('fcgi-program:') or section in homogeneous_exclude:
                 continue
             program_name = process_or_group_name(section.split(':', 1)[1])
             priority = integer(get(section, 'priority', 999))
@@ -1122,18 +1120,20 @@ class ServerOptions(Options):
         os.close(0)
 
         # TODO: check this code
-        tmp_dir = 'C:/Users/alex/PycharmProjects/supervisor/supervisord-env/tmp'
+        tmp_dir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
+                                               'supervisord-env', 'tmp'))
 
-        self.stdin = sys.stdin = sys.__stdin__ = open(os.path.join(tmp_dir, 'dev.stdin.dev'), 'w+')  # "/dev/null")
-        os.close(1)
-        self.stdout = sys.stdout = sys.__stdout__ = open(os.path.join(tmp_dir, 'dev.stdout.dev'),
-                                                         'w')  # open("/dev/null", "w")
-        os.close(2)
-        self.stderr = sys.stderr = sys.__stderr__ = open(os.path.join(tmp_dir, 'dev.stderr.dev'),
-                                                         'w')  # open("/dev/null", "w")
+        program_name, ext = os.path.splitext(os.path.basename(self.progname))
+
+        self.stdin = sys.stdin = sys.__stdin__ = open(os.path.join(tmp_dir, program_name + '_stdin.dev'), 'w+')
+        #os.close(1)
+
+        self.stdout = sys.stdout = sys.__stdout__ = open(os.path.join(tmp_dir, program_name + '_stdout.dev'), 'w')
+
+        #os.close(2)
+        self.stderr = sys.stderr = sys.__stderr__ = open(os.path.join(tmp_dir, program_name + '_stderr.dev'), 'w')
 
         # os.setsid()
-
         os.umask(self.umask)
         # XXX Stevens, in his Advanced Unix book, section 13.3 (page
         # 417) recommends calling umask(0) and closing unused
