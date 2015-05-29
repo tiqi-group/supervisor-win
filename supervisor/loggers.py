@@ -47,7 +47,7 @@ def getLevelNumByDescription(description):
     num = getattr(LevelsByDescription, description, None)
     return num
 
-class Handler:
+class Handler(object):
     fmt = '%(message)s'
     level = LevelsByName.INFO
 
@@ -182,7 +182,7 @@ class RotatingFileHandler(FileHandler):
         """
         if maxBytes > 0:
             mode = 'a' # doesn't make sense otherwise!
-        FileHandler.__init__(self, filename, mode)
+        super(RotatingFileHandler, self).__init__(filename, mode)
         self.maxBytes = maxBytes
         self.backupCount = backupCount
         self.counter = 0
@@ -195,7 +195,7 @@ class RotatingFileHandler(FileHandler):
         Output the record to the file, catering for rollover as described
         in doRollover().
         """
-        FileHandler.emit(self, record)
+        super(RotatingFileHandler, self).emit(record)
         self.doRollover()
 
     def _remove(self, fn): # pragma: no cover
