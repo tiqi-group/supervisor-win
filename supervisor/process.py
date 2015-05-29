@@ -206,9 +206,12 @@ class Subprocess(object):
 
         self.laststart = time.time()
 
-        self._assertInState(ProcessStates.EXITED, ProcessStates.FATAL,
-                            ProcessStates.BACKOFF, ProcessStates.STOPPED)
-
+        self._assertInState(
+            ProcessStates.EXITED,
+            ProcessStates.FATAL,
+            ProcessStates.BACKOFF,
+            ProcessStates.STOPPED
+        )
         self.change_state(ProcessStates.STARTING)
 
         try:
@@ -234,51 +237,7 @@ class Subprocess(object):
             self.change_state(ProcessStates.BACKOFF)
             return
 
-        try:
-            pid = options.fork()
-        except OSError as why:
-            code = why.args[0]
-            if code == errno.EAGAIN:
-                # process table full
-                msg  = ('Too many processes in process table to spawn %r' %
-                        self.config.name)
-            else:
-                msg = ('unknown error during fork: %s' %
-                       errno.errorcode.get(code, code))
-            self.record_spawnerr(msg)
-            self._assertInState(ProcessStates.STARTING)
-            self.change_state(ProcessStates.BACKOFF)
-            options.close_parent_pipes(self.pipes)
-            options.close_child_pipes(self.pipes)
-            return
-
-        if pid != 0:
-            return self._spawn_as_parent(pid)
-
-        else:
-            return self._spawn_as_child(filename, argv)
-
-    def _spawn_as_parent(self, pid):
-        # Parent
-        self.pid = pid
-        options = self.config.options
-        options.close_child_pipes(self.pipes)
-        options.logger.info('spawned: %r with pid %s' % (self.config.name, pid))
-        self.spawnerr = None
-        self.delay = time.time() + self.config.startsecs
-        options.pidhistory[pid] = self
-        return pid
-
-    def _prepare_child_fds(self):
-        options = self.config.options
-        options.dup2(self.pipes['child_stdin'], 0)
-        options.dup2(self.pipes['child_stdout'], 1)
-        if self.config.redirect_stderr:
-            options.dup2(self.pipes['child_stdout'], 2)
-        else:
-            options.dup2(self.pipes['child_stderr'], 2)
-        for i in range(3, options.minfds):
-            options.close_fd(i)
+        return self._spawn_as_child(filename, argv)
 
     def _spawn_as_child(self, filename, argv):
         options = self.config.options
@@ -293,7 +252,7 @@ class Subprocess(object):
         # supervisord from being sent to children.
         options.setpgrp()
 
-        self._prepare_child_fds()
+        # self._prepare_child_fds()
         # sending to fd 2 will put this output in the stderr log
 
         # set user
@@ -333,7 +292,7 @@ class Subprocess(object):
         try:
             if self.config.umask is not None:
                 options.setumask(self.config.umask)
-            options.execve(filename, argv, env)
+            self.pid = options.execve(filename, argv, env)
         except OSError as why:
             code = errno.errorcode.get(why.args[0], why.args[0])
             msg = "couldn't exec %s: %s\n" % (argv[0], code)
@@ -597,7 +556,8 @@ class Subprocess(object):
                 if self.backoff <= self.config.startretries:
                     if now > self.delay:
                         # BACKOFF -> STARTING
-                        self.spawn()
+                        process = self.spawn()
+                        self.pid = process
 
         if state == ProcessStates.STARTING:
             if now - self.laststart > self.config.startsecs:
@@ -611,8 +571,8 @@ class Subprocess(object):
                 # TODO: BUG crash on log
                 # msg = (
                 #     'entered RUNNING state, process has stayed up for '
-                #     '> than %s seconds (startsecs)' % self.config.startsecs)
-                #
+                #     '> than %s seconds (startsecs)' % self.config.startsecs
+                # )
                 # logger.info('success: %s %s' % (self.config.name, msg))
 
         if state == ProcessStates.BACKOFF:
@@ -703,7 +663,6 @@ class ProcessGroupBase(object):
         self.processes = {}
         for pconfig in self.config.process_configs:
             self.processes[pconfig.name] = pconfig.make_process(self)
-
 
     def __lt__(self, other):
         return self.config.priority < other.config.priority

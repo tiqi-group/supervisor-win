@@ -1471,8 +1471,8 @@ class ServerOptions(Options):
         return os.write(fd, as_bytes(data))
 
     def execve(self, filename, argv, env):
-        return subprocess.Popen([filename])
-        # return os.execve(filename, argv, env)
+        process = subprocess.Popen(argv, executable=filename, env=env)
+        return process.pid
 
     def mktempfile(self, suffix, prefix, dir):
         # set os._urandomfd as a hack around bad file descriptor bug

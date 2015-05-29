@@ -90,7 +90,7 @@ class Supervisor:
             self.options.process_environment()
             self.options.openhttpservers(self)
             self.options.setsignals()
-            if (not self.options.nodaemon) and self.options.first:
+            if not self.options.nodaemon and self.options.first:
                 self.options.daemonize()
             # writing pid file needs to come *after* daemonizing or pid
             # will be wrong
@@ -179,15 +179,14 @@ class Supervisor:
 
     def runforever(self):
         events.notify(events.SupervisorRunningEvent())
-        timeout = 1 # this cannot be fewer than the smallest TickEvent (5)
-
         socket_map = self.options.get_socket_map()
 
         while 1:
             combined_map = {}
             combined_map.update(socket_map)
-            combined_map.update(self.get_process_map())
+            pgroups = []
 
+            #combined_map.update(self.get_process_map())
             pgroups = list(self.process_groups.values())
             pgroups.sort()
 
@@ -207,44 +206,11 @@ class Supervisor:
                     raise asyncore.ExitNow
 
             for fd, dispatcher in combined_map.items():
-                if not hasattr(dispatcher, 'socket'):
-                    continue
                 if dispatcher.readable():
-                    self.options.poller.register_readable(dispatcher)
-                if dispatcher.writable():
-                    self.options.poller.register_writable(dispatcher)
-
-            r, w = self.options.poller.poll(timeout)
-
-            dispatchers = combined_map.values()
-
-            for dispatcher in r:
-                if dispatcher not in dispatchers:
-                    continue
-                try:
-                    self.options.logger.blather('read event caused by %(dispatcher)r',
-                                                dispatcher=dispatcher)
                     dispatcher.handle_read_event()
-                    if not dispatcher.readable() and not dispatcher.writable():
-                        self.options.poller.unregister(fd)
-                except asyncore.ExitNow:
-                    raise
-                except:
-                    dispatcher.handle_error()
 
-            for dispatcher in w:
-                if dispatcher not in dispatchers:
-                    continue
-                try:
-                    self.options.logger.blather('write event caused by %(dispatcher)r',
-                                                dispatcher=dispatcher)
+                if dispatcher.writable():
                     dispatcher.handle_write_event()
-                    if not dispatcher.readable() and not dispatcher.writable():
-                        self.options.poller.unregister(fd)
-                except asyncore.ExitNow:
-                    raise
-                except:
-                    dispatcher.handle_error()
 
             for group in pgroups:
                 group.transition()

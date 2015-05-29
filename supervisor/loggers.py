@@ -148,8 +148,7 @@ class FileHandler(Handler):
     """
 
     def __init__(self, filename, mode="a"):
-        Handler.__init__(self)
-        self.stream = open(filename, mode)
+        Handler.__init__(self, open(filename, mode))
         self.baseFilename = filename
         self.mode = mode
 
