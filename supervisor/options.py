@@ -1333,11 +1333,14 @@ class ServerOptions(Options):
         os.setuid(uid)
 
     def waitpid(self):
+        stopped = []
         for pid in self.child_process:
             process = self.child_process[pid]
-            if process.killed:
-                yield pid, (process.wait(), 'closed')
-        yield None, None
+            if process.killed or process.poll() is not None:
+                stopped.append((pid, (process.wait(), 'stopped')))
+        if not stopped:
+            stopped.append((None, None))
+        return stopped
 
     def _waitpid(self):
         # Need pthread_sigmask here to avoid concurrent sigchild, but Python

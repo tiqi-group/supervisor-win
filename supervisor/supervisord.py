@@ -243,19 +243,16 @@ class Supervisor:
                 events.notify(event(this_tick, self))
 
     def reap(self, once=False, recursionguard=0):
-        if recursionguard == 100:
-            return
-        pid, sts = list(self.options.waitpid())[0]
-        if pid:
+        for pid, sts in self.options.waitpid():
+            if not pid:
+                break
             process = self.options.pidhistory.get(pid, None)
             if process is None:
                 self.options.logger.info('reaped unknown pid %s' % pid)
             else:
                 process.finish(pid, sts)
                 del self.options.pidhistory[pid]
-            if not once:
-                # keep reaping until no more kids to reap, but don't recurse infintely
-                self.reap(once=False, recursionguard=recursionguard+1)
+                del self.options.child_process[pid]
 
     def handle_signal(self):
         sig = self.options.get_signal()
