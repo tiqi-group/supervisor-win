@@ -4,16 +4,12 @@ Supervisor
 [CLONE] This is a clone of the original. It is a specific version for the Windows operating system.
 
 Supervisor is a client/server system that allows its users to
-control a number of processes on UNIX-like operating systems.
+control a number of processes on Windows operating system.
 
 Supported Platforms
 -------------------
 
-Supervisor has been tested and is known to run on Linux (Ubuntu), Mac OS X
-(10.4, 10.5, 10.6), and Solaris (10 for Intel) and FreeBSD 6.1.  It will
-likely work fine on most UNIX systems.
-
-Supervisor will not run at all under any version of Windows.
+Supervisor has been tested and is known to run on Windows 10.
 
 *This is the master branch, which will become Supervisor 4.0.  The main
 change from Supervisor 3.x is added support for Python 3, which is still a
