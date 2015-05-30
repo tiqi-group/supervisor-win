@@ -1194,12 +1194,6 @@ class ServerOptions(Options):
         signal.signal(signal.SIGTERM, receive)
         signal.signal(signal.SIGINT, receive)
 
-        if sys.platform.startswith('linux'):
-            signal.signal(signal.SIGQUIT, receive)
-            signal.signal(signal.SIGHUP, receive)
-            signal.signal(signal.SIGCHLD, receive)
-            signal.signal(signal.SIGUSR2, receive)
-
     def get_signal(self):
         return self.signal_receiver.get_signal()
 
