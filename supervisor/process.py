@@ -299,7 +299,6 @@ class Subprocess(object):
             msg = "couldn't exec %s: %s\n" % (filename, error)
             options.write(2, "supervisor: " + msg)
         else:
-            #options.close_child_pipes(self.pipes)
             options.logger.info('Spawned: %r with pid %s' % (self.config.name, self.pid))
             self.delay = time.time() + self.config.startsecs
             options.pidhistory[self.pid] = self
@@ -361,8 +360,11 @@ class Subprocess(object):
         self.delay = now + self.config.stopwaitsecs
         # we will already be in the STOPPING state if we're doing a
         # SIGKILL as a result of overrunning stopwaitsecs
-        self._assertInState(ProcessStates.RUNNING,ProcessStates.STARTING,
-                            ProcessStates.STOPPING)
+        self._assertInState(
+            ProcessStates.RUNNING,
+            ProcessStates.STARTING,
+            ProcessStates.STOPPING
+        )
         self.change_state(ProcessStates.STOPPING)
 
         pid = self.pid
@@ -487,7 +489,6 @@ class Subprocess(object):
         self.config.options.logger.info(msg)
 
         self.pid = 0
-        self.config.options.close_parent_pipes(self.pipes)
         self.pipes = {}
         self.dispatchers = {}
 

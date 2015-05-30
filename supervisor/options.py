@@ -7,55 +7,51 @@ import tempfile
 import errno
 import signal
 import re
-# import pwd
-# import grp
-# import resource
 import stat
 from threading import Thread
 import pkg_resources
 import glob
 import platform
 import warnings
-# import fcntl
 import subprocess
-from supervisor.compat import PY3
-from supervisor.compat import ConfigParser
-from supervisor.compat import as_bytes, as_string
-from supervisor.compat import xmlrpclib
-from supervisor.compat import StringIO
-from supervisor.compat import basestring
+from compat import PY3
+from compat import ConfigParser
+from compat import as_bytes, as_string
+from compat import xmlrpclib
+from compat import StringIO
+from compat import basestring
 
 from supervisor.medusa import asyncore_25 as asyncore
 
-from supervisor.datatypes import process_or_group_name
-from supervisor.datatypes import boolean
-from supervisor.datatypes import integer
-from supervisor.datatypes import name_to_uid
-from supervisor.datatypes import gid_for_uid
-from supervisor.datatypes import existing_dirpath
-from supervisor.datatypes import byte_size
-from supervisor.datatypes import signal_number
-from supervisor.datatypes import list_of_exitcodes
-from supervisor.datatypes import dict_of_key_value_pairs
-from supervisor.datatypes import logfile_name
-from supervisor.datatypes import list_of_strings
-from supervisor.datatypes import octal_type
-from supervisor.datatypes import existing_directory
-from supervisor.datatypes import logging_level
-from supervisor.datatypes import colon_separated_user_group
-from supervisor.datatypes import inet_address
-from supervisor.datatypes import InetStreamSocketConfig
-from supervisor.datatypes import UnixStreamSocketConfig
-from supervisor.datatypes import url
-from supervisor.datatypes import Automatic
-from supervisor.datatypes import auto_restart
-from supervisor.datatypes import profile_options
-from supervisor.datatypes import set_here
+from datatypes import process_or_group_name
+from datatypes import boolean
+from datatypes import integer
+from datatypes import name_to_uid
+from datatypes import gid_for_uid
+from datatypes import existing_dirpath
+from datatypes import byte_size
+from datatypes import signal_number
+from datatypes import list_of_exitcodes
+from datatypes import dict_of_key_value_pairs
+from datatypes import logfile_name
+from datatypes import list_of_strings
+from datatypes import octal_type
+from datatypes import existing_directory
+from datatypes import logging_level
+from datatypes import colon_separated_user_group
+from datatypes import inet_address
+from datatypes import InetStreamSocketConfig
+from datatypes import UnixStreamSocketConfig
+from datatypes import url
+from datatypes import Automatic
+from datatypes import auto_restart
+from datatypes import profile_options
+from datatypes import set_here
 
-from supervisor import loggers
-from supervisor import states
-from supervisor import xmlrpc
-from supervisor import poller
+import loggers
+import states
+import xmlrpc
+import poller
 
 
 def _read_version_txt():
@@ -1078,66 +1074,10 @@ class ServerOptions(Options):
         return configs
 
     def daemonize(self):
-        self.poller.before_daemonize()
-        self._daemonize()
-        self.poller.after_daemonize()
-
-    def _daemonize(self):
-        # To daemonize, we need to become the leader of our own session
-        # (process) group.  If we do not, signals sent to our
-        # parent process will also be sent to us.   This might be bad because
-        # signals such as SIGINT can be sent to our parent process during
-        # normal (uninteresting) operations such as when we press Ctrl-C in the
-        # parent terminal window to escape from a logtail command.
-        # To disassociate ourselves from our parent's session group we use
-        # os.setsid.  It means "set session id", which has the effect of
-        # disassociating a process from is current session and process group
-        # and setting itself up as a new session leader.
-        #
-        # Unfortunately we cannot call setsid if we're already a session group
-        # leader, so we use "fork" to make a copy of ourselves that is
-        # guaranteed to not be a session group leader.
-        #
-        # We also change directories, set stderr and stdout to null, and
-        # change our umask.
-        #
-        # This explanation was (gratefully) garnered from
-        # http://www.hawklord.uklinux.net/system/daemons/d3.htm
-
-        pid = 0  # os.fork()
-        if pid != 0:
-            # Parent
-            self.logger.blather("supervisord forked; parent exiting")
-            os._exit(0)
-        # Child
-        self.logger.info("daemonizing the supervisord process")
-        if self.directory:
-            try:
-                os.chdir(self.directory)
-            except OSError as err:
-                self.logger.critical("can't chdir into %r: %s"
-                                     % (self.directory, err))
-            else:
-                self.logger.info("set current directory: %r"
-                                 % self.directory)
-
-        # TODO: check this code
-        tmp_dir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
-                                               'supervisord-env', 'tmp'))
-
-        program_name, ext = os.path.splitext(os.path.basename(self.progname))
-
-        self.stdin = sys.stdin = sys.__stdin__ = open(os.path.join(tmp_dir, program_name + '_stdin.dev'), 'w+')
-        self.stdout = sys.stdout = sys.__stdout__ = open(os.path.join(tmp_dir, program_name + '_stdout.dev'), 'w')
-        self.stderr = sys.stderr = sys.__stderr__ = open(os.path.join(tmp_dir, program_name + '_stderr.dev'), 'w')
-
-        # os.setsid()
-        os.umask(self.umask)
-        # XXX Stevens, in his Advanced Unix book, section 13.3 (page
-        # 417) recommends calling umask(0) and closing unused
-        # file descriptors.  In his Network Programming book, he
-        # additionally recommends ignoring SIGHUP and forking again
-        # after the setsid() call, for obscure SVR4 reasons.
+        #self.poller.before_daemonize()
+        #self._daemonize()
+        #self.poller.after_daemonize()
+        pass
 
     def write_pidfile(self):
         pid = os.getpid()
@@ -1343,9 +1283,14 @@ class ServerOptions(Options):
                 super(Popen, self).kill()
                 self.killed = True
 
+        argv = list(argv)
+
+        if filename in argv and len(argv) == 2:
+            argv.remove(filename)
+
         process = Popen(argv, executable=filename, env=env,
                         stdout=subprocess.PIPE, stdin=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
+                        stderr=subprocess.PIPE, bufsize=1)
 
         self.child_process[process.pid] = process
         return process.pid
@@ -1402,7 +1347,7 @@ class ServerOptions(Options):
 
     def readfd(self, stream):
         def enqueue_output(out, queue):
-            queue.put(out.readline())
+            queue.put(''.join(out.readlines()))
 
         q = Queue.Queue()
         thread = Thread(target=enqueue_output, args=(stream, q))
@@ -1410,7 +1355,7 @@ class ServerOptions(Options):
         thread.start()
 
         try:
-            data = q.get_nowait()
+            data = q.get(timeout=0.5)
         except Queue.Empty:
             data = ''
         return as_string(data)
@@ -1421,19 +1366,16 @@ class ServerOptions(Options):
     def chdir(self, dir):
         os.chdir(dir)
 
-    def make_pipes(self, stderr=True):
+    def make_pipes(self, pid, stderr=True):
         """ Create pipes for parent to child stdin/stdout/stderr
         communications.  Open fd in non-blocking mode so we can read them
         in the mainloop without blocking.  If stderr is False, don't
         create a pipe for stderr. """
-
+        process = self.child_process[pid]
         pipes = {
-            'child_stdin': None,
-            'child_stdout': None,
-            'child_stderr': None,
-            'stdin': None,
-            'stdout': None,
-            'stderr': None
+            'stdin': process.stdin,
+            'stdout': process.stdout,
+            'stderr': process.stderr
         }
         return pipes
 
@@ -1706,14 +1648,14 @@ class ProcessConfig(Config):
 
     def make_dispatchers(self, proc):
         use_stderr = not self.redirect_stderr
-        p = self.options.make_pipes(use_stderr)
+        pipes = self.options.make_pipes(proc.pid, use_stderr)
 
-        stdout_fd, stderr_fd, stdin_fd = p['stdout'], p['stderr'], p['stdin']
+        stdout_fd, stderr_fd, stdin_fd = pipes['stdout'], pipes['stderr'], pipes['stdin']
         dispatchers = {}
 
-        from supervisor.dispatchers import POutputDispatcher
-        from supervisor.dispatchers import PInputDispatcher
-        from supervisor import events
+        from dispatchers import POutputDispatcher
+        from dispatchers import PInputDispatcher
+        import events
 
         if stdout_fd is not None:
             etype = events.ProcessCommunicationStdoutEvent
@@ -1723,7 +1665,7 @@ class ProcessConfig(Config):
             dispatchers[stderr_fd] = POutputDispatcher(proc, etype, stderr_fd)
         if stdin_fd is not None:
             dispatchers[stdin_fd] = PInputDispatcher(proc, 'stdin', stdin_fd)
-        return dispatchers, p
+        return dispatchers, pipes
 
 
 class EventListenerConfig(ProcessConfig):
