@@ -38,15 +38,18 @@ from medusa import asyncore_25 as asyncore
 
 from options import ServerOptions
 from options import signame
-from supervisor import events
+
 from states import SupervisorStates
 from states import getProcessStateDescription
 
-class Supervisor:
-    stopping = False # set after we detect that we are handling a stop request
-    lastshutdownreport = 0 # throttle for delayed process error reports at stop
-    process_groups = None # map of process group name to process group object
-    stop_groups = None # list used for priority ordered shutdown
+import events
+
+
+class Supervisor(object):
+    stopping = False  # set after we detect that we are handling a stop request
+    lastshutdownreport = 0  # throttle for delayed process error reports at stop
+    process_groups = None  # map of process group name to process group object
+    stop_groups = None  # list used for priority ordered shutdown
 
     def __init__(self, options):
         self.options = options
@@ -81,8 +84,8 @@ class Supervisor:
         self.run()
 
     def run(self):
-        self.process_groups = {} # clear
-        self.stop_groups = None # clear
+        self.process_groups = {}  # clear
+        self.stop_groups = None  # clear
         events.clear()
         try:
             for config in self.options.process_group_configs:
@@ -109,7 +112,7 @@ class Supervisor:
         curdict = dict(zip([cfg.name for cfg in cur], cur))
         newdict = dict(zip([cfg.name for cfg in new], new))
 
-        added   = [cand for cand in new if cand.name not in curdict]
+        added = [cand for cand in new if cand.name not in curdict]
         removed = [cand for cand in cur if cand.name not in newdict]
 
         changed = [cand for cand in new
@@ -148,8 +151,8 @@ class Supervisor:
         if unstopped:
             # throttle 'waiting for x to die' reports
             now = time.time()
-            if now > (self.lastshutdownreport + 3): # every 3 secs
-                names = [ p.config.name for p in unstopped ]
+            if now > (self.lastshutdownreport + 3):  # every 3 secs
+                names = [p.config.name for p in unstopped]
                 namestr = ', '.join(names)
                 self.options.logger.info('waiting for %s to die' % namestr)
                 self.lastshutdownreport = now
@@ -281,17 +284,20 @@ class Supervisor:
     def get_state(self):
         return self.options.mood
 
+
 def timeslice(period, when):
     return int(when - (when % period))
 
+
 # profile entry point
-def profile(cmd, globals, locals, sort_order, callers): # pragma: no cover
+def profile(cmd, globals, locals, sort_order, callers):  # pragma: no cover
     try:
         import cProfile as profile
     except ImportError:
         import profile
     import pstats
     import tempfile
+
     fd, fn = tempfile.mkstemp()
     try:
         profile.runctx(cmd, globals, locals, fn)
@@ -309,7 +315,6 @@ def profile(cmd, globals, locals, sort_order, callers): # pragma: no cover
 
 # Main program
 def main(args=None, test=False):
-
     # assert os.name == "posix", "This code makes Unix-specific assumptions"
 
     # if we hup, restart by making a new Supervisor()
@@ -330,12 +335,14 @@ def main(args=None, test=False):
         if test or (options.mood < SupervisorStates.RESTARTING):
             break
 
-def go(options): # pragma: no cover
+
+def go(options):  # pragma: no cover
     d = Supervisor(options)
     try:
         d.main()
     except asyncore.ExitNow:
         raise
 
-if __name__ == "__main__": # pragma: no cover
+
+if __name__ == "__main__":  # pragma: no cover
     main()
