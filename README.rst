@@ -9,7 +9,7 @@ control a number of processes on Windows operating system.
 Supported Platforms
 -------------------
 
-Supervisor has been tested and is known to run on Windows 10.
+Supervisor has been tested and is known to run on Windows 10 (But still unstable).
 
 *This is the master branch, which will become Supervisor 4.0.  The main
 change from Supervisor 3.x is added support for Python 3, which is still a
