@@ -222,6 +222,8 @@ class Subprocess(object):
             self.change_state(ProcessStates.BACKOFF)
             return
 
+        self._spawn_as_child(filename, argv)
+
         try:
             self.dispatchers, self.pipes = self.config.make_dispatchers(self)
         except (OSError, IOError) as why:
@@ -235,9 +237,6 @@ class Subprocess(object):
             self.record_spawnerr(msg)
             self._assertInState(ProcessStates.STARTING)
             self.change_state(ProcessStates.BACKOFF)
-            return
-
-        return self._spawn_as_child(filename, argv)
 
     def _spawn_as_child(self, filename, argv):
         options = self.config.options
@@ -251,9 +250,6 @@ class Subprocess(object):
         # Presumably it also prevents HUP, etc received by
         # supervisord from being sent to children.
         options.setpgrp()
-
-        # self._prepare_child_fds()
-        # sending to fd 2 will put this output in the stderr log
 
         # set user
         setuid_msg = self.set_uid()
@@ -302,13 +298,12 @@ class Subprocess(object):
             error = '%s, %s: file: %s line: %s' % (t, v, file, line)
             msg = "couldn't exec %s: %s\n" % (filename, error)
             options.write(2, "supervisor: " + msg)
-
-        #     # this point should only be reached if execve failed.
-        #     # the finally clause will exit the child process.
-        #
-        # finally:
-        #     options.write(2, "supervisor: child process was not spawned\n")
-        #     options._exit(127) # exit process with code for spawn failure
+        else:
+            #options.close_child_pipes(self.pipes)
+            options.logger.info('Spawned: %r with pid %s' % (self.config.name, self.pid))
+            self.delay = time.time() + self.config.startsecs
+            options.pidhistory[self.pid] = self
+            self.spawnerr = None  # no error
 
     def stop(self):
         """ Administrative stop """
@@ -333,20 +328,18 @@ class Subprocess(object):
 
         # Properly stop processes in BACKOFF state.
         if self.state == ProcessStates.BACKOFF:
-            msg = ("Attempted to kill %s, which is in BACKOFF state." %
-                   (self.config.name))
+            msg = "Attempted to kill %s, which is in BACKOFF state." % self.config.name
             options.logger.debug(msg)
             self.change_state(ProcessStates.STOPPED)
-            return None
+            return
 
         if not self.pid:
-            msg = ("attempted to kill %s with sig %s but it wasn't running" %
-                   (self.config.name, signame(sig)))
+            msg = "Attempted to kill %s with sig %s but it wasn't running" % (self.config.name, signame(sig))
             options.logger.debug(msg)
             return msg
 
-        #If we're in the stopping state, then we've already sent the stop
-        #signal and this is the kill signal
+        # If we're in the stopping state, then we've already sent the stop
+        # signal and this is the kill signal
         if self.state == ProcessStates.STOPPING:
             killasgroup = self.config.killasgroup
         else:
@@ -373,6 +366,7 @@ class Subprocess(object):
         self.change_state(ProcessStates.STOPPING)
 
         pid = self.pid
+
         if killasgroup:
             # send to the whole process group instead
             pid = -self.pid
@@ -383,7 +377,7 @@ class Subprocess(object):
             io = StringIO()
             traceback.print_exc(file=io)
             tb = io.getvalue()
-            msg = 'unknown problem killing %s (%s):%s' % (self.config.name,
+            msg = 'Unknown problem killing %s (%s):%s' % (self.config.name,
                                                           self.pid, tb)
             options.logger.critical(msg)
             self.change_state(ProcessStates.UNKNOWN)
@@ -391,8 +385,6 @@ class Subprocess(object):
             self.killing = 0
             self.delay = 0
             return msg
-
-        return None
 
     def signal(self, sig):
         """Send a signal to the subprocess, without intending to kill it.
@@ -413,9 +405,11 @@ class Subprocess(object):
                                 signame(sig))
                              )
 
-        self._assertInState(ProcessStates.RUNNING,ProcessStates.STARTING,
-                            ProcessStates.STOPPING)
-
+        self._assertInState(
+            ProcessStates.RUNNING,
+            ProcessStates.STARTING,
+            ProcessStates.STOPPING
+        )
         try:
             options.kill(self.pid, sig)
         except:
@@ -429,14 +423,11 @@ class Subprocess(object):
             self.pid = 0
             return msg
 
-        return None
-
     def finish(self, pid, sts):
         """ The process was reaped and we need to report and manage its state
         """
         self.drain()
-
-        es, msg = decode_wait_status(sts)
+        es, msg = sts
 
         now = time.time()
         self.laststop = now
@@ -544,20 +535,22 @@ class Subprocess(object):
                     if self.config.autorestart is RestartUnconditionally:
                         # EXITED -> STARTING
                         self.spawn()
+
                     else: # autorestart is RestartWhenExitUnexpected
                         if self.exitstatus not in self.config.exitcodes:
                             # EXITED -> STARTING
                             self.spawn()
+
             elif state == ProcessStates.STOPPED and not self.laststart:
                 if self.config.autostart:
                     # STOPPED -> STARTING
                     self.spawn()
+
             elif state == ProcessStates.BACKOFF:
                 if self.backoff <= self.config.startretries:
                     if now > self.delay:
                         # BACKOFF -> STARTING
-                        process = self.spawn()
-                        self.pid = process
+                        self.spawn()
 
         if state == ProcessStates.STARTING:
             if now - self.laststart > self.config.startsecs:
@@ -568,12 +561,11 @@ class Subprocess(object):
                 self.backoff = 0
                 self._assertInState(ProcessStates.STARTING)
                 self.change_state(ProcessStates.RUNNING)
-                # TODO: BUG crash on log
-                # msg = (
-                #     'entered RUNNING state, process has stayed up for '
-                #     '> than %s seconds (startsecs)' % self.config.startsecs
-                # )
-                # logger.info('success: %s %s' % (self.config.name, msg))
+
+                msg = 'entered RUNNING state, process has stayed up for ' \
+                      '> than %s seconds (startsecs)' % self.config.startsecs
+
+                logger.info('success: %s %s' % (self.config.name, msg))
 
         if state == ProcessStates.BACKOFF:
             if self.backoff > self.config.startretries:
@@ -593,7 +585,7 @@ class Subprocess(object):
                 self.config.options.logger.warn(
                     'killing %r (%s) with SIGKILL' % (self.config.name,
                                                       self.pid))
-                self.kill(signal.SIGKILL)
+                self.kill(signal.SIGTERM)
 
 class FastCGISubprocess(Subprocess):
     """Extends Subprocess class to handle FastCGI subprocesses"""

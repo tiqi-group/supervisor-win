@@ -180,13 +180,11 @@ class Supervisor:
     def runforever(self):
         events.notify(events.SupervisorRunningEvent())
         socket_map = self.options.get_socket_map()
-
+        timeout = 0.2
         while 1:
             combined_map = {}
             combined_map.update(socket_map)
-            pgroups = []
-
-            #combined_map.update(self.get_process_map())
+            combined_map.update(self.get_process_map())
             pgroups = list(self.process_groups.values())
             pgroups.sort()
 
@@ -225,6 +223,8 @@ class Supervisor:
             if self.options.test:
                 break
 
+            time.sleep(timeout)
+
     def tick(self, now=None):
         """ Send one or more 'tick' events when the timeslice related to
         the period for the event type rolls over """
@@ -245,7 +245,7 @@ class Supervisor:
     def reap(self, once=False, recursionguard=0):
         if recursionguard == 100:
             return
-        pid, sts = self.options.waitpid()
+        pid, sts = list(self.options.waitpid())[0]
         if pid:
             process = self.options.pidhistory.get(pid, None)
             if process is None:
@@ -254,8 +254,7 @@ class Supervisor:
                 process.finish(pid, sts)
                 del self.options.pidhistory[pid]
             if not once:
-                # keep reaping until no more kids to reap, but don't recurse
-                # infintely
+                # keep reaping until no more kids to reap, but don't recurse infintely
                 self.reap(once=False, recursionguard=recursionguard+1)
 
     def handle_signal(self):

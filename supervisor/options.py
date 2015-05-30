@@ -1,3 +1,4 @@
+import Queue
 import socket
 import getopt
 import os
@@ -10,6 +11,7 @@ import re
 # import grp
 # import resource
 import stat
+from threading import Thread
 import pkg_resources
 import glob
 import platform
@@ -99,7 +101,6 @@ class Options:
         require_configfile -- whether we should fail on no config file.
         """
         self.names_list = []
-        self.process_running = {}
         self.short_options = []
         self.long_options = []
         self.options_map = {}
@@ -425,6 +426,7 @@ class ServerOptions(Options):
         Options.__init__(self)
         self.configroot = Dummy()
         self.configroot.supervisord = Dummy()
+        self.child_process = {}
 
         self.add(None, None, "v", "version", self.version)
         self.add("nodaemon", "supervisord.nodaemon", "n", "nodaemon", flag=1,
@@ -1118,7 +1120,6 @@ class ServerOptions(Options):
             else:
                 self.logger.info("set current directory: %r"
                                  % self.directory)
-        os.close(0)
 
         # TODO: check this code
         tmp_dir = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
@@ -1127,11 +1128,7 @@ class ServerOptions(Options):
         program_name, ext = os.path.splitext(os.path.basename(self.progname))
 
         self.stdin = sys.stdin = sys.__stdin__ = open(os.path.join(tmp_dir, program_name + '_stdin.dev'), 'w+')
-        #os.close(1)
-
         self.stdout = sys.stdout = sys.__stdout__ = open(os.path.join(tmp_dir, program_name + '_stdout.dev'), 'w')
-
-        #os.close(2)
         self.stderr = sys.stderr = sys.__stderr__ = open(os.path.join(tmp_dir, program_name + '_stderr.dev'), 'w')
 
         # os.setsid()
@@ -1266,8 +1263,7 @@ class ServerOptions(Options):
                 pass
 
     def kill(self, pid, signal):
-        process = self.process_running[pid]
-        process.kill()
+        self.child_process[pid].kill()
 
     def set_uid(self):
         if self.uid is None:
@@ -1337,7 +1333,11 @@ class ServerOptions(Options):
         os.setuid(uid)
 
     def waitpid(self):
-        return None, None
+        for pid in self.child_process:
+            process = self.child_process[pid]
+            if process.killed:
+                yield pid, (process.wait(), 'closed')
+        yield None, None
 
     def _waitpid(self):
         # Need pthread_sigmask here to avoid concurrent sigchild, but Python
@@ -1473,8 +1473,21 @@ class ServerOptions(Options):
         return os.write(fd, as_bytes(data))
 
     def execve(self, filename, argv, env):
-        process = subprocess.Popen(argv, executable=filename, env=env)
-        self.process_running[process.pid] = process
+
+        class Popen(subprocess.Popen):
+            def __init__(self, *args, **kwargs):
+                super(Popen, self).__init__(*args, **kwargs)
+                self.killed = False
+
+            def kill(self):
+                super(Popen, self).kill()
+                self.killed = True
+
+        process = Popen(argv, executable=filename, env=env,
+                        stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
+
+        self.child_process[process.pid] = process
         return process.pid
 
     def mktempfile(self, suffix, prefix, dir):
@@ -1527,12 +1540,18 @@ class ServerOptions(Options):
             if hasattr(handler, 'reopen'):
                 handler.reopen()
 
-    def readfd(self, fd):
+    def readfd(self, stream):
+        def enqueue_output(out, queue):
+            queue.put(out.readline())
+
+        q = Queue.Queue()
+        thread = Thread(target=enqueue_output, args=(stream, q))
+        thread.daemon = True # thread dies with the program
+        thread.start()
+
         try:
-            data = os.read(fd, 2 << 16)  # 128K
-        except OSError as why:
-            if why.args[0] not in (errno.EWOULDBLOCK, errno.EBADF, errno.EINTR):
-                raise
+            data = q.get_nowait()
+        except Queue.Empty:
             data = ''
         return as_string(data)
 
@@ -1548,30 +1567,15 @@ class ServerOptions(Options):
         in the mainloop without blocking.  If stderr is False, don't
         create a pipe for stderr. """
 
-        pipes = {'child_stdin': None,
-                 'stdin': None,
-                 'stdout': None,
-                 'child_stdout': None,
-                 'stderr': None,
-                 'child_stderr': None}
-        try:
-            stdin, child_stdin = os.pipe()
-            pipes['child_stdin'], pipes['stdin'] = stdin, child_stdin
-            stdout, child_stdout = os.pipe()
-            pipes['stdout'], pipes['child_stdout'] = stdout, child_stdout
-            if stderr:
-                stderr, child_stderr = os.pipe()
-                pipes['stderr'], pipes['child_stderr'] = stderr, child_stderr
-            # for fd in (pipes['stdout'], pipes['stderr'], pipes['stdin']):
-            #     if fd is not None:
-            #         flags = fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NDELAY
-            #         fcntl.fcntl(fd, fcntl.F_SETFL, flags)
-            return pipes
-        except OSError:
-            for fd in pipes.values():
-                if fd is not None:
-                    self.close_fd(fd)
-            raise
+        pipes = {
+            'child_stdin': None,
+            'child_stdout': None,
+            'child_stderr': None,
+            'stdin': None,
+            'stdout': None,
+            'stderr': None
+        }
+        return pipes
 
     def close_parent_pipes(self, pipes):
         for fdname in ('stdin', 'stdout', 'stderr'):
@@ -1843,8 +1847,10 @@ class ProcessConfig(Config):
     def make_dispatchers(self, proc):
         use_stderr = not self.redirect_stderr
         p = self.options.make_pipes(use_stderr)
+
         stdout_fd, stderr_fd, stdin_fd = p['stdout'], p['stderr'], p['stdin']
         dispatchers = {}
+
         from supervisor.dispatchers import POutputDispatcher
         from supervisor.dispatchers import PInputDispatcher
         from supervisor import events
