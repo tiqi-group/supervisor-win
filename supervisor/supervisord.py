@@ -316,7 +316,6 @@ def profile(cmd, globals, locals, sort_order, callers):  # pragma: no cover
 # Main program
 def main(args=None, test=False):
     # assert os.name == "posix", "This code makes Unix-specific assumptions"
-
     # if we hup, restart by making a new Supervisor()
     first = True
     while 1:

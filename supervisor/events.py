@@ -17,7 +17,7 @@ def clear():
     callbacks[:] = []
 
 
-class Event:
+class Event(object):
     """ Abstract event type """
     pass
 
