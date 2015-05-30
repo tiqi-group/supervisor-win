@@ -1347,7 +1347,7 @@ class ServerOptions(Options):
 
     def readfd(self, stream):
         def enqueue_output(out, queue):
-            queue.put(''.join(out.readlines()))
+            queue.put(out.readline())
 
         q = Queue.Queue()
         thread = Thread(target=enqueue_output, args=(stream, q))
@@ -1358,7 +1358,7 @@ class ServerOptions(Options):
             data = q.get(timeout=0.5)
         except Queue.Empty:
             data = ''
-        return as_string(data)
+        return data
 
     def process_environment(self):
         os.environ.update(self.environment or {})
