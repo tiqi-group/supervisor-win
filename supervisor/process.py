@@ -282,7 +282,14 @@ class Subprocess(object):
             code = errno.errorcode.get(why.args[0], why.args[0])
             msg = "couldn't chdir to %s: %s\n" % (cwd, code)
             options.write(2, "supervisor: " + msg)
-            return # finally clause will exit the child process
+            return  # finally clause will exit the child process
+
+        # Fixes bug in unicode strings env
+        for key in env:
+            if isinstance(key, unicode) or isinstance(env[key], unicode):
+                value = env.pop(key)  # only way to update key unicode!
+                key = key.encode('utf-8')
+                env[key] = value.encode('utf-8')
 
         # set umask, then execve
         try:
