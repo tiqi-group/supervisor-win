@@ -247,11 +247,16 @@ class SystemNamespaceRPCInterface:
                 root = AttrDict(self.namespaces)
                 value = traverse(root, name, params)
             except RPCError as inst:
-                value = {'faultCode': inst.code,
-                         'faultString': inst.text}
+                value = {
+                    'faultCode': inst.code,
+                    'faultString': inst.text
+                }
             except:
                 errmsg = "%s:%s" % (sys.exc_info()[0], sys.exc_info()[1])
-                value = {'faultCode': 1, 'faultString': errmsg}
+                value = {
+                    'faultCode': 1,
+                    'faultString': errmsg
+                }
             producers.append(value)
 
         results = []
@@ -261,23 +266,25 @@ class SystemNamespaceRPCInterface:
             if not producers:
                 return []
 
-            callback = producers.pop(0)
+            while len(producers) > 0:
+                callback = producers.pop(0)
+                if isinstance(callback, types.FunctionType):
+                    try:
+                        value = callback()
+                    except RPCError as err:
+                        value = {
+                            'faultCode': err.code,
+                            'faultString': err.text
+                        }
+                    if value is NOT_DONE_YET:
+                        # push it back in the front of the queue because we
+                        # need to finish the calls in requested order
+                        producers.insert(0, callback)
+                        return NOT_DONE_YET
+                else:
+                    value = callback
 
-            if isinstance(callback, types.FunctionType):
-                try:
-                    value = callback()
-                except RPCError as inst:
-                    value = {'faultCode': inst.code, 'faultString': inst.text}
-
-                if value is NOT_DONE_YET:
-                    # push it back in the front of the queue because we
-                    # need to finish the calls in requested order
-                    producers.insert(0, callback)
-                    return NOT_DONE_YET
-            else:
-                value = callback
-
-            results.append(value)
+                results.append(value)
 
             if producers:
                 # only finish when all producers are finished

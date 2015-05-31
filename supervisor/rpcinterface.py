@@ -312,6 +312,7 @@ class SupervisorNamespaceRPCInterface(object):
                 if process.spawnerr:
                     raise RPCError(Faults.SPAWN_ERROR, name)
 
+                process.transition()
                 state = process.get_state()
 
                 if state not in (ProcessStates.STARTING, ProcessStates.RUNNING):
@@ -877,62 +878,60 @@ def make_allfunc(processes, predicate, func, **extra_kwargs):
     callbacks = []
     results = []
 
-    def allfunc(
-            processes=processes,
-            predicate=predicate,
-            func=func,
-            extra_kwargs=extra_kwargs,
-            callbacks=callbacks,  # used only to fool scoping, never passed by caller
-            results=results,  # used only to fool scoping, never passed by caller
-    ):
+    def allfunc(processes=processes,
+                predicate=predicate,
+                func=func,
+                extra_kwargs=extra_kwargs,
+                callbacks=callbacks,  # used only to fool scoping, never passed by caller
+                results=results):  # used only to fool scoping, never passed by caller
 
         if not callbacks:
-
             for group, process in processes:
                 name = make_namespec(group.config.name, process.config.name)
                 if predicate(process):
                     try:
                         callback = func(name, **extra_kwargs)
                     except RPCError as e:
-                        results.append({'name': process.config.name,
-                                        'group': group.config.name,
-                                        'status': e.code,
-                                        'description': e.text})
+                        results.append({
+                            'name': process.config.name,
+                            'group': group.config.name,
+                            'status': e.code,
+                            'description': e.text
+                        })
                         continue
                     if isinstance(callback, types.FunctionType):
                         callbacks.append((group, process, callback))
                     else:
-                        results.append(
-                            {'name': process.config.name,
-                             'group': group.config.name,
-                             'status': Faults.SUCCESS,
-                             'description': 'OK'}
-                        )
+                        results.append({
+                            'name': process.config.name,
+                            'group': group.config.name,
+                            'status': Faults.SUCCESS,
+                            'description': 'OK'
+                        })
 
         if not callbacks:
             return results
 
         for struct in callbacks[:]:
-
             group, process, cb = struct
-
             try:
                 value = cb()
             except RPCError as e:
-                results.append(
-                    {'name': process.config.name,
-                     'group': group.config.name,
-                     'status': e.code,
-                     'description': e.text})
+                results.append({
+                    'name': process.config.name,
+                    'group': group.config.name,
+                    'status': e.code,
+                    'description': e.text
+                })
                 callbacks.remove(struct)
             else:
                 if value is not NOT_DONE_YET:
-                    results.append(
-                        {'name': process.config.name,
-                         'group': group.config.name,
-                         'status': Faults.SUCCESS,
-                         'description': 'OK'}
-                    )
+                    results.append({
+                        'name': process.config.name,
+                        'group': group.config.name,
+                        'status': Faults.SUCCESS,
+                        'description': 'OK'
+                    })
                     callbacks.remove(struct)
 
         if callbacks:
