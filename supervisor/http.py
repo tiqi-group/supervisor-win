@@ -18,6 +18,7 @@ from medusa import default_handler
 from medusa import text_socket
 
 from medusa.auth_handler import auth_handler
+import traceback
 
 
 class NOT_DONE_YET(object):
@@ -829,19 +830,17 @@ def make_http_servers(options, supervisord):
         from web import supervisor_ui_handler
 
         subinterfaces = []
-        for name, factory, d in options.rpcinterface_factories:
+        for name, factory, kwargs in options.rpcinterface_factories:
             try:
-                inst = factory(supervisord, **d)
+                inst = factory(supervisord, **kwargs)
             except:
-                import traceback
-
                 traceback.print_exc()
                 raise ValueError('Could not make %s rpc interface' % name)
             subinterfaces.append((name, inst))
             options.logger.info('RPC interface %r initialized' % name)
 
-        subinterfaces.append(('system',
-                              SystemNamespaceRPCInterface(subinterfaces)))
+        subinterfaces.append(('system', SystemNamespaceRPCInterface(subinterfaces)))
+
         xmlrpchandler = supervisor_xmlrpc_handler(supervisord, subinterfaces)
         tailhandler = logtail_handler(supervisord)
         maintailhandler = mainlogtail_handler(supervisord)
