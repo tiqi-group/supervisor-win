@@ -55,8 +55,6 @@ import os
 from errno import EALREADY, EINPROGRESS, EWOULDBLOCK, ECONNRESET, \
     ENOTCONN, ESHUTDOWN, EINTR, EISCONN, errorcode
 
-import text_socket
-
 try:
     socket_map
 except NameError:
@@ -266,6 +264,7 @@ class dispatcher(object):
         self._fileno = None
 
     def create_socket(self, family, type):
+        import text_socket
         self.family_and_type = family, type
         self.socket = text_socket.text_socket(family, type)
         self.socket.setblocking(0)
