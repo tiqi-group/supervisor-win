@@ -731,7 +731,7 @@ class logtail_handler(object):
             process_name = process_name_and_channel
             channel = 'stdout'
 
-        from supervisor.options import split_namespec
+        from options import split_namespec
 
         group_name, process_name = split_namespec(process_name)
 
@@ -824,9 +824,9 @@ def make_http_servers(options, supervisord):
         else:
             raise ValueError('Cannot determine socket type %r' % family)
 
-        from supervisor.xmlrpc import supervisor_xmlrpc_handler
-        from supervisor.xmlrpc import SystemNamespaceRPCInterface
-        from supervisor.web import supervisor_ui_handler
+        from xmlrpc import supervisor_xmlrpc_handler
+        from xmlrpc import SystemNamespaceRPCInterface
+        from web import supervisor_ui_handler
 
         subinterfaces = []
         for name, factory, d in options.rpcinterface_factories:
