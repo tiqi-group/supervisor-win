@@ -1364,7 +1364,6 @@ class ServerOptions(Options):
             data = std_queue.get_nowait()
         except Queue.Empty:
             data = ''
-        if data: print data
         return data
 
     def process_environment(self):
