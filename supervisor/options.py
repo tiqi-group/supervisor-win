@@ -1293,6 +1293,9 @@ class ServerOptions(Options):
                         stderr=subprocess.PIPE, bufsize=1)
 
         self.child_process[process.pid] = process
+
+        if process.pid <= 0:
+            raise OSError('failure initializing new process %s' % filename)
         return process.pid
 
     def mktempfile(self, suffix, prefix, dir):
