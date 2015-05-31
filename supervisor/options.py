@@ -9,7 +9,6 @@ import signal
 import re
 import stat
 from threading import Thread
-import threading
 import pkg_resources
 import glob
 import platform
@@ -21,6 +20,7 @@ from compat import as_bytes, as_string
 from compat import xmlrpclib
 from compat import StringIO
 from compat import basestring
+import helpers
 
 from supervisor.medusa import asyncore_25 as asyncore
 
@@ -1274,28 +1274,17 @@ class ServerOptions(Options):
         return os.write(fd, as_bytes(data))
 
     def execve(self, filename, argv, env):
-
-        class Popen(subprocess.Popen):
-            def __init__(self, *args, **kwargs):
-                super(Popen, self).__init__(*args, **kwargs)
-                self.killed = False
-
-            def kill(self):
-                super(Popen, self).kill()
-                self.killed = True
-
         argv = list(argv)
 
         if filename in argv and len(argv) == 2:
             argv.remove(filename)
 
-        process = Popen(argv,
-                        env=env,
-                        universal_newlines=True,
-                        stdout=subprocess.PIPE,
-                        stdin=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
-
+        process = helpers.Popen(argv,
+                                env=env,
+                                universal_newlines=True,
+                                stdout=subprocess.PIPE,
+                                stdin=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
         self.child_process[process.pid] = process
 
         if process.pid <= 0:
@@ -1380,31 +1369,10 @@ class ServerOptions(Options):
         in the mainloop without blocking.  If stderr is False, don't
         create a pipe for stderr. """
         process = self.child_process[pid]
-
-        class StdQueue(Queue.Queue):
-            """
-            Together with a thread, ess class allows you to store data
-            from the stream std [err, out]
-            """
-            def __init__(self, std, *args, **kwargs):
-                Queue.Queue.__init__(self, *args, **kwargs)
-                self.lock = threading.RLock()
-                self.std = std
-
-            def __getattr__(self, item):
-                return getattr(self.std, item)
-
-            def readline(self):
-                if self.lock.acquire(False):
-                    try:
-                        self.put(self.std.readline())
-                    finally:
-                        self.lock.release()
-
         pipes = {
-            'stdin': StdQueue(process.stdin),
-            'stdout': StdQueue(process.stdout),
-            'stderr': StdQueue(process.stderr)
+            'stdin': helpers.StdQueue(process.stdin),
+            'stdout': helpers.StdQueue(process.stdout),
+            'stderr': helpers.StdQueue(process.stderr)
         }
         return pipes
 
