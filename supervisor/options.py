@@ -1289,10 +1289,12 @@ class ServerOptions(Options):
         if filename in argv and len(argv) == 2:
             argv.remove(filename)
 
-        process = Popen(argv, env=env,
-                        stdout=subprocess.PIPE, stdin=subprocess.PIPE,
-                        stderr=subprocess.PIPE, bufsize=0,
-                        universal_newlines=True)
+        process = Popen(argv,
+                        env=env,
+                        universal_newlines=True,
+                        stdout=subprocess.PIPE,
+                        stdin=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
 
         self.child_process[process.pid] = process
 
@@ -1380,10 +1382,13 @@ class ServerOptions(Options):
         process = self.child_process[pid]
 
         class StdQueue(Queue.Queue):
-            lock = threading.RLock()
-
+            """
+            Together with a thread, ess class allows you to store data
+            from the stream std [err, out]
+            """
             def __init__(self, std, *args, **kwargs):
                 Queue.Queue.__init__(self, *args, **kwargs)
+                self.lock = threading.RLock()
                 self.std = std
 
             def __getattr__(self, item):
