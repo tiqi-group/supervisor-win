@@ -4,7 +4,6 @@ import time
 import sys
 import socket
 import errno
-# import pwd
 import weakref
 
 from compat import urllib
@@ -21,11 +20,11 @@ from medusa import text_socket
 from medusa.auth_handler import auth_handler
 
 
-class NOT_DONE_YET:
+class NOT_DONE_YET(object):
     pass
 
 
-class deferring_chunked_producer:
+class deferring_chunked_producer(object):
     """A producer that implements the 'chunked' transfer coding for HTTP/1.1.
     Here is a sample usage:
             request['Transfer-Encoding'] = 'chunked'
@@ -57,7 +56,7 @@ class deferring_chunked_producer:
             return ''
 
 
-class deferring_composite_producer:
+class deferring_composite_producer(object):
     """combine a fifo of producers into one"""
 
     def __init__(self, producers):
@@ -78,7 +77,7 @@ class deferring_composite_producer:
             return ''
 
 
-class deferring_globbing_producer:
+class deferring_globbing_producer(object):
     """
     'glob' the output from a producer into a particular buffer size.
     helps reduce the number of calls to send().  [this appears to
@@ -108,7 +107,7 @@ class deferring_globbing_producer:
         return r
 
 
-class deferring_hooked_producer:
+class deferring_hooked_producer(object):
     """
     A producer that will call <function> when it empties,.
     with an argument of the number of bytes produced.  Useful
@@ -143,18 +142,14 @@ class deferring_http_request(http_server.http_request):
     added to support tail -f like behavior on the logtail handler """
 
     def done(self, *arg, **kw):
-
         """ I didn't want to override this, but there's no way around
         it in order to support deferreds - CM
-
-        finalize this transaction - send output to the http channel"""
-
+        finalize this transaction - send output to the http channel
+        """
         # ----------------------------------------
         # persistent connection management
         # ----------------------------------------
-
         #  --- BUCKLE UP! ----
-
         connection = http_server.get_header(http_server.CONNECTION, self.header)
         connection = connection.lower()
 
@@ -219,7 +214,6 @@ class deferring_http_request(http_server.http_request):
             outgoing_producer = deferring_globbing_producer(outgoing_producer)
 
         self.channel.push_with_producer(outgoing_producer)
-
         self.channel.current_request = None
 
         if close_it:
@@ -250,11 +244,13 @@ class deferring_http_request(http_server.http_request):
 
         # maps request some headers to environment variables.
         # (those that don't start with 'HTTP_')
-        header2env = {'content-length': 'CONTENT_LENGTH',
-                      'content-type': 'CONTENT_TYPE',
-                      'connection': 'CONNECTION_TYPE'}
-
+        header2env = {
+            'content-length': 'CONTENT_LENGTH',
+            'content-type': 'CONTENT_TYPE',
+            'connection': 'CONNECTION_TYPE'
+        }
         workdir = os.getcwd()
+
         (path, params, query, fragment) = self.split_uri()
 
         if params:
@@ -268,6 +264,7 @@ class deferring_http_request(http_server.http_request):
             query = query[1:]
 
         server = self.channel.server
+
         env['REQUEST_METHOD'] = self.command.upper()
         env['SERVER_PORT'] = str(server.port)
         env['SERVER_NAME'] = server.server_name
@@ -302,10 +299,13 @@ class deferring_http_request(http_server.http_request):
         """ Functionality that medusa's http request doesn't have; set an
         attribute named 'server_url' on the request based on the Host: header
         """
-        default_port = {'http': '80', 'https': '443'}
+        default_port = {
+            'http': '80',
+            'https': '443'
+        }
         environ = self.cgi_environment()
-        if (environ.get('HTTPS') in ('on', 'ON') or
-                    environ.get('SERVER_PORT_SECURE') == "1"):
+        if environ.get('HTTPS') in ('on', 'ON') or \
+                        environ.get('SERVER_PORT_SECURE') == "1":
             # XXX this will currently never be true
             protocol = 'https'
         else:
@@ -359,7 +359,7 @@ class deferring_http_channel(http_server.http_channel):
 
     def refill_buffer(self):
         """ Implement deferreds """
-        while 1:
+        while True:
             if len(self.producer_fifo):
                 p = self.producer_fifo.first()
                 # a 'None' in the producer fifo is a sentinel,
@@ -643,7 +643,7 @@ class supervisor_af_unix_http_server(supervisor_http_server):
             return True
 
 
-class tail_f_producer:
+class tail_f_producer(object):
     def __init__(self, request, filename, head):
         self.request = weakref.ref(request)
         self.filename = filename
@@ -698,7 +698,7 @@ class tail_f_producer:
         return os.fstat(self.file.fileno())[stat.ST_SIZE]
 
 
-class logtail_handler:
+class logtail_handler(object):
     IDENT = 'Logtail HTTP Request Handler'
     path = '/logtail'
 
@@ -765,7 +765,7 @@ class logtail_handler:
         request.done()
 
 
-class mainlogtail_handler:
+class mainlogtail_handler(object):
     IDENT = 'Main Logtail HTTP Request Handler'
     path = '/mainlogtail'
 
@@ -793,14 +793,13 @@ class mainlogtail_handler:
         # send a 'Transfer-Encoding: chunked' response
 
         request.push(tail_f_producer(request, logfile, 1024))
-
         request.done()
 
 
 def make_http_servers(options, supervisord):
     servers = []
 
-    class LogWrapper:
+    class LogWrapper(object):
         def log(self, msg):
             if msg.endswith('\n'):
                 msg = msg[:-1]
@@ -834,7 +833,7 @@ def make_http_servers(options, supervisord):
             try:
                 inst = factory(supervisord, **d)
             except:
-                import traceback;
+                import traceback
 
                 traceback.print_exc()
                 raise ValueError('Could not make %s rpc interface' % name)
@@ -880,7 +879,7 @@ def make_http_servers(options, supervisord):
     return servers
 
 
-class encrypted_dictionary_authorizer:
+class encrypted_dictionary_authorizer(object):
     def __init__(self, dict):
         self.dict = dict
 

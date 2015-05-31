@@ -34,7 +34,7 @@ except ImportError:
 #                                                       Request Object
 # ===========================================================================
 
-class http_request:
+class http_request(object):
     # default reply code
     reply_code = 200
 

@@ -17,7 +17,7 @@ def find_prefix_at_end(haystack, needle):
     return l
 
 
-class PDispatcher:
+class PDispatcher(object):
     """ Asyncore dispatcher for mainloop, representing a process channel
     (stdin, stdout, or stderr).  This class is abstract. """
 

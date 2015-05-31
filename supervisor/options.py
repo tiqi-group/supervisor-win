@@ -68,11 +68,11 @@ def normalize_path(v):
     return os.path.normpath(os.path.abspath(os.path.expanduser(v)))
 
 
-class Dummy:
+class Dummy(object):
     pass
 
 
-class Options:
+class Options(object):
     stderr = sys.stderr
     stdout = sys.stdout
     exit = sys.exit

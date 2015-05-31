@@ -47,7 +47,7 @@ you - by calling your self.found_terminator() method.
 """
 
 import socket
-from supervisor.medusa import asyncore_25 as asyncore
+import asyncore_25 as asyncore
 from supervisor.compat import long
 
 
@@ -250,7 +250,7 @@ class simple_producer:
             return result
 
 
-class fifo:
+class fifo(object):
     def __init__(self, list=None):
         if not list:
             self.list = []
