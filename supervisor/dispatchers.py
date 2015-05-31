@@ -260,13 +260,9 @@ class POutputDispatcher(PDispatcher):
 
     def handle_read_event(self):
         data = self.process.config.options.readfd(self.fd)
-        self.output_buffer += data
-        self.record_output()
-        if not data:
-            # if we get no data back from the pipe, it means that the
-            # child process has ended.  See
-            # mail.python.org/pipermail/python-dev/2004-August/046850.html
-            self.close()
+        if data:
+            self.output_buffer += data
+            self.record_output()
 
 
 class PEventListenerDispatcher(PDispatcher):

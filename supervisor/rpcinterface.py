@@ -763,7 +763,6 @@ class SupervisorNamespaceRPCInterface(object):
             process.removelogs()
         except (IOError, OSError):
             raise RPCError(Faults.FAILED, name)
-
         return True
 
     clearProcessLog = clearProcessLogs  # b/c alias

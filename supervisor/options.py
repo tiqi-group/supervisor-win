@@ -9,6 +9,7 @@ import signal
 import re
 import stat
 from threading import Thread
+import threading
 import pkg_resources
 import glob
 import platform
@@ -1288,9 +1289,10 @@ class ServerOptions(Options):
         if filename in argv and len(argv) == 2:
             argv.remove(filename)
 
-        process = Popen(argv, executable=filename, env=env,
+        process = Popen(argv, env=env,
                         stdout=subprocess.PIPE, stdin=subprocess.PIPE,
-                        stderr=subprocess.PIPE, bufsize=1)
+                        stderr=subprocess.PIPE, bufsize=0,
+                        universal_newlines=True)
 
         self.child_process[process.pid] = process
 
@@ -1348,19 +1350,21 @@ class ServerOptions(Options):
             if hasattr(handler, 'reopen'):
                 handler.reopen()
 
-    def readfd(self, stream):
-        def enqueue_output(out, queue):
-            queue.put(out.readline())
-
-        q = Queue.Queue()
-        thread = Thread(target=enqueue_output, args=(stream, q))
-        thread.daemon = True # thread dies with the program
+    def readfd(self, std_queue):
+        """
+        The work of this method is to read the data stream of a process, but without blocking
+        the work of the supervisor. A buffer of data is being read in a thread and when the total
+        data is reached is given in return for one of the Dispatcher objects responsible.
+        """
+        thread = Thread(target=lambda q: q.readline(),
+                        args=(std_queue,))
+        thread.setDaemon(True)  # thread dies with the program
         thread.start()
-
         try:
-            data = q.get(timeout=0.5)
+            data = std_queue.get_nowait()
         except Queue.Empty:
             data = ''
+        if data: print data
         return data
 
     def process_environment(self):
@@ -1375,10 +1379,28 @@ class ServerOptions(Options):
         in the mainloop without blocking.  If stderr is False, don't
         create a pipe for stderr. """
         process = self.child_process[pid]
+
+        class StdQueue(Queue.Queue):
+            lock = threading.RLock()
+
+            def __init__(self, std, *args, **kwargs):
+                Queue.Queue.__init__(self, *args, **kwargs)
+                self.std = std
+
+            def __getattr__(self, item):
+                return getattr(self.std, item)
+
+            def readline(self):
+                if self.lock.acquire(False):
+                    try:
+                        self.put(self.std.readline())
+                    finally:
+                        self.lock.release()
+
         pipes = {
-            'stdin': process.stdin,
-            'stdout': process.stdout,
-            'stderr': process.stderr
+            'stdin': StdQueue(process.stdin),
+            'stdout': StdQueue(process.stdout),
+            'stderr': StdQueue(process.stderr)
         }
         return pipes
 
