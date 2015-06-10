@@ -340,7 +340,7 @@ def go(options):  # pragma: no cover
     try:
         d.main()
     except asyncore.ExitNow:
-        raise
+        d.options.logger.info('exit now...')
 
 
 if __name__ == "__main__":  # pragma: no cover
