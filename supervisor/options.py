@@ -1270,9 +1270,6 @@ class ServerOptions(Options):
     def stat(self, filename):
         return os.stat(filename)
 
-    def write(self, fd, data):
-        return os.write(fd, as_bytes(data))
-
     def execve(self, filename, argv, env):
         argv = list(argv)
 
@@ -1347,15 +1344,14 @@ class ServerOptions(Options):
         the work of the supervisor. A buffer of data is being read in a thread and when the total
         data is reached is given in return for one of the Dispatcher objects responsible.
         """
-        thread = Thread(target=lambda q: q.readline(),
-                        args=(std_queue,))
-        thread.setDaemon(True)  # thread dies with the program
-        thread.start()
         try:
             data = std_queue.get_nowait()
         except Queue.Empty:
             data = ''
         return data
+
+    def write(self, fd, data):
+        return os.write(fd if type(fd) is int else fd.fileno(), as_bytes(data))
 
     def process_environment(self):
         os.environ.update(self.environment or {})
@@ -1370,9 +1366,9 @@ class ServerOptions(Options):
         create a pipe for stderr. """
         process = self.child_process[pid]
         pipes = {
-            'stdin': helpers.StdQueue(process.stdin),
-            'stdout': helpers.StdQueue(process.stdout),
-            'stderr': helpers.StdQueue(process.stderr)
+            'stdin': process.stdin,
+            'stdout': helpers.StdQueueAsync(process.stdout),
+            'stderr': helpers.StdQueueAsync(process.stderr)
         }
         return pipes
 
