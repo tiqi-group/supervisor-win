@@ -464,6 +464,7 @@ class DummyProcess(object):
         self.config = config
         self.logsremoved = False
         self.stop_called = False
+        self.stop_report_called = True
         self.backoff_secs = None
         self.spawned = False
         if state is None:
@@ -505,6 +506,9 @@ class DummyProcess(object):
         self.killing = False
         from supervisor.process import ProcessStates
         self.state = ProcessStates.STOPPED
+
+    def stop_report(self):
+        self.stop_report_called = True
 
     def kill(self, signal):
         self.killed_with = signal

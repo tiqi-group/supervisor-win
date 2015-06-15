@@ -640,6 +640,7 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
         self.assertEqual(process.delay, 0)
         self.assertEqual(process.killing, 0)
         self.assertEqual(process.state, ProcessStates.STOPPED)
+        self.assertTrue(process.stop_report_called)
         self.assertEqual(len(supervisord.process_groups['foo'].processes), 1)
         self.assertEqual(interface.update_text, 'stopProcess')
 
@@ -654,6 +655,7 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
         self.assertEqual(result, True)
         process = supervisord.process_groups['foo'].processes['foo']
         self.assertEqual(process.stop_called, True)
+        self.assertTrue(process.stop_report_called)
         self.assertEqual(interface.update_text, 'stopProcess')
 
     def test_stopProcess_success_in_onwait(self):
