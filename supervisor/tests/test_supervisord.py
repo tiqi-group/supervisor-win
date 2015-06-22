@@ -138,7 +138,7 @@ class SupervisordTests(unittest.TestCase):
         pconfig = DummyPConfig(options, 'process', 'process', '/bin/process1')
         process = DummyProcess(pconfig)
         process.drained = False
-        process.killing = 1
+        process.killing = True
         process.laststop = None
         process.waitstatus = None, None
         options.pidhistory = {1: process}
@@ -152,6 +152,21 @@ class SupervisordTests(unittest.TestCase):
         supervisord = self._makeOne(options)
         result = supervisord.reap(once=True, recursionguard=100)
         self.assertEqual(result, None)
+
+    def test_reap_more_than_once(self):
+        options = DummyOptions()
+        options.waitpid_return = 1, 1
+        pconfig = DummyPConfig(options, 'process', 'process', '/bin/process1')
+        process = DummyProcess(pconfig)
+        process.drained = False
+        process.killing = True
+        process.laststop = None
+        process.waitstatus = None, None
+        options.pidhistory = {1:process}
+        supervisord = self._makeOne(options)
+
+        supervisord.reap(recursionguard=99)
+        self.assertEqual(process.finished, (1,1))
 
     def test_reap_unknown_pid(self):
         options = DummyOptions()
