@@ -9,7 +9,6 @@ import traceback
 import meld3
 
 from supervisor.compat import (
-    StringIO,
     urllib,
     parse_qs,
     parse_qsl,
@@ -59,11 +58,10 @@ class DeferredWebProducer(object):
             return self.sendresponse(response)
 
         except:
-            io = StringIO()
-            traceback.print_exc(file=io)
+            tb = traceback.format_exc()
             # this should go to the main supervisor log file
             self.request.channel.server.logger.log('Web interface error',
-                                                   io.getvalue())
+                                                   tb)
             self.finished = True
             self.request.error(500)
 

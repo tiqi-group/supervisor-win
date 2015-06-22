@@ -8,7 +8,6 @@ import traceback
 import win32api
 import win32job
 import win32process
-
 import win32con
 
 from supervisor import events, helpers
@@ -569,9 +568,7 @@ class Subprocess(object):
         try:
             options.kill(pid, sig)
         except:
-            io = StringIO()
-            traceback.print_exc(file=io)
-            tb = io.getvalue()
+            tb = traceback.format_exc()
             msg = 'unknown problem killing %s (%s):%s' % (self.config.name,
                                                           self.pid, tb)
             options.logger.critical(msg)
@@ -618,9 +615,7 @@ class Subprocess(object):
             options.logger.error(tb)
             return msg
         except:
-            io = StringIO()
-            traceback.print_exc(file=io)
-            tb = io.getvalue()
+            tb = traceback.format_exc()
             msg = 'unknown problem sending sig %s (%s):%s' % (
                 self.config.name, self.pid, tb)
             options.logger.critical(msg)
