@@ -67,7 +67,7 @@ class DeferredXMLRPCResponse(object):
     """ A medusa producer that implements a deferred callback; requires
     a subclass of asynchat.async_chat that handles NOT_DONE_YET sentinel """
     CONNECTION = re.compile('Connection: (.*)', re.IGNORECASE)
-    traceback = traceback  # for testing override
+
 
     def __init__(self, request, callback):
         self.callback = callback
@@ -93,8 +93,10 @@ class DeferredXMLRPCResponse(object):
             return self.getresponse(body)
 
         except:
-            # report unexpected exception back to server
-            self.traceback.print_exc()
+            tb = traceback.format_exc()
+            self.request.channel.server.logger.log(
+                "XML-RPC response callback error", tb
+                )
             self.finished = True
             self.request.error(500)
 
