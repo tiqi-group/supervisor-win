@@ -250,10 +250,9 @@ class SubprocessTests(unittest.TestCase):
         events.subscribe(events.ProcessStateEvent, lambda x: L.append(x))
         result = instance.spawn()
         self.assertEqual(result, None)
-        self.assertEqual(instance.spawnerr,
-                         'unknown error making dispatchers: EPERM')
-        self.assertEqual(options.logger.data[0],
-                         "spawnerr: unknown error making dispatchers: EPERM")
+        msg = "unknown error making dispatchers for 'good': EPERM"
+        self.assertEqual(instance.spawnerr, msg)
+        self.assertEqual(options.logger.data[0], "spawnerr: %s" % msg)
         self.assertTrue(instance.delay)
         self.assertTrue(instance.backoff)
         from supervisor.states import ProcessStates
@@ -280,10 +279,9 @@ class SubprocessTests(unittest.TestCase):
         events.subscribe(events.ProcessStateEvent, lambda x: L.append(x))
         result = instance.spawn()
         self.assertEqual(result, None)
-        self.assertEqual(instance.spawnerr,
-                         "unknown error making dispatchers: EISDIR")
-        self.assertEqual(options.logger.data[0],
-                         "spawnerr: unknown error making dispatchers: EISDIR")
+        msg = "unknown error making dispatchers for 'cat': EISDIR"
+        self.assertEqual(instance.spawnerr, msg)
+        self.assertEqual(options.logger.data[0], "spawnerr: %s" % msg)
         self.assertTrue(instance.delay)
         self.assertTrue(instance.backoff)
         from supervisor.states import ProcessStates
