@@ -44,6 +44,7 @@ from supervisor import xmlrpc
 from supervisor import states
 from supervisor import http_client
 
+
 class fgthread(threading.Thread):
     """ A subclass of threading.Thread, with a kill() method.
     To be used for foreground output/error streaming.
@@ -63,20 +64,20 @@ class fgthread(threading.Thread):
                                                      self.ctl.options.username,
                                                      self.ctl.options.password)
 
-    def start(self): # pragma: no cover
+    def start(self):  # pragma: no cover
         # Start the thread
         self.__run_backup = self.run
         self.run = self.__run
         threading.Thread.start(self)
 
-    def run(self): # pragma: no cover
+    def run(self):  # pragma: no cover
         self.output_handler.get(self.ctl.options.serverurl,
-                                '/logtail/%s/stdout'%self.program)
+                                '/logtail/%s/stdout' % self.program)
         self.error_handler.get(self.ctl.options.serverurl,
-                               '/logtail/%s/stderr'%self.program)
+                               '/logtail/%s/stderr' % self.program)
         asyncore.loop()
 
-    def __run(self): # pragma: no cover
+    def __run(self):  # pragma: no cover
         # Hacked run function, which installs the trace
         sys.settrace(self.globaltrace)
         self.__run_backup()
@@ -99,8 +100,8 @@ class fgthread(threading.Thread):
         self.error_handler.close()
         self.killed = True
 
-class Controller(cmd.Cmd):
 
+class Controller(cmd.Cmd):
     def __init__(self, options, completekey='tab', stdin=None,
                  stdout=None):
         self.options = options
@@ -160,7 +161,7 @@ class Controller(cmd.Cmd):
           - call 'do_foo' on plugins rather than ourself
         """
         origline = line
-        lines = line.split(';') # don't filter(None, line.split), as we pop
+        lines = line.split(';')  # don't filter(None, line.split), as we pop
         line = lines.pop(0)
         # stuffing the remainder into cmdqueue will cause cmdloop to
         # call us again for each command.
@@ -234,7 +235,7 @@ class Controller(cmd.Cmd):
     def upcheck(self):
         try:
             supervisor = self.get_supervisor()
-            api = supervisor.getVersion() # deprecated
+            api = supervisor.getVersion()  # deprecated
             from supervisor import rpcinterface
             if api != rpcinterface.API_VERSION:
                 self.output(
@@ -268,7 +269,7 @@ class Controller(cmd.Cmd):
         as complete(text, state) where text is a fragment to complete and
         state is an integer (0..n).  Each call returns a string with a new
         completion.  When no more are available, None is returned."""
-        if line is None: # line is only set in tests
+        if line is None:  # line is only set in tests
             import readline
             line = readline.get_line_buffer()
 
@@ -300,7 +301,7 @@ class Controller(cmd.Cmd):
 
     def _complete_actions(self, text):
         """Build a completion list of action names matching text"""
-        return [ a + ' ' for a in self.vocab if a.startswith(text)]
+        return [a + ' ' for a in self.vocab if a.startswith(text)]
 
     def _complete_groups(self, text):
         """Build a completion list of group names matching text"""
@@ -308,7 +309,7 @@ class Controller(cmd.Cmd):
         for info in self._get_complete_info():
             if info['group'] not in groups:
                 groups.append(info['group'])
-        return [ g + ' ' for g in groups if g.startswith(text) ]
+        return [g + ' ' for g in groups if g.startswith(text)]
 
     def _complete_processes(self, text):
         """Build a completion list of process names matching text"""
@@ -320,7 +321,7 @@ class Controller(cmd.Cmd):
                     processes.append('%s:*' % info['group'])
             else:
                 processes.append(info['name'])
-        return [ p + ' ' for p in processes if p.startswith(text) ]
+        return [p + ' ' for p in processes if p.startswith(text)]
 
     def _get_complete_info(self):
         """Get all process info used for completion.  We cache this between
@@ -348,6 +349,7 @@ class Controller(cmd.Cmd):
     def help_EOF(self):
         self.output("To quit, type ^D or use the quit command")
 
+
 def get_names(inst):
     names = []
     classes = [inst.__class__]
@@ -358,6 +360,7 @@ def get_names(inst):
         names = names + dir(aclass)
     return names
 
+
 class ControllerPluginBase:
     name = 'unnamed'
 
@@ -366,6 +369,7 @@ class ControllerPluginBase:
 
     def _doc_header(self):
         return "%s commands (type help <topic>):" % self.name
+
     doc_header = property(_doc_header)
 
     def do_help(self, arg):
@@ -391,7 +395,7 @@ class ControllerPluginBase:
             help = {}
             for name in names:
                 if name[:5] == 'help_':
-                    help[name[5:]]=1
+                    help[name[5:]] = 1
             names.sort()
             # There can be duplicates if routines overridden
             prevname = ''
@@ -400,7 +404,7 @@ class ControllerPluginBase:
                     if name == prevname:
                         continue
                     prevname = name
-                    cmd=name[3:]
+                    cmd = name[3:]
                     if cmd in help:
                         cmds_doc.append(cmd)
                         del help[cmd]
@@ -411,9 +415,11 @@ class ControllerPluginBase:
             self.ctl.output('')
             self.ctl.print_topics(self.doc_header, cmds_doc, 15, 80)
 
+
 class DefaultControllerPlugin(ControllerPluginBase):
     name = 'default'
-    listener = None # for unit tests
+    listener = None  # for unit tests
+
     def _tailf(self, path):
         self.ctl.output('==> Press Ctrl-C to exit <==')
 
@@ -430,7 +436,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
             if self.listener is None:
                 listener = http_client.Listener()
             else:
-                listener = self.listener # for unit tests
+                listener = self.listener  # for unit tests
             handler = http_client.HTTPHandler(listener, username, password)
             handler.get(self.ctl.options.serverurl, path)
             asyncore.loop()
@@ -498,7 +504,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
                 if channel is 'stdout':
                     output = supervisor.readProcessStdoutLog(name,
                                                              -bytes, 0)
-                else: # if channel is 'stderr'
+                else:  # if channel is 'stderr'
                     output = supervisor.readProcessStderrLog(name,
                                                              -bytes, 0)
             except xmlrpclib.Fault as e:
@@ -507,10 +513,10 @@ class DefaultControllerPlugin(ControllerPluginBase):
                     self.ctl.output(template % (name, 'no log file'))
                 elif e.faultCode == xmlrpc.Faults.FAILED:
                     self.ctl.output(template % (name,
-                                             'unknown error reading log'))
+                                                'unknown error reading log'))
                 elif e.faultCode == xmlrpc.Faults.BAD_NAME:
                     self.ctl.output(template % (name,
-                                             'no such process name'))
+                                                'no such process name'))
                 else:
                     raise
             else:
@@ -524,7 +530,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
             "\t\t\tCtrl-C to exit.\n"
             "tail -100 <name>\tlast 100 *bytes* of process stdout\n"
             "tail <name> stderr\tlast 1600 *bytes* of process stderr"
-            )
+        )
 
     def do_maintail(self, arg):
         if not self.ctl.upcheck():
@@ -567,7 +573,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
                 self.ctl.output(template % ('supervisord', 'no log file'))
             elif e.faultCode == xmlrpc.Faults.FAILED:
                 self.ctl.output(template % ('supervisord',
-                                         'unknown error reading log'))
+                                            'unknown error reading log'))
             else:
                 raise
         else:
@@ -579,7 +585,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
             " (Ctrl-C to exit)\n"
             "maintail -100\tlast 100 *bytes* of supervisord main log file\n"
             "maintail\tlast 1600 *bytes* of supervisor main log file\n"
-            )
+        )
 
     def do_quit(self, arg):
         sys.exit(0)
@@ -599,7 +605,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
             if len(namespecs[i]) > maxlen:
                 maxlen = len(namespecs[i])
 
-        template = '%(namespec)-' + str(maxlen+3) + 's%(state)-10s%(desc)s'
+        template = '%(namespec)-' + str(maxlen + 3) + 's%(state)-10s%(desc)s'
         for i, info in enumerate(process_infos):
             line = template % {'namespec': namespecs[i],
                                'state': info['statename'],
@@ -674,9 +680,9 @@ class DefaultControllerPlugin(ControllerPluginBase):
     def help_pid(self):
         self.ctl.output("pid\t\t\tGet the PID of supervisord.")
         self.ctl.output("pid <name>\t\tGet the PID of a single "
-            "child process by name.")
+                        "child process by name.")
         self.ctl.output("pid all\t\t\tGet the PID of every child "
-            "process, one per line.")
+                        "process, one per line.")
 
     def _startresult(self, result):
         name = make_namespec(result['group'], result['name'])
@@ -813,7 +819,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
                         error = self._stopresult({'status': e.faultCode,
                                                   'name': process_name,
                                                   'group': group_name,
-                                                  'description':e.faultString})
+                                                  'description': e.faultString})
                         self.ctl.output(error)
                     else:
                         name = make_namespec(group_name, process_name)
@@ -853,7 +859,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
                     try:
                         results = supervisor.signalProcessGroup(
                             group_name, sig
-                            )
+                        )
                         for result in results:
                             result = self._signalresult(result)
                             self.ctl.output(result)
@@ -870,7 +876,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
                         error = self._signalresult({'status': e.faultCode,
                                                     'name': process_name,
                                                     'group': group_name,
-                                                    'description':e.faultString})
+                                                    'description': e.faultString})
                         self.ctl.output(error)
                     else:
                         name = make_namespec(group_name, process_name)
@@ -900,7 +906,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
         self.ctl.output("restart <name>\t\tRestart a process")
         self.ctl.output("restart <gname>:*\tRestart all processes in a group")
         self.ctl.output("restart <name> <name>\tRestart multiple processes or "
-                     "groups")
+                        "groups")
         self.ctl.output("restart all\t\tRestart all processes")
         self.ctl.output("Note: restart does not reread config files. For that,"
                         " see reread and update.")
@@ -977,7 +983,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
 
     def _formatConfigInfo(self, configinfo):
         name = make_namespec(configinfo['group'], configinfo['name'])
-        formatted = { 'name': name }
+        formatted = {'name': name}
         if configinfo['inuse']:
             formatted['inuse'] = 'in use'
         else:
@@ -1217,7 +1223,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
             "version\t\t\tShow the version of the remote supervisord "
             "process")
 
-    def do_fg(self,args=None):
+    def do_fg(self, args=None):
         if not self.ctl.upcheck():
             return
         if not args:
@@ -1245,7 +1251,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
         # everything good; continue
         a = None
         try:
-            a = fgthread(program,self.ctl)
+            a = fgthread(program, self.ctl)
             # this thread takes care of
             # the output/error messages
             a.start()
@@ -1273,7 +1279,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
             self.ctl.output('Exiting foreground')
         return
 
-    def help_fg(self,args=None):
+    def help_fg(self, args=None):
         self.ctl.output('fg <process>\tConnect to a process in foreground mode')
         self.ctl.output('Press Ctrl+C to exit foreground')
 
