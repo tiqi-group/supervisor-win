@@ -8,8 +8,10 @@ import sys
 import signal
 import time
 
+
 class PidProxy:
     pid = None
+
     def __init__(self, args):
         self.setsignals()
         try:
@@ -58,12 +60,11 @@ class PidProxy:
         if sig in [signal.SIGTERM, signal.SIGINT, signal.SIGQUIT]:
             sys.exit(0)
 
+
 def main():
     pp = PidProxy(sys.argv)
     pp.go()
 
+
 if __name__ == '__main__':
     main()
-
-
-
