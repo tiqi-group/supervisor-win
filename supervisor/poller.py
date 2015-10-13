@@ -1,8 +1,8 @@
 import select
 import errno
 
-class BasePoller:
 
+class BasePoller:
     def __init__(self, options):
         self.options = options
         self.initialize()
@@ -30,7 +30,6 @@ class BasePoller:
 
 
 class SelectPoller(BasePoller):
-
     def initialize(self):
         self._select = select
         self._init_fdsets()
@@ -56,7 +55,7 @@ class SelectPoller(BasePoller):
                 self.readables,
                 self.writables,
                 [], timeout
-                )
+            )
         except select.error as err:
             if err.args[0] == errno.EINTR:
                 self.options.logger.blather('EINTR encountered in poll')
@@ -72,8 +71,8 @@ class SelectPoller(BasePoller):
         self.readables = set()
         self.writables = set()
 
-class PollPoller(BasePoller):
 
+class PollPoller(BasePoller):
     def initialize(self):
         self._poller = select.poll()
         self.READ = select.POLLIN | select.POLLPRI | select.POLLHUP
@@ -119,6 +118,7 @@ class PollPoller(BasePoller):
             return True
         return False
 
+
 class KQueuePoller(BasePoller):
     """
     Wrapper for select.kqueue()/kevent()
@@ -148,7 +148,7 @@ class KQueuePoller(BasePoller):
             fd,
             filter=(select.KQ_FILTER_READ | select.KQ_FILTER_WRITE),
             flags=select.KQ_EV_DELETE
-            )
+        )
         self._forget_fd(fd)
         self._kqueue_control(fd, kevent)
 
@@ -199,11 +199,14 @@ class KQueuePoller(BasePoller):
         for fd in self.writables:
             self.register_writable(fd)
 
+
 def implements_poll():
     return hasattr(select, 'poll')
 
+
 def implements_kqueue():
     return hasattr(select, 'kqueue')
+
 
 if implements_kqueue():
     Poller = KQueuePoller
