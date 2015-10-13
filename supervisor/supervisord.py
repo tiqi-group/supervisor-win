@@ -183,7 +183,7 @@ class Supervisor(object):
     def runforever(self):
         events.notify(events.SupervisorRunningEvent())
         socket_map = self.options.get_socket_map()
-        timeout = 0.2
+        timeout = 0.001
         while 1:
             combined_map = {}
             combined_map.update(socket_map)
