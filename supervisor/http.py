@@ -336,6 +336,18 @@ class deferring_http_channel(http_server.http_channel):
 
     delay = False
     writable_check = time.time()
+    _zombie_timeout = 10
+
+    def recv(self, buffer_size):
+        try:
+            return super(deferring_http_channel, self).recv(buffer_size)
+        except socket.error as why:
+            if why[0] == errno.EWOULDBLOCK:
+                if (time.time() - self.creation_time) > self._zombie_timeout:
+                    self.close()
+                return ''
+            else:
+                raise
 
     def writable(self, t=time.time):
         now = t()
