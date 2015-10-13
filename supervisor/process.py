@@ -29,30 +29,30 @@ from supervisor.datatypes import RestartUnconditionally
 
 from supervisor.socket_manager import SocketManager
 
+
 @total_ordering
 class Subprocess(object):
-
     """A class to manage a subprocess."""
 
     # Initial state; overridden by instance variables
 
-    pid = 0 # Subprocess pid; 0 when not running
-    config = None # ProcessConfig instance
-    state = None # process state code
-    listener_state = None # listener state code (if we're an event listener)
-    event = None # event currently being processed (if we're an event listener)
-    laststart = 0 # Last time the subprocess was started; 0 if never
+    pid = 0  # Subprocess pid; 0 when not running
+    config = None  # ProcessConfig instance
+    state = None  # process state code
+    listener_state = None  # listener state code (if we're an event listener)
+    event = None  # event currently being processed (if we're an event listener)
+    laststart = 0  # Last time the subprocess was started; 0 if never
     laststop = 0  # Last time the subprocess was stopped; 0 if never
-    delay = 0 # If nonzero, delay starting or killing until this time
-    administrative_stop = 0 # true if the process has been stopped by an admin
-    system_stop = 0 # true if the process has been stopped by the system
-    killing = 0 # flag determining whether we are trying to kill this proc
-    backoff = 0 # backoff counter (to startretries)
-    dispatchers = None # asyncore output dispatchers (keyed by fd)
-    pipes = None # map of channel name to file descriptor #
-    exitstatus = None # status attached to dead process by finish()
-    spawnerr = None # error message attached by spawn() if any
-    group = None # ProcessGroup instance if process is in the group
+    delay = 0  # If nonzero, delay starting or killing until this time
+    administrative_stop = 0  # true if the process has been stopped by an admin
+    system_stop = 0  # true if the process has been stopped by the system
+    killing = 0  # flag determining whether we are trying to kill this proc
+    backoff = 0  # backoff counter (to startretries)
+    dispatchers = None  # asyncore output dispatchers (keyed by fd)
+    pipes = None  # map of channel name to file descriptor #
+    exitstatus = None  # status attached to dead process by finish()
+    spawnerr = None  # error message attached by spawn() if any
+    group = None  # ProcessGroup instance if process is in the group
 
     def __init__(self, config):
         """Constructor.
@@ -98,7 +98,7 @@ class Subprocess(object):
             raise OSError(errno.EPIPE, "Process' stdin channel is closed")
 
         dispatcher.input_buffer += chars
-        dispatcher.flush() # this must raise EPIPE if the pipe is closed
+        dispatcher.flush()  # this must raise EPIPE if the pipe is closed
 
     def get_execv_args(self):
         """Internal: turn a program name into a file name, using $PATH,
@@ -108,7 +108,7 @@ class Subprocess(object):
             commandargs = shlex.split(self.config.command)
         except ValueError as e:
             raise BadCommand("can't parse command %r: %s" % \
-                (self.config.command, str(e)))
+                             (self.config.command, str(e)))
 
         if commandargs:
             program = commandargs[0]
@@ -148,14 +148,14 @@ class Subprocess(object):
 
     event_map = {
         ProcessStates.BACKOFF: events.ProcessStateBackoffEvent,
-        ProcessStates.FATAL:   events.ProcessStateFatalEvent,
+        ProcessStates.FATAL: events.ProcessStateFatalEvent,
         ProcessStates.UNKNOWN: events.ProcessStateUnknownEvent,
         ProcessStates.STOPPED: events.ProcessStateStoppedEvent,
-        ProcessStates.EXITED:  events.ProcessStateExitedEvent,
+        ProcessStates.EXITED: events.ProcessStateExitedEvent,
         ProcessStates.RUNNING: events.ProcessStateRunningEvent,
         ProcessStates.STARTING: events.ProcessStateStartingEvent,
         ProcessStates.STOPPING: events.ProcessStateStoppingEvent,
-        }
+    }
 
     def change_state(self, new_state, expected=True):
         old_state = self.state
@@ -179,7 +179,7 @@ class Subprocess(object):
         if self.state not in states:
             current_state = getProcessStateDescription(self.state)
             allowable_states = ' '.join(map(getProcessStateDescription, states))
-            raise AssertionError('Assertion failed for %s: %s not in %s' %  (
+            raise AssertionError('Assertion failed for %s: %s not in %s' % (
                 self.config.name, current_state, allowable_states))
 
     def record_spawnerr(self, msg):
@@ -240,7 +240,7 @@ class Subprocess(object):
 
     def _spawn_as_child(self, filename, argv):
         options = self.config.options
-        #try:
+        # try:
         # prevent child from receiving signals sent to the
         # parent by calling os.setpgrp to create a new process
         # group for the child; this prevents, for instance,
@@ -257,14 +257,14 @@ class Subprocess(object):
             uid = self.config.uid
             msg = "couldn't setuid to %s: %s\n" % (uid, setuid_msg)
             options.write(2, "supervisor: " + msg)
-            return # finally clause will exit the child process
+            return  # finally clause will exit the child process
 
         # set environment
         env = os.environ.copy()
         env['SUPERVISOR_ENABLED'] = '1'
         serverurl = self.config.serverurl
-        if serverurl is None: # unset
-            serverurl = self.config.options.serverurl # might still be None
+        if serverurl is None:  # unset
+            serverurl = self.config.options.serverurl  # might still be None
         if serverurl:
             env['SUPERVISOR_SERVER_URL'] = serverurl
         env['SUPERVISOR_PROCESS_NAME'] = self.config.name
@@ -301,7 +301,7 @@ class Subprocess(object):
             msg = "couldn't exec %s: %s\n" % (argv[0], code)
             options.write(2, "supervisor: " + msg)
         except:
-            (file, fun, line), t,v,tbinfo = asyncore.compact_traceback()
+            (file, fun, line), t, v, tbinfo = asyncore.compact_traceback()
             error = '%s, %s: file: %s line: %s' % (t, v, file, line)
             msg = "couldn't exec %s: %s\n" % (filename, error)
             options.write(2, "supervisor: " + msg)
@@ -426,7 +426,7 @@ class Subprocess(object):
             traceback.print_exc(file=io)
             tb = io.getvalue()
             msg = 'unknown problem sending sig %s (%s):%s' % (
-                                self.config.name, self.pid, tb)
+                self.config.name, self.pid, tb)
             options.logger.critical(msg)
             self.change_state(ProcessStates.UNKNOWN)
             self.pid = 0
@@ -473,7 +473,7 @@ class Subprocess(object):
             self.backoff = 0
             self.exitstatus = es
 
-            if self.state == ProcessStates.STARTING: # pragma: no cover
+            if self.state == ProcessStates.STARTING:  # pragma: no cover
                 # XXX I don't know under which circumstances this
                 # happens, but in the wild, there is a transition that
                 # subverts the RUNNING state (directly from STARTING
@@ -544,7 +544,7 @@ class Subprocess(object):
                         # EXITED -> STARTING
                         self.spawn()
 
-                    else: # autorestart is RestartWhenExitUnexpected
+                    else:  # autorestart is RestartWhenExitUnexpected
                         if self.exitstatus not in self.config.exitcodes:
                             # EXITED -> STARTING
                             self.spawn()
@@ -595,6 +595,7 @@ class Subprocess(object):
                                                       self.pid))
                 self.kill(signal.SIGTERM)
 
+
 class FastCGISubprocess(Subprocess):
     """Extends Subprocess class to handle FastCGI subprocesses"""
 
@@ -620,7 +621,7 @@ class FastCGISubprocess(Subprocess):
         self.before_spawn()
         pid = Subprocess.spawn(self)
         if pid is None:
-            #Remove object reference to decrement the reference count on error
+            # Remove object reference to decrement the reference count on error
             self.fcgi_sock = None
         return pid
 
@@ -628,7 +629,7 @@ class FastCGISubprocess(Subprocess):
         """
         Releases reference to FastCGI socket when process is reaped
         """
-        #Remove object reference to decrement the reference count
+        # Remove object reference to decrement the reference count
         self.fcgi_sock = None
 
     def finish(self, pid, sts):
@@ -655,6 +656,7 @@ class FastCGISubprocess(Subprocess):
             options.dup2(self.pipes['child_stderr'], 2)
         for i in range(3, options.minfds):
             options.close_fd(i)
+
 
 @total_ordering
 class ProcessGroupBase(object):
@@ -685,7 +687,7 @@ class ProcessGroupBase(object):
     def stop_all(self):
         processes = list(self.processes.values())
         processes.sort()
-        processes.reverse() # stop in desc priority order
+        processes.reverse()  # stop in desc priority order
 
         for proc in processes:
             state = proc.get_state()
@@ -701,8 +703,8 @@ class ProcessGroupBase(object):
 
     def get_unstopped_processes(self):
         """ Processes which aren't in a state that is considered 'stopped' """
-        return [ x for x in self.processes.values() if x.get_state() not in
-                 STOPPED_STATES ]
+        return [x for x in self.processes.values() if x.get_state() not in
+                STOPPED_STATES]
 
     def get_dispatchers(self):
         dispatchers = {}
@@ -710,13 +712,14 @@ class ProcessGroupBase(object):
             dispatchers.update(process.dispatchers)
         return dispatchers
 
+
 class ProcessGroup(ProcessGroupBase):
     def transition(self):
         for proc in self.processes.values():
             proc.transition()
 
-class FastCGIProcessGroup(ProcessGroup):
 
+class FastCGIProcessGroup(ProcessGroup):
     def __init__(self, config, **kwargs):
         ProcessGroup.__init__(self, config)
         sockManagerKlass = kwargs.get('socketManager', SocketManager)
@@ -730,7 +733,8 @@ class FastCGIProcessGroup(ProcessGroup):
             raise ValueError(
                 'Could not create FastCGI socket %s: %s' % (
                     self.socket_manager.config(), e)
-                )
+            )
+
 
 class EventListenerPool(ProcessGroupBase):
     def __init__(self, config):
@@ -741,12 +745,12 @@ class EventListenerPool(ProcessGroupBase):
         events.subscribe(events.EventRejectedEvent, self.handle_rejected)
         self.serial = -1
         self.last_dispatch = 0
-        self.dispatch_throttle = 0 # in seconds: .00195 is an interesting one
+        self.dispatch_throttle = 0  # in seconds: .00195 is an interesting one
 
     def handle_rejected(self, event):
         process = event.process
         procs = self.processes.values()
-        if process in procs: # this is one of our processes
+        if process in procs:  # this is one of our processes
             # rebuffer the event
             self._acceptEvent(event.event, head=True)
 
@@ -792,7 +796,7 @@ class EventListenerPool(ProcessGroupBase):
         else:
             self.config.options.logger.debug(
                 'rebuffering event %s for pool %s (bufsize %s)' % (
-                (event.serial, self.config.name, len(self.event_buffer))))
+                    (event.serial, self.config.name, len(self.event_buffer))))
 
         if len(self.event_buffer) >= self.config.buffer_size:
             if self.event_buffer:
@@ -800,7 +804,7 @@ class EventListenerPool(ProcessGroupBase):
                 discarded_event = self.event_buffer.pop(0)
                 self.config.options.logger.error(
                     'pool %s event buffer overflowed, discarding event %s' % (
-                    (self.config.name, discarded_event.serial)))
+                        (self.config.name, discarded_event.serial)))
         if head:
             self.event_buffer.insert(0, event)
         else:
@@ -827,14 +831,14 @@ class EventListenerPool(ProcessGroupBase):
                     self.config.options.logger.debug(
                         'epipe occurred while sending event %s '
                         'to listener %s, listener state unchanged' % (
-                        event.serial, process.config.name))
+                            event.serial, process.config.name))
                     continue
 
                 process.listener_state = EventListenerStates.BUSY
                 process.event = event
                 self.config.options.logger.debug(
                     'event %s sent to listener %s' % (
-                    event.serial, process.config.name))
+                        event.serial, process.config.name))
                 return True
 
         return False
@@ -843,30 +847,30 @@ class EventListenerPool(ProcessGroupBase):
         event_name = events.getEventNameByType(event_type)
         payload_len = len(payload)
         D = {
-            'ver':'3.0',
-            'sid':self.config.options.identifier,
-            'serial':serial,
-            'pool_name':self.config.name,
-            'pool_serial':pool_serial,
-            'event_name':event_name,
-            'len':payload_len,
-            'payload':payload,
-             }
+            'ver': '3.0',
+            'sid': self.config.options.identifier,
+            'serial': serial,
+            'pool_name': self.config.name,
+            'pool_serial': pool_serial,
+            'event_name': event_name,
+            'len': payload_len,
+            'payload': payload,
+        }
         return ('ver:%(ver)s server:%(sid)s serial:%(serial)s '
                 'pool:%(pool_name)s poolserial:%(pool_serial)s '
                 'eventname:%(event_name)s len:%(len)s\n%(payload)s' % D)
+
 
 class GlobalSerial(object):
     def __init__(self):
         self.serial = -1
 
-GlobalSerial = GlobalSerial() # singleton
+
+GlobalSerial = GlobalSerial()  # singleton
+
 
 def new_serial(inst):
     if inst.serial == maxint:
         inst.serial = -1
     inst.serial += 1
     return inst.serial
-
-
-
