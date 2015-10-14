@@ -3,6 +3,7 @@ import re
 import time
 import traceback
 import datetime
+import types
 
 import meld3
 
@@ -349,9 +350,13 @@ class StatusView(MeldView):
                     callback = rpcinterface.supervisor.stopProcess(namespec)
 
                     def stopprocess():
-                        result = callback()
+                        if isinstance(callback, types.FunctionType):
+                            result = callback()
+                        else:
+                            result = callback
                         if result is NOT_DONE_YET:
                             return NOT_DONE_YET
+
                         return 'Process %s stopped' % namespec
 
                     stopprocess.delay = 0.05
@@ -401,7 +406,10 @@ class StatusView(MeldView):
 
                     def startprocess():
                         try:
-                            result = callback()
+                            if isinstance(callback, types.FunctionType):
+                                result = callback()
+                            else:
+                                result = callback
                         except RPCError as e:
                             if e.code == Faults.SPAWN_ERROR:
                                 msg = 'spawn error'
