@@ -327,7 +327,7 @@ class SupervisorNamespaceRPCInterface(object):
             onwait.rpcinterface = self
             return onwait  # deferred
 
-        return lambda: True
+        return True
 
     def startProcessGroup(self, name, wait=True):
         """ Start all processes in the group named 'name'
@@ -417,11 +417,10 @@ class SupervisorNamespaceRPCInterface(object):
                     return NOT_DONE_YET
                 return True
 
-            onwait.delay = 0
+            onwait.delay = 0.05
             onwait.rpcinterface = self
             return onwait  # deferred
-
-        return lambda: True
+        return True
 
     def stopProcessGroup(self, name, wait=True):
         """ Stop all processes in the process group named 'name'
