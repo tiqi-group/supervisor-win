@@ -9,17 +9,13 @@ control a number of processes on Windows operating system.
 Supported Platforms
 -------------------
 
-Supervisor has been tested and is known to run on Windows 10 (But still unstable).
+Supervisor has been tested (Python 2.7) and is known to run on Windows 10 (It is working properly).
 
-*This is the master branch, which will become Supervisor 4.0.  The main
-change from Supervisor 3.x is added support for Python 3, which is still a
-work-in-progress, and has not been released yet.  If Python 3 support is
-important to you, we would appreciate if you would test this branch and
-report any issues you encounter.  If you depend on Supervisor in production,
-you should probably be running a release version of Supervisor 3.x.*
+* New processes are created by the standard lib module subprocess.
+* Some specific features of OS Linux have been disabled and others were adapted to the Windows OS.
+* The process control (supervisorctl) works and management processes correctly, as well as control via web!
 
-Supervisor 4.0 will work under Python 2 version 2.6 or greater and Python 3
-version 3.2 or greater.
+Supervisor 4.0 will work under Python 2 version 2.7 or greater and Python 3 version 3.2 or greater.
 
 Documentation
 -------------
