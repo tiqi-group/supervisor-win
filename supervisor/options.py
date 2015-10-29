@@ -261,7 +261,6 @@ class Options(object):
         if doc is None:
             try:
                 import __main__
-
                 doc = __main__.__doc__
             except Exception:
                 pass
@@ -1397,19 +1396,19 @@ class ClientOptions(Options):
         kwargs = {}
         if PY3:
             kwargs['inline_comment_prefixes'] = (';', '#')
-        config = UnhosedConfigParser(**kwargs)
-        config.expansions = self.environ_expansions
-        config.mysection = 'supervisorctl'
+        parser = UnhosedConfigParser(**kwargs)
+        parser.expansions = self.environ_expansions
+        parser.mysection = 'supervisorctl'
         try:
-            config.read_file(fp)
+            parser.read_file(fp)
         except AttributeError:
-            config.readfp(fp)
+            parser.readfp(fp)
         if need_close:
             fp.close()
-        sections = config.sections()
+        sections = parser.sections()
         if not 'supervisorctl' in sections:
             raise ValueError('.ini file does not include supervisorctl section')
-        serverurl = config.getdefault('serverurl', 'http://localhost:9001')
+        serverurl = parser.getdefault('serverurl', 'http://localhost:9001')
         if serverurl.startswith('unix://'):
             sf = serverurl[7:]
             path = expand(sf, {'here': self.here}, 'serverurl')
@@ -1419,10 +1418,10 @@ class ClientOptions(Options):
 
         # The defaults used below are really set in __init__ (since
         # section==self.configroot.supervisorctl)
-        section.prompt = config.getdefault('prompt', section.prompt)
-        section.username = config.getdefault('username', section.username)
-        section.password = config.getdefault('password', section.password)
-        history_file = config.getdefault('history_file', section.history_file)
+        section.prompt = parser.getdefault('prompt', section.prompt)
+        section.username = parser.getdefault('username', section.username)
+        section.password = parser.getdefault('password', section.password)
+        history_file = parser.getdefault('history_file', section.history_file)
 
         if history_file:
             history_file = normalize_path(history_file)
@@ -1433,7 +1432,7 @@ class ClientOptions(Options):
             self.history_file = None
 
         self.plugin_factories += self.get_plugins(
-            config,
+            parser,
             'supervisor.ctl_factory',
             'ctlplugin:'
         )
