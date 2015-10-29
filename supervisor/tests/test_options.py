@@ -843,15 +843,15 @@ class ServerOptionsTests(unittest.TestCase):
         instance = self._makeOne()
         try:
             instance.read_config(supervisord_conf)
-            options = instance.configroot.supervisord
-            self.assertEqual(len(options.server_configs), 1)
-            self.assertEqual(len(options.process_group_configs), 1)
-            msg = 'Included extra file "%s" during parsing' % conf_file
-            self.assertTrue(msg in instance.parse_warnings)
-            msg = 'Included extra file "%s" during parsing' % ini_file
-            self.assertTrue(msg in instance.parse_warnings)
         finally:
-            shutil.rmtree(dirname)
+            shutil.rmtree(dirname, ignore_errors=True)
+        options = instance.configroot.supervisord
+        self.assertEqual(len(options.server_configs), 1)
+        self.assertEqual(len(options.process_group_configs), 1)
+        msg = 'Included extra file "%s" during parsing' % conf_file
+        self.assertTrue(msg in instance.parse_warnings)
+        msg = 'Included extra file "%s" during parsing' % ini_file
+        self.assertTrue(msg in instance.parse_warnings)
 
     def test_include_reads_files_in_sorted_order(self):
         dirname = tempfile.mkdtemp()
@@ -879,14 +879,14 @@ class ServerOptionsTests(unittest.TestCase):
         instance = self._makeOne()
         try:
             instance.read_config(supervisord_conf)
-            expected_msgs = []
-            for letter in sorted(a_z):
-                filename = os.path.join(conf_d, "%s.conf" % letter)
-                expected_msgs.append(
-                    'Included extra file "%s" during parsing' % filename)
-            self.assertEqual(instance.parse_warnings, expected_msgs)
         finally:
-            shutil.rmtree(dirname)
+            shutil.rmtree(dirname, ignore_errors=True)
+        expected_msgs = []
+        for letter in sorted(a_z):
+            filename = os.path.join(conf_d, "%s.conf" % letter)
+            expected_msgs.append(
+                'Included extra file "%s" during parsing' % filename)
+        self.assertEqual(instance.parse_warnings, expected_msgs)
 
     def test_read_config_include_extra_file_malformed(self):
         dirname = tempfile.mkdtemp()
@@ -917,7 +917,7 @@ class ServerOptionsTests(unittest.TestCase):
             msg = 'Included extra file "%s" during parsing' % malformed_file
             self.assertTrue(msg in instance.parse_warnings)
         finally:
-            shutil.rmtree(dirname)
+            shutil.rmtree(dirname, ignore_errors=True)
 
     def test_readFile_failed(self):
         from supervisor.options import readFile
@@ -1518,10 +1518,7 @@ class ServerOptionsTests(unittest.TestCase):
             instance.process_config(do_usage=False)
             instance.realize(args=[])
         finally:
-            try:
-                shutil.rmtree(here)
-            except OSError:
-                pass
+            shutil.rmtree(here, ignore_errors=True)
         self.assertEqual(instance.childlogdir,
             os.path.join(here))
         self.assertEqual(instance.directory,
@@ -1552,10 +1549,7 @@ class ServerOptionsTests(unittest.TestCase):
             instance.process_config(do_usage=False)
             instance.realize(args=[])
         finally:
-            try:
-                shutil.rmtree(here)
-            except OSError:
-                pass
+            shutil.rmtree(here, ignore_errors=True)
         options = instance.configroot.supervisord
         group = options.process_group_configs[0]
         self.assertEqual(group.name, 'cat')
@@ -1593,10 +1587,7 @@ class ServerOptionsTests(unittest.TestCase):
             instance.process_config(do_usage=False)
             instance.realize(args=[])
         finally:
-            try:
-                shutil.rmtree(here)
-            except OSError:
-                pass
+            shutil.rmtree(here, ignore_errors=True)
         options = instance.configroot.supervisord
         group = options.process_group_configs[0]
         self.assertEqual(group.name, 'memmon')
@@ -2419,7 +2410,7 @@ class ServerOptionsTests(unittest.TestCase):
             self.assertFalse(os.path.exists(first))
             self.assertFalse(os.path.exists(second))
         finally:
-            shutil.rmtree(dn)
+            shutil.rmtree(dn, ignore_errors=True)
 
     def test_clear_autochildlogdir_listdir_oserror(self):
         instance = self._makeOne()
