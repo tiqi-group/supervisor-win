@@ -11,14 +11,6 @@ from supervisor.loggers import getLevelNumByDescription
 from supervisor.medusa import text_socket
 from supervisor.utils import raise_not_implemented
 
-here = None
-
-
-def set_here(v):
-    global here
-    here = v
-
-
 def process_or_group_name(name):
     """Ensures that a process or group name is not created with
        characters that break the eventlistener protocol"""
@@ -278,16 +270,14 @@ def octal_type(arg):
 
 
 def existing_directory(v):
-    nv = v % {'here': here}
-    nv = os.path.expanduser(nv)
+    nv = os.path.expanduser(v)
     if os.path.isdir(nv):
         return nv
     raise ValueError('%s is not an existing directory' % v)
 
 
 def existing_dirpath(v):
-    nv = v % {'here': here}
-    nv = os.path.expanduser(nv)
+    nv = os.path.expanduser(v)
     dir = os.path.dirname(nv)
     if not dir:
         # relative pathname with no directory component

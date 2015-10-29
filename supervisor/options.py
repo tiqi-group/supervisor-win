@@ -44,14 +44,12 @@ from supervisor.datatypes import (
     octal_type,
     existing_directory,
     logging_level,
-    colon_separated_user_group,
     inet_address,
     InetStreamSocketConfig,
     url,
     Automatic,
     auto_restart,
-    profile_options,
-    set_here
+    profile_options
 )
 from supervisor.medusa import asyncore_25 as asyncore
 from supervisor.utils import raise_not_implemented
@@ -356,7 +354,6 @@ class Options(object):
         # Process config file
         if not hasattr(self.configfile, 'read'):
             self.here = os.path.abspath(os.path.dirname(self.configfile))
-            set_here(self.here)
         try:
             self.read_config(self.configfile)
         except ValueError as msg:
