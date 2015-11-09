@@ -55,6 +55,7 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.2",
     "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.5",
 ]
 
 version_txt = os.path.join(here, 'supervisor/version.txt')
