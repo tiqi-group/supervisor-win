@@ -1004,7 +1004,7 @@ class ServerOptionsTests(unittest.TestCase):
         instance.realize(args=["--bad=1"])
         self.assertEqual(len(recorder), 1)
         self.assertEqual(recorder[0],
-                         "GetoptError('option --bad not recognized', 'bad')")
+                         "option --bad not recognized")
 
     def test_options_afunix(self):
         instance = self._makeOne()
