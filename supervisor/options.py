@@ -429,6 +429,8 @@ class ServerOptions(Options):
         self.add(None, None, "v", "version", self.version)
         self.add("nodaemon", "supervisord.nodaemon", "n", "nodaemon", flag=1,
                  default=0)
+        self.add("cpu_overload_sleep", "supervisord.cpu_overload_sleep", "p",
+                 "cpu_overload_sleep", default=0.001)
         self.add("user", "supervisord.user", "u:", "user=")
         self.add("umask", "supervisord.umask", "m:", "umask=",
                  octal_type, default='022')
@@ -630,6 +632,7 @@ class ServerOptions(Options):
         section.pidfile = existing_dirpath(get('pidfile', 'supervisord.pid'))
         section.identifier = get('identifier', 'supervisor')
         section.nodaemon = boolean(get('nodaemon', 'false'))
+        section.cpu_overload_sleep = float(get("cpu_overload_sleep", 0.001))
 
         tempdir = tempfile.gettempdir()
         section.childlogdir = existing_directory(get('childlogdir', tempdir))
