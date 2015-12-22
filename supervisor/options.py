@@ -1,4 +1,5 @@
 import Queue
+import atexit
 import socket
 import getopt
 import os
@@ -1286,6 +1287,9 @@ class ServerOptions(Options):
 
         if process.pid <= 0:
             raise OSError('failure initializing new process %s' % filename)
+
+        # exit with parent
+        atexit.register(process.kill)
         return process.pid
 
     def mktempfile(self, suffix, prefix, dir):
