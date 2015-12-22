@@ -183,8 +183,8 @@ class Supervisor(object):
     def runforever(self):
         events.notify(events.SupervisorRunningEvent())
         socket_map = self.options.get_socket_map()
-        timeout = 0.001
-        while 1:
+
+        while True:
             combined_map = {}
             combined_map.update(socket_map)
             combined_map.update(self.get_process_map())
@@ -225,8 +225,11 @@ class Supervisor(object):
 
             if self.options.test:
                 break
-
-            time.sleep(timeout)
+            try:
+                # Avoid overloading the processor
+                time.sleep(self.options.cpu_overload_sleep)
+            except IOError:
+                continue
 
     def tick(self, now=None):
         """ Send one or more 'tick' events when the timeslice related to
@@ -260,26 +263,21 @@ class Supervisor(object):
     def handle_signal(self):
         sig = self.options.get_signal()
         if sig:
-            if sig in (signal.SIGTERM, signal.SIGINT, signal.SIGQUIT):
-                self.options.logger.warn(
-                    'received %s indicating exit request' % signame(sig))
+            if sig in (signal.SIGTERM, signal.SIGINT, signal.SIGABRT):
+                self.options.logger.warn('received %s indicating exit request' % signame(sig))
                 self.options.mood = SupervisorStates.SHUTDOWN
             elif sig == signal.SIGHUP:
-                self.options.logger.warn(
-                    'received %s indicating restart request' % signame(sig))
+                self.options.logger.warn('received %s indicating restart request' % signame(sig))
                 self.options.mood = SupervisorStates.RESTARTING
             elif sig == signal.SIGCHLD:
-                self.options.logger.debug(
-                    'received %s indicating a child quit' % signame(sig))
+                self.options.logger.debug('received %s indicating a child quit' % signame(sig))
             elif sig == signal.SIGUSR2:
-                self.options.logger.info(
-                    'received %s indicating log reopen request' % signame(sig))
+                self.options.logger.info('received %s indicating log reopen request' % signame(sig))
                 self.options.reopenlogs()
                 for group in self.process_groups.values():
                     group.reopenlogs()
             else:
-                self.options.logger.blather(
-                    'received %s indicating nothing' % signame(sig))
+                self.options.logger.blather('received %s indicating nothing' % signame(sig))
 
     def get_state(self):
         return self.options.mood
