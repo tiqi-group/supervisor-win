@@ -15,8 +15,6 @@ Supervisor has been tested (Python 2.7) and is known to run on Windows 10 (It is
 * Some specific features of OS Linux have been disabled and others were adapted to the Windows OS.
 * The process control (supervisorctl) works and management processes correctly, as well as control via web!
 
-Supervisor 4.0 will work under Python 2 version 2.7 or greater and Python 3 version 3.2 or greater.
-
 Documentation
 -------------
 
