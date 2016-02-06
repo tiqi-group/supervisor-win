@@ -718,6 +718,23 @@ class Test_gettags(unittest.TestCase):
         )
 
 
+class Test_capped_int(unittest.TestCase):
+    def _callFUT(self, comment):
+        from supervisor.xmlrpc import capped_int
+        return capped_int(comment)
+
+    def test_converts_value_to_integer(self):
+        self.assertEqual(self._callFUT('42'), 42)
+
+    def test_caps_value_below_minint(self):
+        from supervisor.compat import xmlrpclib
+        self.assertEqual(self._callFUT(xmlrpclib.MININT - 1), xmlrpclib.MININT)
+
+    def test_caps_value_above_maxint(self):
+        from supervisor.compat import xmlrpclib
+        self.assertEqual(self._callFUT(xmlrpclib.MAXINT + 1), xmlrpclib.MAXINT)
+
+
 class DummyResponse:
     def __init__(self, status=200, body='', reason='reason'):
         self.status = status
