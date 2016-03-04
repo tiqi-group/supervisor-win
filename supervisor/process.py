@@ -421,6 +421,14 @@ class Subprocess(object):
         )
         try:
             options.kill(self.pid, sig)
+        except ValueError as e:  # signal not supported
+            msg = 'problem sending sig %s (%s): %s' % (
+                self.config.name, self.pid, str(e))
+            io = StringIO()
+            traceback.print_exc(file=io)
+            tb = io.getvalue()
+            options.logger.error(tb)
+            return msg
         except:
             io = StringIO()
             traceback.print_exc(file=io)
