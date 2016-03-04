@@ -258,7 +258,7 @@ class Supervisor(object):
             else:
                 process.finish(pid, sts)
                 del self.options.pidhistory[pid]
-                del self.options.child_process[pid]
+                del self.options.processbypid[pid]
 
     def handle_signal(self):
         sig = self.options.get_signal()

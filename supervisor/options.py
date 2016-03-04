@@ -1,5 +1,4 @@
 import Queue
-import atexit
 import socket
 import getopt
 import os
@@ -9,7 +8,6 @@ import errno
 import signal
 import re
 import stat
-from threading import Thread
 import pkg_resources
 import glob
 import platform
@@ -424,8 +422,6 @@ class ServerOptions(Options):
         Options.__init__(self)
         self.configroot = Dummy()
         self.configroot.supervisord = Dummy()
-        self.child_process = {}
-
         self.add(None, None, "v", "version", self.version)
         self.add("nodaemon", "supervisord.nodaemon", "n", "nodaemon", flag=1,
                  default=0)
@@ -461,6 +457,7 @@ class ServerOptions(Options):
                  "t", "strip_ansi", flag=1, default=0)
         self.add("profile_options", "supervisord.profile_options",
                  "", "profile_options=", profile_options, default=None)
+        self.processbypid = {}
         self.pidhistory = {}
         self.process_group_configs = []
         self.parse_warnings = []
@@ -1202,7 +1199,7 @@ class ServerOptions(Options):
                 pass
 
     def kill(self, pid, sig):
-        self.child_process[pid].send_signal(sig)
+        self.processbypid[pid].send_signal(sig)
 
     def set_uid(self):
         if self.uid is None:
@@ -1219,8 +1216,8 @@ class ServerOptions(Options):
 
     def waitpid(self):
         stopped = []
-        for pid in self.child_process:
-            process = self.child_process[pid]
+        for pid in self.processbypid:
+            process = self.processbypid[pid]
             if process.killed or process.poll() is not None:
                 stopped.append((pid, (process.wait(), 'stopped')))
         if not stopped:
@@ -1275,28 +1272,16 @@ class ServerOptions(Options):
         return os.stat(filename)
 
     def execve(self, filename, argv, env):
-        argv = list(argv)
-
-        if filename in argv and len(argv) == 2:
-            executable = filename
-            argv.remove(filename)
-        else:
-            executable = None
-
+        """starts new process"""
         process = helpers.Popen(argv,
                                 env=env,
-                                executable=executable,
                                 universal_newlines=True,
                                 stdout=subprocess.PIPE,
                                 stdin=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
-        self.child_process[process.pid] = process
-
+        self.processbypid[process.pid] = process
         if process.pid <= 0:
-            raise OSError('failure initializing new process %s' % filename)
-
-        # exit with parent
-        atexit.register(process.kill)
+            raise OSError('failure initializing new process ' + ' '.join(argv))
         return process.pid
 
     def mktempfile(self, suffix, prefix, dir):
@@ -1375,7 +1360,7 @@ class ServerOptions(Options):
         communications.  Open fd in non-blocking mode so we can read them
         in the mainloop without blocking.  If stderr is False, don't
         create a pipe for stderr. """
-        process = self.child_process[pid]
+        process = self.processbypid[pid]
         pipes = {
             'stdin': process.stdin,
             'stdout': helpers.StdQueueAsync(process.stdout),
