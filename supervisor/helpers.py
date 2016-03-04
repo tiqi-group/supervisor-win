@@ -19,8 +19,8 @@ class Popen(subprocess.Popen):
         super(Popen, self).__init__(*args, **kwargs)
         self.killed = False
 
-    def kill(self):
-        super(Popen, self).kill()
+    def send_signal(self, sig):
+        super(Popen, self).send_signal(sig)
         self.killed = True
 
 

@@ -1201,8 +1201,8 @@ class ServerOptions(Options):
             except OSError:
                 pass
 
-    def kill(self, pid, signal):
-        self.child_process[pid].kill()
+    def kill(self, pid, sig):
+        self.child_process[pid].send_signal(sig)
 
     def set_uid(self):
         if self.uid is None:
@@ -1278,10 +1278,14 @@ class ServerOptions(Options):
         argv = list(argv)
 
         if filename in argv and len(argv) == 2:
+            executable = filename
             argv.remove(filename)
+        else:
+            executable = None
 
         process = helpers.Popen(argv,
                                 env=env,
+                                executable=executable,
                                 universal_newlines=True,
                                 stdout=subprocess.PIPE,
                                 stdin=subprocess.PIPE,
