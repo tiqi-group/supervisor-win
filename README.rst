@@ -1,7 +1,7 @@
 Supervisor
 ==========
 
-[CLONE] This is a clone of the original. It is a specific version for the Windows operating system.
+[Fork] This is a fork of the original. It is a specific version for the Windows operating system.
 
 Supervisor is a client/server system that allows its users to
 control a number of processes on Windows operating system.
