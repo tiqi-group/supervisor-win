@@ -263,7 +263,7 @@ class Supervisor(object):
     def handle_signal(self):
         sig = self.options.get_signal()
         if sig:
-            if sig in (signal.SIGTERM, signal.SIGINT, signal.SIGABRT):
+            if sig in (signal.SIGTERM, signal.SIGINT):
                 self.options.logger.warn('received %s indicating exit request' % signame(sig))
                 self.options.mood = SupervisorStates.SHUTDOWN
             elif sig == signal.SIGHUP:
