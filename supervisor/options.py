@@ -13,6 +13,7 @@ import glob
 import platform
 import warnings
 import subprocess
+import threading
 from compat import PY3
 from compat import ConfigParser
 from compat import as_bytes, as_string
@@ -1129,12 +1130,18 @@ class ServerOptions(Options):
             server.close()
 
     def close_logger(self):
-        self.logger.close()
+        try:
+            self.logger.close()
+        except AttributeError:
+            # Pywin32 : PyTraceObject error
+            pass
 
     def setsignals(self):
-        receive = self.signal_receiver.receive
-        signal.signal(signal.SIGTERM, receive)
-        signal.signal(signal.SIGINT, receive)
+        thread = threading.current_thread()
+        if thread.getName() == "MainThread":
+            receive = self.signal_receiver.receive
+            signal.signal(signal.SIGTERM, receive)
+            signal.signal(signal.SIGINT, receive)
 
     def get_signal(self):
         return self.signal_receiver.get_signal()
