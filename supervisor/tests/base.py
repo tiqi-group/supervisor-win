@@ -1015,6 +1015,9 @@ class DummySupervisorRPCNamespace:
     def raiseError(self):
         raise ValueError('error')
 
+    def getXmlRpcUnmarshallable(self):
+        return {'stdout_logfile': None}  # None is unmarshallable
+
     def getSupervisorVersion(self):
         return '3000'
 
