@@ -517,9 +517,13 @@ class Subprocess(object):
         now = time.time()
         options = self.config.options
 
-        # Properly stop processes in BACKOFF state.
+        # If the process is in BACKOFF and we want to stop or kill it, then
+        # BACKOFF -> STOPPED.  This is needed because if startretries is a
+        # large number and the process isn't starting successfully, the stop
+        # request would be blocked for a long time waiting for the retries.
         if self.state == ProcessStates.BACKOFF:
-            msg = "Attempted to kill %s, which is in BACKOFF state." % self.config.name
+            msg = ("Attempted to kill %s, which is in BACKOFF state." %
+                   (self.config.name,))
             options.logger.debug(msg)
             self.change_state(ProcessStates.STOPPED)
             return None
