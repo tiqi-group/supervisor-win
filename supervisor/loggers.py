@@ -192,10 +192,25 @@ class RotatingFileHandler(FileHandler):
         if maxBytes > 0:
             mode = 'a'  # doesn't make sense otherwise!
         super(RotatingFileHandler, self).__init__(filename, mode)
+        self._disable_inheritance_filehandler()  # fix file used by others process
         self.maxBytes = maxBytes
         self.backupCount = backupCount
         self.counter = 0
         self.every = 10
+
+    def _disable_inheritance_filehandler(self):
+        """Disable file handlers inheritance by child processes"""
+        try:
+            import win32api
+            import win32con
+        except ImportError:
+            raise ImportWarning("log rotation requires the installation of the \"pywin32\" library.\n"
+                                "Download and install from https://sourceforge.net/projects/pywin32")
+        import msvcrt
+        win32api.SetHandleInformation(
+            msvcrt.get_osfhandle(self.stream.fileno()),
+            win32con.HANDLE_FLAG_INHERIT,
+            0)
 
     def emit(self, record):
         """
