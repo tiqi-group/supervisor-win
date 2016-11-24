@@ -256,7 +256,7 @@ class Subprocess(object):
         if setuid_msg:
             uid = self.config.uid
             msg = "couldn't setuid to %s: %s\n" % (uid, setuid_msg)
-            options.write(2, "supervisor: " + msg)
+            options.logger.error("supervisor/process: " + msg)
             return  # finally clause will exit the child process
 
         # set environment
@@ -281,7 +281,7 @@ class Subprocess(object):
         except OSError as why:
             code = errno.errorcode.get(why.args[0], why.args[0])
             msg = "couldn't chdir to %s: %s\n" % (cwd, code)
-            options.write(2, "supervisor: " + msg)
+            options.logger.error("supervisor/process: " + msg)
             return  # finally clause will exit the child process
 
         # Fixes bug in unicode strings env
@@ -299,12 +299,12 @@ class Subprocess(object):
         except OSError as why:
             code = errno.errorcode.get(why.args[0], why.args[0])
             msg = "couldn't exec %s: %s\n" % (argv[0], code)
-            options.write(2, "supervisor: " + msg)
+            options.logger.error("supervisor/process: " + msg)
         except:
             (file, fun, line), t, v, tbinfo = asyncore.compact_traceback()
             error = '%s, %s: file: %s line: %s' % (t, v, file, line)
             msg = "couldn't exec %s: %s\n" % (filename, error)
-            options.write(2, "supervisor: " + msg)
+            options.logger.error("supervisor/process: " + msg)
         else:
             options.logger.info('Spawned: %r with pid %s' % (self.config.name, self.pid))
             self.delay = time.time() + self.config.startsecs
