@@ -557,8 +557,7 @@ class DummyPConfig:
     def make_dispatchers(self, proc):
         use_stderr = not self.redirect_stderr
         pipes = self.options.make_pipes(use_stderr)
-        stdout_fd,stderr_fd,stdin_fd = (pipes['stdout'],pipes['stderr'],
-                                        pipes['stdin'])
+        stdout_fd, stderr_fd, stdin_fd = pipes['stdout'], pipes['stderr'], pipes['stdin']
         dispatchers = {}
         if stdout_fd is not None:
             dispatchers[stdout_fd] = DummyDispatcher(readable=True)

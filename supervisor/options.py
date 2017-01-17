@@ -1370,9 +1370,12 @@ class ServerOptions(Options):
         process = self.processbypid[pid]
         pipes = {
             'stdin': process.stdin,
-            'stdout': helpers.StdQueueAsync(process.stdout),
-            'stderr': helpers.StdQueueAsync(process.stderr)
+            'stdout': helpers.StdQueueAsync(process.stdout)
         }
+        if stderr:
+            pipes['stderr'] = helpers.StdQueueAsync(process.stderr)
+        else:
+            pipes['stderr'] = None
         return pipes
 
     def close_parent_pipes(self, pipes):
@@ -1645,7 +1648,6 @@ class ProcessConfig(Config):
     def make_dispatchers(self, proc):
         use_stderr = not self.redirect_stderr
         pipes = self.options.make_pipes(proc.pid, use_stderr)
-
         stdout_fd, stderr_fd, stdin_fd = pipes['stdout'], pipes['stderr'], pipes['stdin']
         dispatchers = {}
 
