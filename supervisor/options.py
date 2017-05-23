@@ -12,7 +12,6 @@ import pkg_resources
 import glob
 import platform
 import warnings
-import subprocess
 import threading
 from compat import PY3
 from compat import ConfigParser
@@ -959,8 +958,7 @@ class ServerOptions(Options):
 
             command = get(section, 'command', None, expansions=expansions)
             if command is None:
-                raise ValueError(
-                    'program section %s does not specify a command' % section)
+                raise ValueError('program section %s does not specify a command' % section)
 
             pconfig = klass(
                 self,
@@ -1077,9 +1075,9 @@ class ServerOptions(Options):
         return configs
 
     def daemonize(self):
-        #self.poller.before_daemonize()
-        #self._daemonize()
-        #self.poller.after_daemonize()
+        # self.poller.before_daemonize()
+        # self._daemonize()
+        # self.poller.after_daemonize()
         pass
 
     def write_pidfile(self):
@@ -1278,18 +1276,11 @@ class ServerOptions(Options):
     def stat(self, filename):
         return os.stat(filename)
 
-    def execve(self, filename, argv, env):
-        """starts new process"""
-        process = helpers.Popen(argv,
-                                env=env,
-                                universal_newlines=True,
-                                stdout=subprocess.PIPE,
-                                stdin=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
-        self.processbypid[process.pid] = process
-        if process.pid <= 0:
-            raise OSError('failure initializing new process ' + ' '.join(argv))
-        return process.pid
+    def execve(self, process, *args, **kwargs):
+        """dummy:fake"""
+        pid = process.pid
+        self.processbypid[pid] = process
+        return pid
 
     def mktempfile(self, suffix, prefix, dir):
         # set os._urandomfd as a hack around bad file descriptor bug
@@ -1635,7 +1626,7 @@ class ProcessConfig(Config):
         name = self.name
         if self.stdout_logfile is Automatic:
             self.stdout_logfile = get_autoname(name, sid, 'stdout')
-        if self.stderr_logfile is Automatic:
+        if self.stderr_logfile is Automatic and not self.redirect_stderr:
             self.stderr_logfile = get_autoname(name, sid, 'stderr')
 
     def make_process(self, group=None):
@@ -1680,8 +1671,7 @@ class EventListenerConfig(ProcessConfig):
         from supervisor import events
 
         if stdout_fd is not None:
-            dispatchers[stdout_fd] = PEventListenerDispatcher(proc, 'stdout',
-                                                              stdout_fd)
+            dispatchers[stdout_fd] = PEventListenerDispatcher(proc, 'stdout', stdout_fd)
         if stderr_fd is not None:
             etype = events.ProcessCommunicationStderrEvent
             dispatchers[stderr_fd] = POutputDispatcher(proc, etype, stderr_fd)

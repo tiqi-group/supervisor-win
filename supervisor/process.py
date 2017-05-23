@@ -23,11 +23,12 @@ from supervisor.options import ProcessException, BadCommand
 
 from supervisor.dispatchers import EventListenerStates
 
-from supervisor import events
+from supervisor import events, helpers
 
 from supervisor.datatypes import RestartUnconditionally
 
 from supervisor.socket_manager import SocketManager
+import subprocess
 
 
 @total_ordering
@@ -238,6 +239,24 @@ class Subprocess(object):
             self._assertInState(ProcessStates.STARTING)
             self.change_state(ProcessStates.BACKOFF)
 
+    def _open(self, filename, argv, env):
+        """start process"""
+        params = dict(
+            env=env,
+            universal_newlines=True,
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE
+        )
+        # stderr goes to stdout
+        if self.config.redirect_stderr:
+            params['stderr'] = subprocess.STDOUT
+        else:
+            params['stderr'] = subprocess.PIPE
+        proc = helpers.Popen(argv, **params)
+        if proc.pid <= 0:
+            raise OSError('failure initializing new process ' + ' '.join(argv))
+        return proc
+
     def _spawn_as_child(self, filename, argv):
         options = self.config.options
         # try:
@@ -295,7 +314,7 @@ class Subprocess(object):
         try:
             if self.config.umask is not None:
                 options.setumask(self.config.umask)
-            self.pid = options.execve(filename, argv, env)
+            self.pid = options.execve(self._open(filename, argv, env))
         except OSError as why:
             code = errno.errorcode.get(why.args[0], why.args[0])
             msg = "couldn't exec %s: %s\n" % (argv[0], code)
