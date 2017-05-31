@@ -158,8 +158,7 @@ class Supervisor(object):
                 self.lastshutdownreport = now
                 for proc in unstopped:
                     state = getProcessStateDescription(proc.get_state())
-                    self.options.logger.blather(
-                        '%s state: %s' % (proc.config.name, state))
+                    self.options.logger.blather('%s state: %s' % (proc.config.name, state))
         return unstopped
 
     def ordered_stop_groups_phase_1(self):
