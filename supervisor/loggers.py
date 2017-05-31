@@ -12,7 +12,6 @@ import errno
 import sys
 import time
 import traceback
-import warnings
 
 from supervisor.compat import syslog
 from supervisor.compat import long
@@ -401,13 +400,12 @@ def handle_boundIO(logger, fmt, maxbytes=_2MB):
 
 
 def handle_stdout(logger, fmt):
-    if sys.stdout.isatty():
-        handler = StreamHandler(sys.stdout)
-        handler.setFormat(fmt)
-        handler.setLevel(logger.level)
-        logger.addHandler(handler)
-    else:
-        warnings.warn("stdout is closed. run as daemon.")
+    if not sys.stdout.isatty():
+        logger.error("*** STDOUT is closed. Run as daemon! ***")
+    handler = StreamHandler(sys.stdout)
+    handler.setFormat(fmt)
+    handler.setLevel(logger.level)
+    logger.addHandler(handler)
 
 
 def handle_syslog(logger, fmt):

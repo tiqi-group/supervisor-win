@@ -1236,8 +1236,6 @@ class ServerOptions(Options):
         # must be called after realize() and after supervisor does setuid()
         format = '%(asctime)s %(levelname)s %(message)s\n'
         self.logger = loggers.getLogger(self.loglevel)
-        if self.nodaemon:
-            loggers.handle_stdout(self.logger, format)
         loggers.handle_file(
             self.logger,
             self.logfile,
@@ -1246,6 +1244,8 @@ class ServerOptions(Options):
             maxbytes=self.logfile_maxbytes,
             backups=self.logfile_backups,
         )
+        if self.nodaemon:
+            loggers.handle_stdout(self.logger, format)
         for msg in critical_messages:
             self.logger.critical(msg)
         for msg in warn_messages:
