@@ -1601,6 +1601,9 @@ class ProcessConfig(Config):
     optional_param_names = ['environment', 'serverurl']
 
     def __init__(self, options, **params):
+        affinity = params.get("affinity")
+        if affinity:
+            print 'affinity ', affinity
         self.options = options
         for name in self.req_param_names:
             setattr(self, name, params[name])

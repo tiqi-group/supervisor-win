@@ -57,6 +57,52 @@ class ProcessJobHandler(object):
         win32job.AssignProcessToJobObject(self.hJob, hProcess)
 
 
+class ProcessThreadPriorityHandler(object):
+    IDLE = "idle"
+    BELOW = "below"
+    NORMAL = "normal"
+    ABOVE = "above"
+    HIGH = "high"
+    REALTIME = "realtime"
+
+    def __init__(self):
+        import win32process
+        self.opts = {
+            self.IDLE: win32process.IDLE_PRIORITY_CLASS,
+            self.BELOW: win32process.BELOW_NORMAL_PRIORITY_CLASS,
+            self.NORMAL: win32process.NORMAL_PRIORITY_CLASS,
+            self.ABOVE: win32process.ABOVE_NORMAL_PRIORITY_CLASS,
+            self.HIGH: win32process.HIGH_PRIORITY_CLASS,
+            self.REALTIME: win32process.REALTIME_PRIORITY_CLASS
+        }
+
+    @staticmethod
+    def _get_handle_for_pid(pid, ro=True):
+        import win32process
+        import win32con
+        import win32api
+        import pywintypes
+        if pid is None:
+            pHandle = win32process.GetCurrentProcess()
+        else:
+            flags = win32con.PROCESS_QUERY_INFORMATION
+            if not ro:
+                flags |= win32con.PROCESS_SET_INFORMATION
+            try:
+                pHandle = win32api.OpenProcess(flags, False, pid)
+            except pywintypes.error, e:
+                raise ValueError, e
+        return pHandle
+
+    def set_priority(self, pid=None, priority=NORMAL):
+        """ Set The Priority of a Windows Process.  Priority is a value between 0-5 where
+            2 is normal priority.  Default sets the priority of the current
+            python process but can take any valid process ID. """
+        import win32process
+        pHandle = self._get_handle_for_pid(pid, ro=False)
+        win32process.SetPriorityClass(pHandle, self.opts[priority])
+
+
 @total_ordering
 class Subprocess(object):
     """A class to manage a subprocess."""
@@ -265,6 +311,22 @@ class Subprocess(object):
             self._assertInState(ProcessStates.STARTING)
             self.change_state(ProcessStates.BACKOFF)
 
+    def __configure_handlers(self, proc):
+        # Adds the process to the job
+        options = self.config.options
+        job_handler = options.job_handler
+        if isinstance(job_handler, ProcessJobHandler):
+            try:
+                job_handler.add_child(proc.pid)
+            except Exception as e:
+                options.logger.error("subprocess job/add: %s" % e)
+        th_priority_handler = options.th_priority_handler
+        if isinstance(th_priority_handler, ProcessThreadPriorityHandler):
+            try:
+                th_priority_handler.set_priority(proc.pid)
+            except Exception as e:
+                options.logger.error("subprocess job/add: %s" % e)
+
     def _open(self, filename, argv, env):
         """start process"""
         params = dict(
@@ -281,14 +343,7 @@ class Subprocess(object):
         proc = helpers.Popen(argv, **params)
         if proc.pid <= 0:
             raise OSError('failure initializing new process ' + ' '.join(argv))
-        # Adds the process to the job
-        options = self.config.options
-        job_handler = options.job_handler
-        if isinstance(job_handler, ProcessJobHandler):
-            try:
-                job_handler.add_child(proc.pid)
-            except Exception as e:
-                options.logger.error("subprocess job/add: %s" % e)
+        self.__configure_handlers(proc)
         return proc
 
     def _spawn_as_child(self, filename, argv):
