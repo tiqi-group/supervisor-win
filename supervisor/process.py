@@ -39,7 +39,7 @@ class ProcessJobHandler(object):
     def __init__(self):
         import win32job
 
-        self.hJob = win32job.CreateJobObject(None, "SupervisorJob")
+        self.hJob = win32job.CreateJobObject(None, "SupervisorJob{}".format(os.getpid()))
         extended_info = win32job.QueryInformationJobObject(self.hJob, win32job.JobObjectExtendedLimitInformation)
         extended_info['BasicLimitInformation']['LimitFlags'] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
         win32job.SetInformationJobObject(self.hJob, win32job.JobObjectExtendedLimitInformation, extended_info)
