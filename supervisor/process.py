@@ -31,6 +31,32 @@ from supervisor.socket_manager import SocketManager
 import subprocess
 
 
+class ProcessJobHandler(object):
+    """
+    Creates a container in which subprocesses will reside
+    https://stackoverflow.com/questions/23434842/python-how-to-kill-child-processes-when-parent-dies/23587108#23587108
+    """
+    def __init__(self):
+        import win32job
+
+        self.hJob = win32job.CreateJobObject(None, "SupervisorJob")
+        extended_info = win32job.QueryInformationJobObject(self.hJob, win32job.JobObjectExtendedLimitInformation)
+        extended_info['BasicLimitInformation']['LimitFlags'] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+        win32job.SetInformationJobObject(self.hJob, win32job.JobObjectExtendedLimitInformation, extended_info)
+
+    def add_child(self, child_pid):
+        """Adds the child process to the job"""
+        import win32api
+        import win32con
+        import win32job
+
+        # Convert process id to process handle:
+        perms = win32con.PROCESS_TERMINATE | win32con.PROCESS_SET_QUOTA
+        hProcess = win32api.OpenProcess(perms, False, child_pid)
+
+        win32job.AssignProcessToJobObject(self.hJob, hProcess)
+
+
 @total_ordering
 class Subprocess(object):
     """A class to manage a subprocess."""
@@ -255,6 +281,14 @@ class Subprocess(object):
         proc = helpers.Popen(argv, **params)
         if proc.pid <= 0:
             raise OSError('failure initializing new process ' + ' '.join(argv))
+        # Adds the process to the job
+        options = self.config.options
+        job_handler = options.job_handler
+        if isinstance(job_handler, ProcessJobHandler):
+            try:
+                job_handler.add_child(proc.pid)
+            except Exception as e:
+                options.logger.error("subprocess job/add: %s" % e)
         return proc
 
     def _spawn_as_child(self, filename, argv):
