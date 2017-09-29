@@ -849,6 +849,7 @@ class ServerOptions(Options):
 
     def _processes_from_section(self, parser, section, group_name,
                                 klass=None):
+        """tag: subprocess"""
         if klass is None:
             klass = ProcessConfig
         programs = []
@@ -868,6 +869,14 @@ class ServerOptions(Options):
             kwargs['expansions'] = expansions
             return parser.saneget(section, opt, *args, **kwargs)
 
+        # cpu settings
+        cpupriority = get(section, 'cpupriority', None)
+        cpuaffinity = integer(get(section, 'cpuaffinity', 0))
+
+        # system settings
+        systemjob = boolean(get(section, 'systemjob', 'true'))
+
+        # default settings
         priority = integer(get(section, 'priority', 999))
         autostart = boolean(get(section, 'autostart', 'true'))
         autorestart = auto_restart(get(section, 'autorestart', 'unexpected'))
@@ -972,6 +981,9 @@ class ServerOptions(Options):
                 startsecs=startsecs,
                 startretries=startretries,
                 uid=uid,
+                cpupriority=cpupriority,
+                cpuaffinity=cpuaffinity,
+                systemjob=systemjob,
                 stdout_logfile=logfiles['stdout_logfile'],
                 stdout_capture_maxbytes=stdout_cmaxbytes,
                 stdout_events_enabled=stdout_events,
@@ -1598,7 +1610,11 @@ class ProcessConfig(Config):
         'stderr_events_enabled', 'stderr_syslog',
         'stopsignal', 'stopwaitsecs', 'stopasgroup', 'killasgroup',
         'exitcodes', 'redirect_stderr']
-    optional_param_names = ['environment', 'serverurl']
+    optional_param_names = [
+        'environment', 'serverurl',
+        'cpupriority', 'cpuaffinity',
+        'systemjob'
+    ]
 
     def __init__(self, options, **params):
         self.options = options

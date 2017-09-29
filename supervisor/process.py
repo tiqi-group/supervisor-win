@@ -79,6 +79,7 @@ class ProcessCpuHandler(object):
 
     def set_affinity_mask(self, value):
         """
+        Sets the number of cores dedicated to a process
         CPU3 CPU2 CPU1 CPU0  Bin  Hex
         ---- ---- ---- ----  ---  ---
         OFF  OFF  OFF  ON  = 0001 = 1
@@ -343,17 +344,29 @@ class Subprocess(object):
         # Adds the process to the job
         options = self.config.options
         job_handler = options.job_handler
-        if isinstance(job_handler, ProcessJobHandler):
+        if self.config.systemjob and isinstance(job_handler, ProcessJobHandler):
             try:
                 job_handler.add_child(proc.pid)
             except Exception as e:
                 options.logger.error("subprocess job/add: %s" % e)
         try:
             cpu_handler = ProcessCpuHandler(proc.pid)
-            cpu_handler.set_priority()
-            cpu_handler.set_affinity_mask(hex(255))
         except Exception as e:
-            options.logger.error("subprocess cpu: %s" % e)
+            options.logger.error("subprocess cpu-handler: %s" % e)
+            cpu_handler = None
+        if cpu_handler:
+            try:
+                # Configures the process cpu priority
+                if self.config.cpupriority:
+                    cpu_handler.set_priority(self.config.cpupriority)
+            except Exception as e:
+                options.logger.error("subprocess cpu-priority: %s" % e)
+            try:
+                # Sets the number of cores to process
+                if self.config.cpuaffinity > 0:
+                    cpu_handler.set_affinity_mask(self.config.cpuaffinity)
+            except Exception as e:
+                options.logger.error("subprocess cpu-affinity: %s" % e)
 
     def _open(self, filename, argv, env):
         """start process"""
