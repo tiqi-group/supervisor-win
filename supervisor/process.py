@@ -30,6 +30,12 @@ from supervisor.datatypes import RestartUnconditionally
 from supervisor.socket_manager import SocketManager
 import subprocess
 
+# pywin32 required!
+import win32job
+import win32process
+import win32con
+import win32api
+
 
 class ProcessJobHandler(object):
     """
@@ -37,8 +43,6 @@ class ProcessJobHandler(object):
     https://stackoverflow.com/questions/23434842/python-how-to-kill-child-processes-when-parent-dies/23587108#23587108
     """
     def __init__(self):
-        import win32job
-
         self.hJob = win32job.CreateJobObject(None, "SupervisorJob{}".format(os.getpid()))
         extended_info = win32job.QueryInformationJobObject(self.hJob, win32job.JobObjectExtendedLimitInformation)
         extended_info['BasicLimitInformation']['LimitFlags'] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
@@ -46,42 +50,74 @@ class ProcessJobHandler(object):
 
     def add_child(self, child_pid):
         """Adds the child process to the job"""
-        import win32api
-        import win32con
-        import win32job
-
-        # Convert process id to process handle:
+        # Convert process id to process handle
         perms = win32con.PROCESS_TERMINATE | win32con.PROCESS_SET_QUOTA
         hProcess = win32api.OpenProcess(perms, False, child_pid)
 
         win32job.AssignProcessToJobObject(self.hJob, hProcess)
 
 
-class ProcessThreadPriorityHandler(object):
-    IDLE = "idle"
-    BELOW = "below"
-    NORMAL = "normal"
-    ABOVE = "above"
-    HIGH = "high"
+class ProcessCpuHandler(object):
     REALTIME = "realtime"
+    HIGH = "high"
+    ABOVE = "above"
+    NORMAL = "normal"
+    BELOW = "below"
+    IDLE = "idle"
 
-    def __init__(self):
-        import win32process
-        self.opts = {
-            self.IDLE: win32process.IDLE_PRIORITY_CLASS,
-            self.BELOW: win32process.BELOW_NORMAL_PRIORITY_CLASS,
-            self.NORMAL: win32process.NORMAL_PRIORITY_CLASS,
-            self.ABOVE: win32process.ABOVE_NORMAL_PRIORITY_CLASS,
-            self.HIGH: win32process.HIGH_PRIORITY_CLASS,
-            self.REALTIME: win32process.REALTIME_PRIORITY_CLASS
-        }
+    options = {
+        IDLE: win32process.IDLE_PRIORITY_CLASS,
+        BELOW: win32process.BELOW_NORMAL_PRIORITY_CLASS,
+        NORMAL: win32process.NORMAL_PRIORITY_CLASS,
+        ABOVE: win32process.ABOVE_NORMAL_PRIORITY_CLASS,
+        HIGH: win32process.HIGH_PRIORITY_CLASS,
+        REALTIME: win32process.REALTIME_PRIORITY_CLASS
+    }
+
+    def __init__(self, pid=None):
+        self.pHandle = self._get_handle_for_pid(pid=pid, ro=False)
+
+    def set_affinity_mask(self, value):
+        """
+        CPU3 CPU2 CPU1 CPU0  Bin  Hex
+        ---- ---- ---- ----  ---  ---
+        OFF  OFF  OFF  ON  = 0001 = 1
+        OFF  OFF  ON   OFF = 0010 = 2
+        OFF  OFF  ON   ON  = 0011 = 3
+        OFF  ON   OFF  OFF = 0100 = 4
+        OFF  ON   OFF  ON  = 0101 = 5
+        OFF  ON   ON   OFF = 0110 = 6
+        OFF  ON   ON   ON  = 0111 = 7
+        ON   OFF  OFF  OFF = 1000 = 8
+        ON   OFF  OFF  ON  = 1001 = 9
+        ON   OFF  ON   OFF = 1010 = A
+        ON   OFF  ON   ON  = 1011 = B
+        ON   ON   OFF  OFF = 1100 = C
+        ON   ON   OFF  ON  = 1101 = D
+        ON   ON   ON   OFF = 1110 = E
+        ON   ON   ON   ON  = 1111 = F
+        :param value: int mask
+        :return: current
+        """
+        current = self.get_affinity_mask()
+        try:
+            win32process.SetProcessAffinityMask(self.pHandle, value)
+        except win32process.error as e:
+            raise ValueError(e)
+        return current
+
+    def get_affinity_mask(self):
+        try:
+            return win32process.GetProcessAffinityMask(self.pHandle)[0]
+        except win32process.error as e:
+            raise ValueError(e)
+
+    def set_priority(self, priority=NORMAL):
+        """ Set The Priority of a Windows Process """
+        win32process.SetPriorityClass(self.pHandle, self.options[priority])
 
     @staticmethod
     def _get_handle_for_pid(pid, ro=True):
-        import win32process
-        import win32con
-        import win32api
-        import pywintypes
         if pid is None:
             pHandle = win32process.GetCurrentProcess()
         else:
@@ -90,17 +126,9 @@ class ProcessThreadPriorityHandler(object):
                 flags |= win32con.PROCESS_SET_INFORMATION
             try:
                 pHandle = win32api.OpenProcess(flags, False, pid)
-            except pywintypes.error, e:
-                raise ValueError, e
+            except win32process.error as e:
+                raise ValueError(e)
         return pHandle
-
-    def set_priority(self, pid=None, priority=NORMAL):
-        """ Set The Priority of a Windows Process.  Priority is a value between 0-5 where
-            2 is normal priority.  Default sets the priority of the current
-            python process but can take any valid process ID. """
-        import win32process
-        pHandle = self._get_handle_for_pid(pid, ro=False)
-        win32process.SetPriorityClass(pHandle, self.opts[priority])
 
 
 @total_ordering
@@ -320,12 +348,12 @@ class Subprocess(object):
                 job_handler.add_child(proc.pid)
             except Exception as e:
                 options.logger.error("subprocess job/add: %s" % e)
-        th_priority_handler = options.th_priority_handler
-        if isinstance(th_priority_handler, ProcessThreadPriorityHandler):
-            try:
-                th_priority_handler.set_priority(proc.pid)
-            except Exception as e:
-                options.logger.error("subprocess job/add: %s" % e)
+        try:
+            cpu_handler = ProcessCpuHandler(proc.pid)
+            cpu_handler.set_priority()
+            cpu_handler.set_affinity_mask(hex(255))
+        except Exception as e:
+            options.logger.error("subprocess cpu: %s" % e)
 
     def _open(self, filename, argv, env):
         """start process"""

@@ -322,32 +322,18 @@ def make_job_handler():
     return job_handler
 
 
-def make_priority_handler():
-    """Object that manages subprocesses (simulates a process tree, causing the subprocess
-    to be closed if the supervisor stops working unexpectedly)
-    """
-    try:
-        from .process import ProcessThreadPriorityHandler
-        th_priority_handler = ProcessThreadPriorityHandler()
-    except (ImportError, Exception):  # Supervisor can not stop due to execution failure
-        th_priority_handler = None
-    return th_priority_handler
-
-
 # Main program
 def main(args=None, test=False):
     # assert os.name == "posix", "This code makes Unix-specific assumptions"
     # if we hup, restart by making a new Supervisor()
     first = True
     job_handler = make_job_handler()
-    th_priority_handler = make_priority_handler()
     while 1:
         options = ServerOptions()
         options.realize(args, doc=__doc__)
         options.first = first
         options.test = test
         options.job_handler = job_handler
-        options.th_priority_handler = th_priority_handler
         if options.profile_options:
             sort_order, callers = options.profile_options
             profile('go(options)', globals(), locals(), sort_order, callers)
