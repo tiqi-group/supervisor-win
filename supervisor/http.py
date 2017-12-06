@@ -690,7 +690,7 @@ class tail_f_producer(object):
 
     def _open(self):
         self.file = open(self.filename, 'rb')
-        self.ino = os.fstat(self.file.fileno())[stat.ST_INO]
+        self.ctime = os.fstat(self.file.fileno())[stat.ST_CTIME]
         self.sz = 0
 
     def _close(self):
@@ -698,12 +698,12 @@ class tail_f_producer(object):
 
     def _follow(self):
         try:
-            ino = os.stat(self.filename)[stat.ST_INO]
+            ctime = os.stat(self.filename)[stat.ST_CTIME]
         except (OSError, ValueError):
             # file was unlinked
             return
 
-        if self.ino != ino:  # log rotation occurred
+        if self.ctime != ctime:  # log rotation occurred
             self._close()
             self._open()
 
