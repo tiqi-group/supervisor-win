@@ -17,8 +17,10 @@ import sys
 
 py_version = sys.version_info[:2]
 
-if (3, 0) < py_version < (3, 2):
-    raise RuntimeError('On Python 3, Supervisor requires Python 3.2 or later')
+if py_version < (2, 7):
+    raise RuntimeError('On Python 2, Supervisor requires Python 2.7 or later')
+elif (3, 0) < py_version < (3, 4):
+    raise RuntimeError('On Python 3, Supervisor requires Python 3.4 or later')
 
 requires = ['meld3 >= 1.0.0', 'pywin32']
 tests_require = []
