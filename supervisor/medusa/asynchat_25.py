@@ -49,6 +49,7 @@ you - by calling your self.found_terminator() method.
 import socket
 
 from supervisor.compat import long
+from supervisor.compat import as_bytes
 from supervisor.medusa import asyncore_25 as asyncore
 
 
@@ -62,8 +63,8 @@ class async_chat(asyncore.dispatcher):
     ac_out_buffer_size = 4096
 
     def __init__(self, conn=None, map=None):
-        self.ac_in_buffer = ''
-        self.ac_out_buffer = ''
+        self.ac_in_buffer = b''
+        self.ac_out_buffer = b''
         self.producer_fifo = fifo()
         asyncore.dispatcher.__init__(self, conn, map)
 
@@ -105,13 +106,13 @@ class async_chat(asyncore.dispatcher):
             if not terminator:
                 # no terminator, collect it all
                 self.collect_incoming_data(self.ac_in_buffer)
-                self.ac_in_buffer = ''
+                self.ac_in_buffer = b''
             elif isinstance(terminator, int) or isinstance(terminator, long):
                 # numeric terminator
                 n = terminator
                 if lb < n:
                     self.collect_incoming_data(self.ac_in_buffer)
-                    self.ac_in_buffer = ''
+                    self.ac_in_buffer = b''
                     self.terminator -= lb
                 else:
                     self.collect_incoming_data(self.ac_in_buffer[:n])
@@ -148,7 +149,7 @@ class async_chat(asyncore.dispatcher):
                     else:
                         # no prefix, collect it all
                         self.collect_incoming_data(self.ac_in_buffer)
-                        self.ac_in_buffer = ''
+                        self.ac_in_buffer = b''
 
     def handle_write(self):
         self.initiate_send()
@@ -157,6 +158,7 @@ class async_chat(asyncore.dispatcher):
         self.close()
 
     def push(self, data):
+        data = as_bytes(data)
         self.producer_fifo.push(simple_producer(data))
         self.initiate_send()
 
@@ -173,7 +175,7 @@ class async_chat(asyncore.dispatcher):
         # return len(self.ac_out_buffer) or len(self.producer_fifo) or (not self.connected)
         # this is about twice as fast, though not as clear.
         return not (
-            (self.ac_out_buffer == '') and
+            (self.ac_out_buffer == b'') and
             self.producer_fifo.is_empty() and
             self.connected
         )
@@ -197,7 +199,7 @@ class async_chat(asyncore.dispatcher):
                         self.producer_fifo.pop()
                         self.close()
                     return
-                elif isinstance(p, str):
+                elif isinstance(p, bytes):
                     self.producer_fifo.pop()
                     self.ac_out_buffer += p
                     return
@@ -229,8 +231,8 @@ class async_chat(asyncore.dispatcher):
 
     def discard_buffers(self):
         # Emergencies only!
-        self.ac_in_buffer = ''
-        self.ac_out_buffer = ''
+        self.ac_in_buffer = b''
+        self.ac_out_buffer = b''
         while self.producer_fifo:
             self.producer_fifo.pop()
 
@@ -247,7 +249,7 @@ class simple_producer(object):
             return result
         else:
             result = self.data
-            self.data = ''
+            self.data = b''
             return result
 
 

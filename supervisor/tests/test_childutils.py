@@ -1,8 +1,10 @@
+from io import BytesIO
 import sys
 import time
 import unittest
 
 from supervisor.compat import StringIO
+from supervisor.compat import as_string
 
 
 class ChildUtilsTests(unittest.TestCase):
@@ -52,23 +54,23 @@ class ChildUtilsTests(unittest.TestCase):
 class TestProcessCommunicationsProtocol(unittest.TestCase):
     def test_send(self):
         from supervisor.childutils import pcomm
-        stdout = StringIO()
-        pcomm.send('hello', stdout)
+        stdout = BytesIO()
+        pcomm.send(b'hello', stdout)
         from supervisor.events import ProcessCommunicationEvent
         begin = ProcessCommunicationEvent.BEGIN_TOKEN
         end = ProcessCommunicationEvent.END_TOKEN
-        self.assertEqual(stdout.getvalue(), '%s%s%s' % (begin, 'hello', end))
+        self.assertEqual(stdout.getvalue(), begin + b'hello' + end)
 
     def test_stdout(self):
         from supervisor.childutils import pcomm
         old = sys.stdout
         try:
-            io = sys.stdout = StringIO()
-            pcomm.stdout('hello')
+            io = sys.stdout = BytesIO()
+            pcomm.stdout(b'hello')
             from supervisor.events import ProcessCommunicationEvent
             begin = ProcessCommunicationEvent.BEGIN_TOKEN
             end = ProcessCommunicationEvent.END_TOKEN
-            self.assertEqual(io.getvalue(), '%s%s%s' % (begin, 'hello', end))
+            self.assertEqual(io.getvalue(), begin + b'hello' + end)
         finally:
             sys.stdout = old
 
@@ -76,12 +78,12 @@ class TestProcessCommunicationsProtocol(unittest.TestCase):
         from supervisor.childutils import pcomm
         old = sys.stderr
         try:
-            io = sys.stderr = StringIO()
-            pcomm.stderr('hello')
+            io = sys.stderr = BytesIO()
+            pcomm.stderr(b'hello')
             from supervisor.events import ProcessCommunicationEvent
             begin = ProcessCommunicationEvent.BEGIN_TOKEN
             end = ProcessCommunicationEvent.END_TOKEN
-            self.assertEqual(io.getvalue(), '%s%s%s' % (begin, 'hello', end))
+            self.assertEqual(io.getvalue(), begin + b'hello' + end)
         finally:
             sys.stderr = old
 
@@ -106,7 +108,7 @@ class TestEventListenerProtocol(unittest.TestCase):
     def test_token(self):
         from supervisor.childutils import listener
         from supervisor.dispatchers import PEventListenerDispatcher
-        token = PEventListenerDispatcher.READY_FOR_EVENTS_TOKEN
+        token = as_string(PEventListenerDispatcher.READY_FOR_EVENTS_TOKEN)
         stdout = StringIO()
         listener.ready(stdout)
         self.assertEqual(stdout.getvalue(), token)
@@ -114,7 +116,7 @@ class TestEventListenerProtocol(unittest.TestCase):
     def test_ok(self):
         from supervisor.childutils import listener
         from supervisor.dispatchers import PEventListenerDispatcher
-        begin = PEventListenerDispatcher.RESULT_TOKEN_START
+        begin = as_string(PEventListenerDispatcher.RESULT_TOKEN_START)
         stdout = StringIO()
         listener.ok(stdout)
         self.assertEqual(stdout.getvalue(), begin + '2\nOK')
@@ -122,7 +124,7 @@ class TestEventListenerProtocol(unittest.TestCase):
     def test_fail(self):
         from supervisor.childutils import listener
         from supervisor.dispatchers import PEventListenerDispatcher
-        begin = PEventListenerDispatcher.RESULT_TOKEN_START
+        begin = as_string(PEventListenerDispatcher.RESULT_TOKEN_START)
         stdout = StringIO()
         listener.fail(stdout)
         self.assertEqual(stdout.getvalue(), begin + '4\nFAIL')
@@ -130,7 +132,7 @@ class TestEventListenerProtocol(unittest.TestCase):
     def test_send(self):
         from supervisor.childutils import listener
         from supervisor.dispatchers import PEventListenerDispatcher
-        begin = PEventListenerDispatcher.RESULT_TOKEN_START
+        begin = as_string(PEventListenerDispatcher.RESULT_TOKEN_START)
         stdout = StringIO()
         msg = 'the body data ya fool\n'
         listener.send(msg, stdout)

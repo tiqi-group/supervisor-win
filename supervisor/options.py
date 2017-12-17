@@ -1863,7 +1863,7 @@ def tailFile(filename, offset, length):
                 length = 0
 
             if length == 0:
-                data = ''
+                data = b''
             else:
                 f.seek(offset)
                 data = f.read(length)

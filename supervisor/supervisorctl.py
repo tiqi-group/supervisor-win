@@ -38,8 +38,10 @@ from supervisor.compat import (
     xmlrpclib,
     urlparse,
     unicode,
-    raw_input
+    raw_input,
+    as_string
 )
+
 from supervisor.medusa import asyncore_25 as asyncore
 from supervisor.options import (
     ClientOptions,
@@ -670,7 +672,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
         supervisor = self.ctl.get_supervisor()
         all_infos = supervisor.getAllProcessInfo()
 
-        names = arg.split()
+        names = as_string(arg).split()
         if not names or "all" in names:
             matching_infos = all_infos
         else:

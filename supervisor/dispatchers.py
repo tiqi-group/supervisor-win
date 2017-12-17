@@ -4,6 +4,7 @@ import warnings
 from supervisor import loggers
 from supervisor.events import (
     notify,
+    as_string,
     EventRejectedEvent,
     ProcessLogStderrEvent,
     ProcessLogStdoutEvent
@@ -11,7 +12,6 @@ from supervisor.events import (
 from supervisor.medusa.asyncore_25 import compact_traceback
 from supervisor.states import EventListenerStates
 from supervisor.states import getEventListenerStateDescription
-from supervisor.compat import as_bytes
 
 
 def find_prefix_at_end(haystack, needle):
@@ -120,7 +120,7 @@ class POutputDispatcher(PLogDispatcher):
     mainlog = None  # the process' "normal" logger
     capturelog = None  # the logger while we're in capturemode
     childlog = None  # the current logger (event or main)
-    output_buffer = ''  # data waiting to be logged
+    output_buffer = b''  # data waiting to be logged
 
     def __init__(self, process, event_type, fd):
         """
@@ -207,10 +207,17 @@ class POutputDispatcher(PLogDispatcher):
             if self.childlog:
                 self.childlog.info(data)
             if self.log_to_mainlog:
+                if not isinstance(data, bytes):
+                    text = data
+                else:
+                    try:
+                        text = data.decode('utf-8')
+                    except UnicodeDecodeError:
+                        text = 'Undecodable: %r' % data
                 msg = '%(name)r %(channel)s output:\n%(data)s'
                 config.options.logger.log(
                     self.mainlog_level, msg, name=config.name,
-                    channel=self.channel, data=data)
+                    channel=self.channel, data=text)
             if self.channel == 'stdout':
                 if self.stdout_events_enabled:
                     notify(
@@ -228,7 +235,7 @@ class POutputDispatcher(PLogDispatcher):
         if self.capturelog is None:
             # shortcut trying to find capture data
             data = self.output_buffer
-            self.output_buffer = ''
+            self.output_buffer = b''
             self._log(data)
             return
 
@@ -241,7 +248,7 @@ class POutputDispatcher(PLogDispatcher):
             return  # not enough data
 
         data = self.output_buffer
-        self.output_buffer = ''
+        self.output_buffer = b''
 
         try:
             before, after = data.split(token, 1)
@@ -325,10 +332,10 @@ class PEventListenerDispatcher(PLogDispatcher):
     """ An output dispatcher that monitors and changes a process'
     listener_state """
     childlog = None  # the logger
-    state_buffer = ''  # data waiting to be reviewed for state changes
+    state_buffer = b''  # data waiting to be reviewed for state changes
 
-    READY_FOR_EVENTS_TOKEN = 'READY\n'
-    RESULT_TOKEN_START = 'RESULT '
+    READY_FOR_EVENTS_TOKEN = b'READY\n'
+    RESULT_TOKEN_START = b'RESULT '
     READY_FOR_EVENTS_LEN = len(READY_FOR_EVENTS_TOKEN)
     RESULT_TOKEN_START_LEN = len(RESULT_TOKEN_START)
 
@@ -338,7 +345,7 @@ class PEventListenerDispatcher(PLogDispatcher):
         # "busy" state that implies we're awaiting a READY_FOR_EVENTS_TOKEN
         self.process.listener_state = EventListenerStates.ACKNOWLEDGED
         self.process.event = self.resultlen = None
-        self.result = ''
+        self.result = b''
 
         logfile = getattr(process.config, '%s_logfile' % channel)
 
@@ -401,7 +408,7 @@ class PEventListenerDispatcher(PLogDispatcher):
 
         if state == EventListenerStates.UNKNOWN:
             # this is a fatal state
-            self.state_buffer = ''
+            self.state_buffer = b''
             return
 
         if state == EventListenerStates.ACKNOWLEDGED:
@@ -415,7 +422,7 @@ class PEventListenerDispatcher(PLogDispatcher):
                 process.event = None
             else:
                 self._change_listener_state(EventListenerStates.UNKNOWN)
-                self.state_buffer = ''
+                self.state_buffer = b''
                 process.event = None
             if self.state_buffer:
                 # keep going til its too short
@@ -426,14 +433,14 @@ class PEventListenerDispatcher(PLogDispatcher):
         elif state == EventListenerStates.READY:
             # the process sent some spurious data, be strict about it
             self._change_listener_state(EventListenerStates.UNKNOWN)
-            self.state_buffer = ''
+            self.state_buffer = b''
             process.event = None
             return
 
         elif state == EventListenerStates.BUSY:
             if self.resultlen is None:
                 # we haven't begun gathering result data yet
-                pos = data.find('\n')
+                pos = data.find(b'\n')
                 if pos == -1:
                     # we can't make a determination yet, we dont have a full
                     # results line
@@ -445,11 +452,15 @@ class PEventListenerDispatcher(PLogDispatcher):
                 try:
                     self.resultlen = int(resultlen)
                 except ValueError:
+                    try:
+                        result_line = as_string(result_line)
+                    except UnicodeDecodeError:
+                        result_line = 'Undecodable: %r' % result_line
                     process.config.options.logger.warn(
-                        '%s: bad result line: %r' % (procname, result_line)
+                        '%s: bad result line: \'%s\'' % (procname, result_line)
                         )
                     self._change_listener_state(EventListenerStates.UNKNOWN)
-                    self.state_buffer = ''
+                    self.state_buffer = b''
                     notify(EventRejectedEvent(process, process.event))
                     process.event = None
                     return
@@ -465,7 +476,7 @@ class PEventListenerDispatcher(PLogDispatcher):
                 if not needed:
                     self.handle_result(self.result)
                     self.process.event = None
-                    self.result = ''
+                    self.result = b''
                     self.resultlen = None
 
             if self.state_buffer:
@@ -528,9 +539,8 @@ class PInputDispatcher(PDispatcher):
     """ Input (stdin) dispatcher """
 
     def __init__(self, process, channel, fd):
-        super(PInputDispatcher, self).__init__(process, channel, fd)
-        # the data type will always be bytes
-        self.input_buffer = as_bytes('')
+        PDispatcher.__init__(self, process, channel, fd)
+        self.input_buffer = b''
 
     def writable(self):
         if self.input_buffer and not self.closed:
@@ -559,27 +569,27 @@ class PInputDispatcher(PDispatcher):
                 self.flush()
             except OSError as why:
                 if why.args[0] == errno.EPIPE:
-                    self.input_buffer = ''
+                    self.input_buffer = b''
                     self.close()
                 else:
                     raise
 
 
-ANSI_ESCAPE_BEGIN = '\x1b['
-ANSI_TERMINATORS = ('H', 'f', 'A', 'B', 'C', 'D', 'R', 's', 'u', 'J',
-                    'K', 'h', 'l', 'p', 'm')
+ANSI_ESCAPE_BEGIN = b'\x1b['
+ANSI_TERMINATORS = (b'H', b'f', b'A', b'B', b'C', b'D', b'R', b's', b'u', b'J',
+                    b'K', b'h', b'l', b'p', b'm')
 
 
 def stripEscapes(s):
     """
     Remove all ANSI color escapes from the given string.
     """
-    result = ''
+    result = b''
     show = 1
     i = 0
     L = len(s)
     while i < L:
-        if show == 0 and s[i] in ANSI_TERMINATORS:
+        if show == 0 and s[i:i + 1] in ANSI_TERMINATORS:
             show = 1
         elif show:
             n = s.find(ANSI_ESCAPE_BEGIN, i)
@@ -599,5 +609,5 @@ class RejectEvent(Exception):
 
 
 def default_handler(event, response):
-    if response != 'OK':
+    if response != b'OK':
         raise RejectEvent(response)

@@ -130,7 +130,7 @@ class StreamHandler(Handler):
 
 
 class BoundIO(object):
-    def __init__(self, maxbytes, buf=''):
+    def __init__(self, maxbytes, buf=b''):
         self.maxbytes = maxbytes
         self.buf = buf
 
@@ -140,24 +140,24 @@ class BoundIO(object):
     def close(self):
         self.clear()
 
-    def write(self, s):
-        slen = len(s)
-        if len(self.buf) + slen > self.maxbytes:
-            self.buf = self.buf[slen:]
-        self.buf += s
+    def write(self, b):
+        blen = len(b)
+        if len(self.buf) + blen > self.maxbytes:
+            self.buf = self.buf[blen:]
+        self.buf += b
 
     def getvalue(self):
         return self.buf
 
     def clear(self):
-        self.buf = ''
+        self.buf = b''
 
 
 class FileHandler(Handler):
     """File handler which supports reopening of logs.
     """
 
-    def __init__(self, filename, mode="a"):
+    def __init__(self, filename, mode="ab"):
         Handler.__init__(self, self._openfile(filename, mode))
         self.baseFilename = filename
         self.mode = mode
@@ -185,7 +185,7 @@ class FileHandler(Handler):
 
 
 class RotatingFileHandler(FileHandler):
-    def __init__(self, filename, mode='a', maxBytes=512 * 1024 * 1024,
+    def __init__(self, filename, mode='ab', maxBytes=512 * 1024 * 1024,
                  backupCount=10):
         """
         Open the specified file and use it as the stream for logging.
@@ -208,7 +208,7 @@ class RotatingFileHandler(FileHandler):
         If maxBytes is zero, rollover never occurs.
         """
         if maxBytes > 0:
-            mode = 'a'  # doesn't make sense otherwise!
+            mode = 'ab'  # doesn't make sense otherwise!
         super(RotatingFileHandler, self).__init__(filename, mode)
         self._disable_inheritance_filehandler()  # fix file used by others process
         self.maxBytes = maxBytes
@@ -291,7 +291,7 @@ class RotatingFileHandler(FileHandler):
             except:
                 pass
             finally:
-                self.stream = self._openfile(self.baseFilename, 'w')
+                self.stream = self._openfile(self.baseFilename, 'wb')
 
 
 class LogRecord(object):

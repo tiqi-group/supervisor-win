@@ -129,17 +129,17 @@ class TailFProducerTests(unittest.TestCase):
         from supervisor import http
         with TempFileOpen() as tmpfile:
             # test 1
-            tmpfile.write(as_bytes('a' * 80))
+            tmpfile.write(b'a' * 80)
             tmpfile.flush()
             producer = self._makeOne(request, tmpfile.name, 80)
             result = producer.more()
-            self.assertEqual(result, as_bytes('a' * 80))
+            self.assertEqual(result, b'a' * 80)
 
             # test 2
-            tmpfile.write(as_bytes('b' * 100))
+            tmpfile.write(as_bytes(b'b' * 100))
             tmpfile.flush()
             result = producer.more()
-            self.assertEqual(result, as_bytes('b' * 100))
+            self.assertEqual(result, b'b' * 100)
 
             result = producer.more()
             self.assertEqual(result, http.NOT_DONE_YET)
@@ -173,14 +173,14 @@ class TailFProducerTests(unittest.TestCase):
             producer = self._makeOne(request, tmpfile.name, 80)
             result = producer.more()
 
-            self.assertEqual(result, as_bytes('a' * 80))
+            self.assertEqual(result, b'a' * 80)
 
             # in windows open files need to be closed
             tmpfile.close()
 
             tmpfile = open(tmpfile.name, 'wb')
             try:
-                tmpfile.write(as_bytes('b' * 80))
+                tmpfile.write(as_bytes(b'b' * 80))
                 tmpfile.flush()
                 result = producer.more()
             finally:
@@ -188,25 +188,24 @@ class TailFProducerTests(unittest.TestCase):
                 os.remove(tmpfile.name)
         finally:
             tmpfile.close()
-        self.assertEqual(result, as_bytes('b' * 80))
+        self.assertEqual(result, b'b' * 80)
 
     def test_handle_more_follow_file_gone(self):
         request = DummyRequest('/logtail/foo', None, None, None)
         tmpfile = TempFileOpen()
-        tmpfile.write(as_bytes('a' * 80))
+        tmpfile.write(b'a' * 80)
         try:
             producer = self._makeOne(request, tmpfile.name, 80)
             producer.close()
         finally:
             tmpfile.close()
         result = producer.more()
-        self.assertEqual(result, '')
-
+        self.assertEqual(result, b'a' * 80)
         with open(tmpfile.name, 'wb') as tmpfile:
-            tmpfile.write(as_bytes('b' * 80))
+            tmpfile.write(as_bytes(b'b' * 80))
         try:
             result = producer.more()  # should open in new file
-            self.assertEqual(result, as_bytes('b' * 80))
+            self.assertEqual(result, b'b' * 80)
         finally:
             os.remove(tmpfile.name)
 
@@ -225,28 +224,28 @@ class DeferringChunkedProducerTests(unittest.TestCase):
         self.assertEqual(producer.more(), NOT_DONE_YET)
 
     def test_more_string(self):
-        wrapped = DummyProducer('hello')
+        wrapped = DummyProducer(b'hello')
         producer = self._makeOne(wrapped)
-        self.assertEqual(producer.more(), '5\r\nhello\r\n')
+        self.assertEqual(producer.more(), b'5\r\nhello\r\n')
 
     def test_more_nodata(self):
         wrapped = DummyProducer()
-        producer = self._makeOne(wrapped, footers=['a', 'b'])
-        self.assertEqual(producer.more(), '0\r\na\r\nb\r\n\r\n')
+        producer = self._makeOne(wrapped, footers=[b'a', b'b'])
+        self.assertEqual(producer.more(), b'0\r\na\r\nb\r\n\r\n')
 
     def test_more_nodata_footers(self):
-        wrapped = DummyProducer('')
-        producer = self._makeOne(wrapped, footers=['a', 'b'])
-        self.assertEqual(producer.more(), '0\r\na\r\nb\r\n\r\n')
+        wrapped = DummyProducer(b'')
+        producer = self._makeOne(wrapped, footers=[b'a', b'b'])
+        self.assertEqual(producer.more(), b'0\r\na\r\nb\r\n\r\n')
 
     def test_more_nodata_nofooters(self):
-        wrapped = DummyProducer('')
+        wrapped = DummyProducer(b'')
         producer = self._makeOne(wrapped)
-        self.assertEqual(producer.more(), '0\r\n\r\n')
+        self.assertEqual(producer.more(), b'0\r\n\r\n')
 
     def test_more_noproducer(self):
         producer = self._makeOne(None)
-        self.assertEqual(producer.more(), '')
+        self.assertEqual(producer.more(), b'')
 
 
 class DeferringCompositeProducerTests(unittest.TestCase):
@@ -268,12 +267,12 @@ class DeferringCompositeProducerTests(unittest.TestCase):
         producer = self._makeOne([wrapped1, wrapped2])
         self.assertEqual(producer.more(), 'hello')
         self.assertEqual(producer.more(), 'goodbye')
-        self.assertEqual(producer.more(), '')
+        self.assertEqual(producer.more(), b'')
 
     def test_more_nodata(self):
         wrapped = DummyProducer()
         producer = self._makeOne([wrapped])
-        self.assertEqual(producer.more(), '')
+        self.assertEqual(producer.more(), b'')
 
 
 class DeferringGlobbingProducerTests(unittest.TestCase):
@@ -292,16 +291,16 @@ class DeferringGlobbingProducerTests(unittest.TestCase):
     def test_more_string(self):
         wrapped = DummyProducer('hello', 'there', 'guy')
         producer = self._makeOne(wrapped, buffer_size=1)
-        self.assertEqual(producer.more(), 'hello')
+        self.assertEqual(producer.more(), b'hello')
 
         wrapped = DummyProducer('hello', 'there', 'guy')
         producer = self._makeOne(wrapped, buffer_size=50)
-        self.assertEqual(producer.more(), 'hellothereguy')
+        self.assertEqual(producer.more(), b'hellothereguy')
 
     def test_more_nodata(self):
         wrapped = DummyProducer()
         producer = self._makeOne(wrapped)
-        self.assertEqual(producer.more(), '')
+        self.assertEqual(producer.more(), b'')
 
 
 class DeferringHookedProducerTests(unittest.TestCase):
@@ -338,12 +337,12 @@ class DeferringHookedProducerTests(unittest.TestCase):
             L.append(bytes)
 
         producer = self._makeOne(wrapped, callback)
-        self.assertEqual(producer.more(), '')
+        self.assertEqual(producer.more(), b'')
         self.assertEqual(L, [0])
 
     def test_more_noproducer(self):
         producer = self._makeOne(None, None)
-        self.assertEqual(producer.more(), '')
+        self.assertEqual(producer.more(), b'')
 
 
 class Test_deferring_http_request(unittest.TestCase):
@@ -653,7 +652,7 @@ class DummyProducer:
         if self.data:
             return self.data.pop(0)
         else:
-            return ''
+            return b''
 
 
 def test_suite():

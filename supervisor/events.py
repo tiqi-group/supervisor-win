@@ -1,11 +1,11 @@
 from supervisor.states import getProcessStateDescription
+from supervisor.compat import as_string
 
 callbacks = []
 
 
 def subscribe(type, callback):
     callbacks.append((type, callback))
-
 
 def notify(event):
     for type, callback in callbacks:
@@ -31,16 +31,22 @@ class ProcessLogEvent(Event):
         self.pid = pid
         self.data = data
 
-    def __str__(self):
+    def payload(self):
         groupname = ''
         if self.process.group is not None:
             groupname = self.process.group.config.name
-        return 'processname:%s groupname:%s pid:%s channel:%s\n%s' % (
-            self.process.config.name,
-            groupname,
-            self.pid,
-            self.channel,
-            self.data)
+        try:
+            data = as_string(self.data)
+        except UnicodeDecodeError:
+            data = 'Undecodable: %r' % self.data
+        # On Python 2, stuff needs to be in Unicode before invoking the
+        # % operator, otherwise implicit encodings to ASCII can cause
+        # failures
+        fmt = as_string('processname:%s groupname:%s pid:%s channel:%s\n%s')
+        result = fmt % (as_string(self.process.config.name),
+                        as_string(groupname), self.pid,
+                        as_string(self.channel), data)
+        return result
 
 
 class ProcessLogStdoutEvent(ProcessLogEvent):
@@ -54,23 +60,27 @@ class ProcessLogStderrEvent(ProcessLogEvent):
 class ProcessCommunicationEvent(Event):
     """ Abstract """
     # event mode tokens
-    BEGIN_TOKEN = '<!--XSUPERVISOR:BEGIN-->'
-    END_TOKEN = '<!--XSUPERVISOR:END-->'
+    BEGIN_TOKEN = b'<!--XSUPERVISOR:BEGIN-->'
+    END_TOKEN = b'<!--XSUPERVISOR:END-->'
 
     def __init__(self, process, pid, data):
         self.process = process
         self.pid = pid
         self.data = data
 
-    def __str__(self):
+    def payload(self):
         groupname = ''
         if self.process.group is not None:
             groupname = self.process.group.config.name
+        try:
+            data = as_string(self.data)
+        except UnicodeDecodeError:
+            data = 'Undecodable: %r' % self.data
         return 'processname:%s groupname:%s pid:%s\n%s' % (
             self.process.config.name,
             groupname,
             self.pid,
-            self.data)
+            data)
 
 
 class ProcessCommunicationStdoutEvent(ProcessCommunicationEvent):
@@ -86,14 +96,14 @@ class RemoteCommunicationEvent(Event):
         self.type = type
         self.data = data
 
-    def __str__(self):
+    def payload(self):
         return 'type:%s\n%s' % (self.type, self.data)
 
 
 class SupervisorStateChangeEvent(Event):
     """ Abstract class """
 
-    def __str__(self):
+    def payload(self):
         return ''
 
 
@@ -124,7 +134,7 @@ class ProcessStateEvent(Event):
         # us, we stash the values at the time the event was sent
         self.extra_values = self.get_extra_values()
 
-    def __str__(self):
+    def payload(self):
         groupname = ''
         if self.process.group is not None:
             groupname = self.process.group.config.name
@@ -183,7 +193,7 @@ class ProcessGroupEvent(Event):
     def __init__(self, group):
         self.group = group
 
-    def __str__(self):
+    def payload(self):
         return 'groupname:%s\n' % self.group
 
 
@@ -202,7 +212,7 @@ class TickEvent(Event):
         self.when = when
         self.supervisord = supervisord
 
-    def __str__(self):
+    def payload(self):
         return 'when:%s' % self.when
 
 

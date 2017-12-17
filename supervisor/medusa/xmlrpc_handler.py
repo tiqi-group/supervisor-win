@@ -7,6 +7,8 @@
 
 import sys
 
+from supervisor.compat import as_string
+
 import supervisor.medusa.http_server as http_server
 
 try:
@@ -85,8 +87,10 @@ class collector(object):
 
     def found_terminator(self):
         # set the terminator back to the default
-        self.request.channel.set_terminator('\r\n\r\n')
-        self.handler.continue_request("".join(self.data), self.request)
+        self.request.channel.set_terminator(b'\r\n\r\n')
+        # convert the data back to text for processing
+        data = as_string(b''.join(self.data))
+        self.handler.continue_request(data, self.request)
 
 
 if __name__ == '__main__':

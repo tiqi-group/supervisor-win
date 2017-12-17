@@ -16,6 +16,8 @@ from supervisor.compat import (
     splitquery,
     unquote
 )
+from supervisor.compat import as_bytes
+
 # async modules
 from supervisor.medusa import (
     asyncore_25 as asyncore,
@@ -90,8 +92,9 @@ class http_request(object):
 
     def build_reply_header(self):
         header_items = ['%s: %s' % item for item in self.reply_headers.items()]
-        return '\r\n'.join(
+        result = '\r\n'.join(
             [self.response(self.reply_code)] + header_items) + '\r\n\r\n'
+        return as_bytes(result)
 
     ####################################################
     # multiple reply header management
@@ -259,11 +262,13 @@ class http_request(object):
             )
 
     def push(self, thing):
-        if type(thing) == type(''):
-            self.outgoing.append(producers.simple_producer(thing,
-                                                           buffer_size=len(thing)))
-        else:
-            self.outgoing.append(thing)
+        # Sometimes, text gets pushed by XMLRPC logic for later
+        # processing.
+        if isinstance(thing, str):
+            thing = as_bytes(thing)
+        if isinstance(thing, bytes):
+            thing = producers.simple_producer(thing, buffer_size=len(thing))
+        self.outgoing.append(thing)
 
     def response(self, code=200):
         message = self.responses[code]
@@ -277,6 +282,7 @@ class http_request(object):
             'code': code,
             'message': message,
         }
+        s = as_bytes(s)
         self['Content-Length'] = len(s)
         self['Content-Type'] = 'text/html'
         # make an error reply
@@ -469,8 +475,8 @@ class http_channel(asynchat.async_chat):
         asynchat.async_chat.__init__(self, conn)
         self.server = server
         self.addr = addr
-        self.set_terminator('\r\n\r\n')
-        self.in_buffer = ''
+        self.set_terminator(b'\r\n\r\n')
+        self.in_buffer = b''
         self.creation_time = int(time.time())
         self.last_used = self.creation_time
         self.check_maintenance()
@@ -557,8 +563,8 @@ class http_channel(asynchat.async_chat):
             self.current_request.found_terminator()
         else:
             header = self.in_buffer
-            self.in_buffer = ''
-            lines = header.split('\r\n')
+            self.in_buffer = b''
+            lines = header.split(b'\r\n')
 
             # --------------------------------------------------
             # crack the request header

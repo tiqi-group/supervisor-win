@@ -5,6 +5,8 @@ import unittest
 
 from supervisor.tests.base import DummyEvent
 from supervisor.tests.base import DummyLogger
+from supervisor.compat import as_bytes
+
 from supervisor.tests.base import DummyOptions
 from supervisor.tests.base import DummyPConfig
 from supervisor.tests.base import DummyProcess
@@ -91,24 +93,24 @@ class POutputDispatcherTests(unittest.TestCase):
 
     def test_handle_read_event(self):
         options = DummyOptions()
-        options.readfd_result = 'abc'
+        options.readfd_result = b'abc'
         config = DummyPConfig(options, 'process1', '/bin/process1',
                               stdout_capture_maxbytes=100)
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
         self.assertEqual(dispatcher.handle_read_event(), None)
-        self.assertEqual(dispatcher.output_buffer, 'abc')
+        self.assertEqual(dispatcher.output_buffer, b'abc')
 
     def test_handle_read_event_no_data_closes(self):
         options = DummyOptions()
-        options.readfd_result = ''
+        options.readfd_result = b''
         config = DummyPConfig(options, 'process1', '/bin/process1',
                               stdout_capture_maxbytes=100)
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
         self.assertFalse(dispatcher.closed)
         self.assertEqual(dispatcher.handle_read_event(), None)
-        self.assertEqual(dispatcher.output_buffer, '')
+        self.assertEqual(dispatcher.output_buffer, b'')
         self.assertTrue(dispatcher.closed)
 
     def test_handle_error(self):
@@ -185,7 +187,7 @@ class POutputDispatcherTests(unittest.TestCase):
         self.assertEqual(dispatcher.childlog.data, ['a'])
         self.assertEqual(options.logger.data[0],
                          "'process1' stdout output:\na")
-        self.assertEqual(dispatcher.output_buffer, '')
+        self.assertEqual(dispatcher.output_buffer, b'')
 
     def test_record_output_emits_stdout_event_when_enabled(self):
         options = DummyOptions()
@@ -193,7 +195,7 @@ class POutputDispatcherTests(unittest.TestCase):
                               stdout_events_enabled=True)
         process = DummyProcess(config)
         dispatcher = self._makeOne(process, 'stdout')
-        dispatcher.output_buffer = 'hello from stdout'
+        dispatcher.output_buffer = b'hello from stdout'
 
         L = []
 
@@ -207,7 +209,7 @@ class POutputDispatcherTests(unittest.TestCase):
         self.assertEqual(len(L), 1)
         event = L[0]
         self.assertEqual(event.process, process)
-        self.assertEqual(event.data, 'hello from stdout')
+        self.assertEqual(event.data, b'hello from stdout')
 
     def test_record_output_does_not_emit_stdout_event_when_disabled(self):
         options = DummyOptions()
@@ -215,7 +217,7 @@ class POutputDispatcherTests(unittest.TestCase):
                               stdout_events_enabled=False)
         process = DummyProcess(config)
         dispatcher = self._makeOne(process, 'stdout')
-        dispatcher.output_buffer = 'hello from stdout'
+        dispatcher.output_buffer = b'hello from stdout'
 
         L = []
 
@@ -234,7 +236,7 @@ class POutputDispatcherTests(unittest.TestCase):
                               stderr_events_enabled=True)
         process = DummyProcess(config)
         dispatcher = self._makeOne(process, 'stderr')
-        dispatcher.output_buffer = 'hello from stderr'
+        dispatcher.output_buffer = b'hello from stderr'
 
         L = []
 
@@ -248,7 +250,7 @@ class POutputDispatcherTests(unittest.TestCase):
         self.assertEqual(len(L), 1)
         event = L[0]
         self.assertEqual(event.process, process)
-        self.assertEqual(event.data, 'hello from stderr')
+        self.assertEqual(event.data, b'hello from stderr')
 
     def test_record_output_does_not_emit_stderr_event_when_disabled(self):
         options = DummyOptions()
@@ -256,7 +258,7 @@ class POutputDispatcherTests(unittest.TestCase):
                               stderr_events_enabled=False)
         process = DummyProcess(config)
         dispatcher = self._makeOne(process, 'stderr')
-        dispatcher.output_buffer = 'hello from stderr'
+        dispatcher.output_buffer = b'hello from stderr'
 
         L = []
 
@@ -281,10 +283,10 @@ class POutputDispatcherTests(unittest.TestCase):
                               stdout_capture_maxbytes=100)
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
-        dispatcher.output_buffer = 'stdout string longer than a token'
+        dispatcher.output_buffer = b'stdout string longer than a token'
         dispatcher.record_output()
         self.assertEqual(dispatcher.childlog.data,
-                         ['stdout string longer than a token'])
+                         [b'stdout string longer than a token'])
         self.assertEqual(options.logger.data[0],
                          "'process1' stdout output:\nstdout string longer than a token")
 
@@ -316,7 +318,7 @@ class POutputDispatcherTests(unittest.TestCase):
         subscribe(ProcessCommunicationEvent, doit)
         BEGIN_TOKEN = ProcessCommunicationEvent.BEGIN_TOKEN
         END_TOKEN = ProcessCommunicationEvent.END_TOKEN
-        data = BEGIN_TOKEN + 'hello' + END_TOKEN
+        data = BEGIN_TOKEN + b'hello' + END_TOKEN
         options = DummyOptions()
         from supervisor.loggers import getLogger
         options.getLogger = getLogger  # actually use real logger
@@ -339,7 +341,7 @@ class POutputDispatcherTests(unittest.TestCase):
             self.assertEqual(event.__class__, ProcessCommunicationStdoutEvent)
             self.assertEqual(event.process, process)
             self.assertEqual(event.channel, 'stdout')
-            self.assertEqual(event.data, 'hello')
+            self.assertEqual(event.data, b'hello')
 
         finally:
             try:
@@ -360,16 +362,17 @@ class POutputDispatcherTests(unittest.TestCase):
         subscribe(ProcessCommunicationEvent, doit)
         import string
         # ascii_letters for python 3
-        letters = getattr(string, "letters", string.ascii_letters)
-        digits = string.digits * 4
+        letters = as_bytes(getattr(string, "letters", string.ascii_letters))
+        digits = as_bytes(string.digits) * 4
         BEGIN_TOKEN = ProcessCommunicationEvent.BEGIN_TOKEN
         END_TOKEN = ProcessCommunicationEvent.END_TOKEN
         data = (letters + BEGIN_TOKEN + digits + END_TOKEN + letters)
 
         # boundaries that split tokens
-        broken = data.split(':')
-        first = broken[0] + ':'
-        second = broken[1] + ':'
+        colon = b':'
+        broken = data.split(colon)
+        first = broken[0] + colon
+        second = broken[1] + colon
         third = broken[2]
 
         options = DummyOptions()
@@ -385,7 +388,7 @@ class POutputDispatcherTests(unittest.TestCase):
             dispatcher.output_buffer = first
             dispatcher.record_output()
             [x.flush() for x in dispatcher.childlog.handlers]
-            with open(logfile, 'r') as f:
+            with open(logfile, 'rb') as f:
                 self.assertEqual(f.read(), letters)
             self.assertEqual(dispatcher.output_buffer, first[len(letters):])
             self.assertEqual(len(events), 0)
@@ -394,7 +397,7 @@ class POutputDispatcherTests(unittest.TestCase):
             dispatcher.record_output()
             self.assertEqual(len(events), 0)
             [x.flush() for x in dispatcher.childlog.handlers]
-            with open(logfile, 'r') as f:
+            with open(logfile, 'rb') as f:
                 self.assertEqual(f.read(), letters)
             self.assertEqual(dispatcher.output_buffer, first[len(letters):])
             self.assertEqual(len(events), 0)
@@ -402,7 +405,7 @@ class POutputDispatcherTests(unittest.TestCase):
             dispatcher.output_buffer += third
             dispatcher.record_output()
             [x.flush() for x in dispatcher.childlog.handlers]
-            with open(logfile, 'r') as f:
+            with open(logfile, 'rb') as f:
                 self.assertEqual(f.read(), letters * 2)
             self.assertEqual(len(events), 1)
             event = events[0]
@@ -427,8 +430,8 @@ class POutputDispatcherTests(unittest.TestCase):
                               stdout_logfile=os.path.join(tempfile.gettempdir(), 'foo.txt'))
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
-        ansi = '\x1b[34mHello world... this is longer than a token!\x1b[0m'
-        noansi = 'Hello world... this is longer than a token!'
+        ansi = b'\x1b[34mHello world... this is longer than a token!\x1b[0m'
+        noansi = b'Hello world... this is longer than a token!'
 
         dispatcher.output_buffer = ansi
         dispatcher.record_output()
@@ -582,9 +585,9 @@ class PInputDispatcherTests(unittest.TestCase):
         config = DummyPConfig(options, 'test', '/test')
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
-        self.assertEqual(dispatcher.input_buffer, '')
+        self.assertEqual(dispatcher.input_buffer, b'')
         dispatcher.handle_write_event
-        self.assertEqual(dispatcher.input_buffer, '')
+        self.assertEqual(dispatcher.input_buffer, b'')
         self.assertEqual(options.written, {})
 
     def test_handle_write_event_epipe_raised(self):
@@ -596,7 +599,7 @@ class PInputDispatcherTests(unittest.TestCase):
         import errno
         options.write_error = errno.EPIPE
         dispatcher.handle_write_event()
-        self.assertEqual(dispatcher.input_buffer, '')
+        self.assertEqual(dispatcher.input_buffer, b'')
         self.assertTrue(options.logger.data[0].startswith(
             'fd 0 closed, stopped monitoring'))
         self.assertTrue(options.logger.data[0].endswith('(stdin)>'))
@@ -721,7 +724,7 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         options.readfd_result = dispatcher.READY_FOR_EVENTS_TOKEN
         self.assertEqual(dispatcher.handle_read_event(), None)
         self.assertEqual(process.listener_state, EventListenerStates.READY)
-        self.assertEqual(dispatcher.state_buffer, '')
+        self.assertEqual(dispatcher.state_buffer, b'')
         self.assertEqual(len(dispatcher.childlog.data), 1)
         self.assertEqual(dispatcher.childlog.data[0],
                          dispatcher.READY_FOR_EVENTS_TOKEN)
@@ -733,14 +736,14 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
         self.assertEqual(dispatcher.handle_read_event(), None)
-        self.assertEqual(dispatcher.state_buffer, '')
+        self.assertEqual(dispatcher.state_buffer, b'')
         from supervisor.dispatchers import EventListenerStates
         self.assertEqual(dispatcher.process.listener_state,
                          EventListenerStates.ACKNOWLEDGED)
 
     def test_handle_read_event_logging_nologs(self):
         options = DummyOptions()
-        options.readfd_result = 'supercalifragilisticexpialidocious'
+        options.readfd_result = b'supercalifragilisticexpialidocious'
         config = DummyPConfig(options, 'process1', '/bin/process1')
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
@@ -751,7 +754,7 @@ class PEventListenerDispatcherTests(unittest.TestCase):
 
     def test_handle_read_event_logging_childlog(self):
         options = DummyOptions()
-        options.readfd_result = 'supercalifragilisticexpialidocious'
+        options.readfd_result = b'supercalifragilisticexpialidocious'
         config = DummyPConfig(options, 'process1', '/bin/process1',
                               stdout_logfile=os.path.join(tempfile.gettempdir(), 'foo.txt'))
         process = DummyProcess(config)
@@ -759,7 +762,7 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         self.assertEqual(dispatcher.handle_read_event(), None)
         self.assertEqual(len(dispatcher.childlog.data), 1)
         self.assertEqual(dispatcher.childlog.data[0],
-                         'supercalifragilisticexpialidocious')
+                         b'supercalifragilisticexpialidocious')
 
     def test_handle_listener_state_change_from_unknown(self):
         options = DummyOptions()
@@ -768,9 +771,9 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         from supervisor.dispatchers import EventListenerStates
         dispatcher = self._makeOne(process)
         process.listener_state = EventListenerStates.UNKNOWN
-        dispatcher.state_buffer = 'whatever'
+        dispatcher.state_buffer = b'whatever'
         self.assertEqual(dispatcher.handle_listener_state_change(), None)
-        self.assertEqual(dispatcher.state_buffer, '')
+        self.assertEqual(dispatcher.state_buffer, b'')
         self.assertEqual(options.logger.data, [])
         self.assertEqual(process.listener_state, EventListenerStates.UNKNOWN)
 
@@ -781,9 +784,9 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         from supervisor.dispatchers import EventListenerStates
         dispatcher = self._makeOne(process)
         process.listener_state = EventListenerStates.ACKNOWLEDGED
-        dispatcher.state_buffer = 'READY\n'
+        dispatcher.state_buffer = b'READY\n'
         self.assertEqual(dispatcher.handle_listener_state_change(), None)
-        self.assertEqual(dispatcher.state_buffer, '')
+        self.assertEqual(dispatcher.state_buffer, b'')
         self.assertEqual(options.logger.data[0],
                          'process1: ACKNOWLEDGED -> READY')
         self.assertEqual(process.listener_state, EventListenerStates.READY)
@@ -795,9 +798,9 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         from supervisor.dispatchers import EventListenerStates
         dispatcher = self._makeOne(process)
         process.listener_state = EventListenerStates.ACKNOWLEDGED
-        dispatcher.state_buffer = 'READY\ngarbage\n'
+        dispatcher.state_buffer = b'READY\ngarbage\n'
         self.assertEqual(dispatcher.handle_listener_state_change(), None)
-        self.assertEqual(dispatcher.state_buffer, '')
+        self.assertEqual(dispatcher.state_buffer, b'')
         self.assertEqual(options.logger.data[0],
                          'process1: ACKNOWLEDGED -> READY')
         self.assertEqual(options.logger.data[1],
@@ -811,9 +814,9 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         from supervisor.dispatchers import EventListenerStates
         dispatcher = self._makeOne(process)
         process.listener_state = EventListenerStates.ACKNOWLEDGED
-        dispatcher.state_buffer = 'RE'
+        dispatcher.state_buffer = b'RE'
         self.assertEqual(dispatcher.handle_listener_state_change(), None)
-        self.assertEqual(dispatcher.state_buffer, 'RE')
+        self.assertEqual(dispatcher.state_buffer, b'RE')
         self.assertEqual(options.logger.data, [])
         self.assertEqual(process.listener_state,
                          EventListenerStates.ACKNOWLEDGED)
@@ -825,9 +828,9 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         from supervisor.dispatchers import EventListenerStates
         dispatcher = self._makeOne(process)
         process.listener_state = EventListenerStates.ACKNOWLEDGED
-        dispatcher.state_buffer = 'bogus data yo'
+        dispatcher.state_buffer = b'bogus data yo'
         self.assertEqual(dispatcher.handle_listener_state_change(), None)
-        self.assertEqual(dispatcher.state_buffer, '')
+        self.assertEqual(dispatcher.state_buffer, b'')
         self.assertEqual(options.logger.data[0],
                          'process1: ACKNOWLEDGED -> UNKNOWN')
         self.assertEqual(options.logger.data[1],
@@ -843,9 +846,9 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         from supervisor.dispatchers import EventListenerStates
         dispatcher = self._makeOne(process)
         process.listener_state = EventListenerStates.READY
-        dispatcher.state_buffer = 'bogus data yo'
+        dispatcher.state_buffer = b'bogus data yo'
         self.assertEqual(dispatcher.handle_listener_state_change(), None)
-        self.assertEqual(dispatcher.state_buffer, '')
+        self.assertEqual(dispatcher.state_buffer, b'')
         self.assertEqual(options.logger.data[0],
                          'process1: READY -> UNKNOWN')
         self.assertEqual(options.logger.data[1],
@@ -861,9 +864,9 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         from supervisor.dispatchers import EventListenerStates
         dispatcher = self._makeOne(process)
         process.listener_state = EventListenerStates.BUSY
-        dispatcher.state_buffer = 'bogus data yo'
+        dispatcher.state_buffer = b'bogus data yo'
         self.assertEqual(dispatcher.handle_listener_state_change(), None)
-        self.assertEqual(dispatcher.state_buffer, 'bogus data yo')
+        self.assertEqual(dispatcher.state_buffer, b'bogus data yo')
         self.assertEqual(process.listener_state, EventListenerStates.BUSY)
 
     def test_handle_listener_state_change_busy_to_acknowledged_procd(self):
@@ -881,9 +884,9 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         process.group.config = Dummy()
         from supervisor.dispatchers import default_handler
         process.group.config.result_handler = default_handler
-        dispatcher.state_buffer = 'RESULT 2\nOKabc'
+        dispatcher.state_buffer = b'RESULT 2\nOKabc'
         self.assertEqual(dispatcher.handle_listener_state_change(), None)
-        self.assertEqual(dispatcher.state_buffer, 'abc')
+        self.assertEqual(dispatcher.state_buffer, b'abc')
         self.assertEqual(options.logger.data[0],
                          'process1: event was processed')
         self.assertEqual(options.logger.data[1],
@@ -906,9 +909,9 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         process.group.config = Dummy()
         from supervisor.dispatchers import default_handler
         process.group.config.result_handler = default_handler
-        dispatcher.state_buffer = 'RESULT 4\nFAILabc'
+        dispatcher.state_buffer = b'RESULT 4\nFAILabc'
         self.assertEqual(dispatcher.handle_listener_state_change(), None)
-        self.assertEqual(dispatcher.state_buffer, 'abc')
+        self.assertEqual(dispatcher.state_buffer, b'abc')
         self.assertEqual(options.logger.data[0],
                          'process1: event was rejected')
         self.assertEqual(options.logger.data[1],
@@ -933,9 +936,9 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         process.listener_state = EventListenerStates.BUSY
         current_event = DummyEvent()
         process.event = current_event
-        dispatcher.state_buffer = 'bogus data\n'
+        dispatcher.state_buffer = b'bogus data\n'
         self.assertEqual(dispatcher.handle_listener_state_change(), None)
-        self.assertEqual(dispatcher.state_buffer, '')
+        self.assertEqual(dispatcher.state_buffer, b'')
         self.assertEqual(options.logger.data[0],
                          "process1: bad result line: 'bogus data'")
         self.assertEqual(options.logger.data[1],
@@ -964,9 +967,9 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         process.group.config = Dummy()
         from supervisor.dispatchers import default_handler
         process.group.config.result_handler = default_handler
-        dispatcher.state_buffer = 'RESULT 2\nOKbogus data\n'
+        dispatcher.state_buffer = b'RESULT 2\nOKbogus data\n'
         self.assertEqual(dispatcher.handle_listener_state_change(), None)
-        self.assertEqual(dispatcher.state_buffer, '')
+        self.assertEqual(dispatcher.state_buffer, b'')
         self.assertEqual(options.logger.data[0],
                          'process1: event was processed')
         self.assertEqual(options.logger.data[1],
@@ -1129,8 +1132,8 @@ class PEventListenerDispatcherTests(unittest.TestCase):
                               stdout_logfile=os.path.join(tempfile.gettempdir(), 'foo.txt'))
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
-        ansi = '\x1b[34mHello world... this is longer than a token!\x1b[0m'
-        noansi = 'Hello world... this is longer than a token!'
+        ansi = b'\x1b[34mHello world... this is longer than a token!\x1b[0m'
+        noansi = b'Hello world... this is longer than a token!'
 
         options.readfd_result = ansi
         dispatcher.handle_read_event()
@@ -1194,15 +1197,15 @@ class stripEscapeTests(unittest.TestCase):
         return stripEscapes(s)
 
     def test_zero_length_string(self):
-        self.assertEqual(self._callFUT(''), '')
+        self.assertEqual(self._callFUT(b''), b'')
 
     def test_ansi(self):
-        ansi = '\x1b[34mHello world... this is longer than a token!\x1b[0m'
-        noansi = 'Hello world... this is longer than a token!'
+        ansi = b'\x1b[34mHello world... this is longer than a token!\x1b[0m'
+        noansi = b'Hello world... this is longer than a token!'
         self.assertEqual(self._callFUT(ansi), noansi)
 
     def test_noansi(self):
-        noansi = 'Hello world... this is longer than a token!'
+        noansi = b'Hello world... this is longer than a token!'
         self.assertEqual(self._callFUT(noansi), noansi)
 
 
