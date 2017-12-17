@@ -11,6 +11,7 @@ from supervisor.loggers import getLevelNumByDescription
 from supervisor.medusa import text_socket
 from supervisor.utils import raise_not_implemented
 
+
 def process_or_group_name(name):
     """Ensures that a process or group name is not created with
        characters that break the eventlistener protocol"""
@@ -221,7 +222,7 @@ class InetStreamSocketConfig(SocketConfig):
         return self.host, self.port
 
     def create_and_bind(self):
-        sock = text_socket.text_socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind(self.addr())

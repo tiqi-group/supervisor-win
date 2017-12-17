@@ -20,12 +20,9 @@ from supervisor.compat import (
     PY3
 )
 from supervisor.http import NOT_DONE_YET
-from supervisor.medusa import (
-    producers,
-    text_socket
-)
 from supervisor.medusa.http_server import get_header
 from supervisor.medusa.xmlrpc_handler import xmlrpc_handler
+from supervisor.medusa import producers
 
 
 class Faults(object):
@@ -556,7 +553,7 @@ class SupervisorTransport(xmlrpclib.Transport):
 
 class UnixStreamHTTPConnection(httplib.HTTPConnection):
     def connect(self):  # pragma: no cover
-        self.sock = text_socket.text_socket(socket.AF_INET if sys.platform.startswith('win') else socket.AF_INET,
+        self.sock = socket.socket(socket.AF_INET if sys.platform.startswith('win') else socket.AF_INET,
                                             socket.SOCK_STREAM)
         # we abuse the host parameter as the socketname
         self.sock.connect(self.socketfile)

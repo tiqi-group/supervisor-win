@@ -53,6 +53,8 @@ import socket
 import sys
 import time
 
+from supervisor.compat import as_string, as_bytes
+
 try:
     socket_map
 except NameError:
@@ -264,7 +266,7 @@ class dispatcher(object):
     def create_socket(self, family, type):
         from supervisor.medusa import text_socket
         self.family_and_type = family, type
-        self.socket = text_socket.text_socket(family, type)
+        self.socket = socket.socket(family, type)
         self.socket.setblocking(0)
         self._fileno = self.socket.fileno()
         self.add_channel()
@@ -535,13 +537,9 @@ if os.name == 'posix':
             self.fd = fd
 
         def recv(self, buffersize):
-            from supervisor.compat import as_string
-
             return as_string(os.read(self.fd, buffersize))
 
         def send(self, s):
-            from supervisor.compat import as_bytes
-
             return os.write(self.fd, as_bytes(s))
 
         read = recv
@@ -554,6 +552,7 @@ if os.name == 'posix':
             return self.fd
 
     class file_dispatcher(dispatcher):
+
         def __init__(self, fd, map=None):
             dispatcher.__init__(self, None, map)
             self.connected = True

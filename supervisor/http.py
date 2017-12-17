@@ -16,15 +16,13 @@ from supervisor.compat import (
     as_bytes
 )
 from supervisor.compat import as_string
-from supervisor.medusa import (
-    asyncore_25 as asyncore,
-    http_date,
-    http_server,
-    producers,
-    filesys,
-    default_handler,
-    text_socket
-)
+from supervisor.medusa import asyncore_25 as asyncore
+from supervisor.medusa import http_date
+from supervisor.medusa import http_server
+from supervisor.medusa import producers
+from supervisor.medusa import filesys
+from supervisor.medusa import default_handler
+
 from supervisor.medusa.auth_handler import auth_handler
 
 
@@ -544,7 +542,7 @@ class supervisor_af_inet_http_server(supervisor_http_server):
         super(supervisor_af_inet_http_server, self).__init__(ip, port, init=False)
         self.ip = ip
         self.port = port
-        sock = text_socket.text_socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.prebind(sock, logger_object)
         self.bind((ip, port))
 
@@ -590,7 +588,7 @@ class supervisor_af_unix_http_server(supervisor_http_server):
             pass
 
         while 1:
-            sock = text_socket.text_socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
                 sock.bind(tempname)
                 os.chmod(tempname, sockchmod)
@@ -921,6 +919,7 @@ class LogWrapper:
             self.logger.error(msg)
         else:
             self.logger.trace(msg)
+
 
 class encrypted_dictionary_authorizer(object):
     def __init__(self, dict):
