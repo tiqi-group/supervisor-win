@@ -53,10 +53,10 @@ CLASSIFIERS = [
     'Topic :: System :: Monitoring',
     'Topic :: System :: Systems Administration',
     "Programming Language :: Python",
+    "Programming Language :: Python :: 2",
     "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.2",
-    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.4",
     "Programming Language :: Python :: 3.5",
 ]
 
