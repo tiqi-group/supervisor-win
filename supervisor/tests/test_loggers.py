@@ -7,8 +7,10 @@ import tempfile
 import unittest
 
 from supervisor.compat import PY3, as_bytes
-from supervisor.compat import StringIO
 from supervisor.compat import as_string
+from supervisor.compat import StringIO
+from supervisor.compat import unicode
+
 from supervisor.compat import syslog
 from supervisor.tests.base import DummyStream
 from supervisor.tests.base import mock

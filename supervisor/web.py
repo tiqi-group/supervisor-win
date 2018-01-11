@@ -8,13 +8,13 @@ import traceback
 
 import meld3
 
-from supervisor.compat import (
-    urllib,
-    parse_qs,
-    parse_qsl,
-    as_string,
-    PY3,
-    as_bytes)
+from supervisor.compat import urllib
+from supervisor.compat import parse_qs
+from supervisor.compat import parse_qsl
+from supervisor.compat import as_bytes
+from supervisor.compat import as_string
+from supervisor.compat import PY3
+from supervisor.compat import unicode
 from supervisor.http import NOT_DONE_YET
 from supervisor.medusa import producers
 from supervisor.medusa.http_server import get_header
