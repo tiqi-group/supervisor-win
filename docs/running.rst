@@ -205,8 +205,85 @@ interactively is started.  Use the action "help" to find out about available
 actions.
 
 
-Running :program:`supervisorctl`
---------------------------------
+:command:`supervisorctl` Actions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+help
+
+   Print a list of available actions
+
+help <action>
+
+   Print help for <action>
+
+add <name> [...]
+
+   Activates any updates in config for process/group
+
+remove <name> [...]
+
+   Removes process/group from active config
+
+update <name> [...]
+
+   Reload config and then add and remove as necessary (restarts programs)
+
+clear <name>
+
+   Clear a process' log files.
+
+clear <name> <name>
+
+   Clear multiple process' log files
+
+clear all
+
+   Clear all process' log files
+
+fg <process>
+
+   Connect to a process in foreground mode
+   Press Ctrl+C to exit foreground
+
+pid
+
+   Get the PID of supervisord.
+
+pid <name>
+
+   Get the PID of a single child process by name.
+
+pid all
+
+   Get the PID of every child process, one per line.
+
+reread
+
+   Reload the daemon's configuration files, without add/remove (no restarts)
+
+restart <name>
+
+   Restart a process
+   Note: restart does not reread config files. For that, see reread and update.
+
+restart <gname>:*
+
+   Restart all processes in a group
+   Note: restart does not reread config files. For that, see reread and update.
+
+restart <name> <name>
+
+   Restart multiple processes or groups
+   Note: restart does not reread config files. For that, see reread and update.
+
+restart all
+
+   Restart all processes
+   Note: restart does not reread config files. For that, see reread and update.
+
+signal
+
+   No help on signal
 
 To start :program:`supervisorctl`, run ``$BINDIR/supervisorctl``.  A
 shell will be presented that will allow you to control the processes
