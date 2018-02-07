@@ -2,31 +2,33 @@ language: python
 
 sudo: false
 
-env:
-    global:
-        - END_TO_END=1
-
 matrix:
     include:
         - python: 2.7
           env: TOXENV=cover
-        - python: 3.5
+        - python: 3.6
           env: TOXENV=cover3
-        - python: 3.5
+        - python: 3.6
           env: TOXENV=docs
         - python: 2.7
-          env: TOXENV=py27
+          env:
+            - TOXENV=py27
+            - END_TO_END=1
         - python: 3.4
-          env: TOXENV=py34
+          env:
+            - TOXENV=py34
+            - END_TO_END=1
         - python: 3.5
-          env: TOXENV=py35
-        - python: pypy
-          env: TOXENV=pypy
-        - python: pypy3
-          env: TOXENV=pypy3
+          env:
+            - TOXENV=py35
+            - END_TO_END=1
+        - python: 3.6
+          env:
+            - TOXENV=py36
+            - END_TO_END=1
 
 install:
-    - travis_retry pip install virtualenv tox
+    - travis_retry pip install virtualenv tox pexpect
 
 script:
     - travis_retry tox
