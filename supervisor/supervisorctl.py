@@ -177,16 +177,13 @@ class Controller(cmd.Cmd):
             self.output('')
             pass
 
-    def handle_xmlrpc_fault_state(self, state_handler, result, ignore_state=None):
-        code = result['status']
-        result = state_handler(result)
-        if code == ignore_state or code == xmlrpc.Faults.SUCCESS:
-            self.output(result)
-        elif code in xmlrpc.DEAD_PROGRAM_FAULTS:
-            self.output(result)
+    def handle_xmlrpc_fault_state(self, result, ignored_faultcode=None):
+        faultcode = result['status']
+        if faultcode in (ignored_faultcode, xmlrpc.Faults.SUCCESS):
+            pass
+        elif faultcode in xmlrpc.DEAD_PROGRAM_FAULTS:
             self.exitstatus = LSBInitErrorCodes.NOT_RUNNING
         else:
-            self.output(result)
             self.exitstatus = LSBInitErrorCodes.GENERIC
 
     def onecmd(self, line):
@@ -780,7 +777,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
         if 'all' in names:
             results = supervisor.startAllProcesses()
             for result in results:
-                self.ctl.handle_xmlrpc_fault_state(self._startresult, result, xmlrpc.Faults.ALREADY_STARTED)
+                self.ctl.output(self._startresult(result))
+                self.ctl.handle_xmlrpc_fault_state(result, xmlrpc.Faults.ALREADY_STARTED)
         else:
             for name in names:
                 group_name, process_name = split_namespec(name)
@@ -788,7 +786,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
                     try:
                         results = supervisor.startProcessGroup(group_name)
                         for result in results:
-                            self.ctl.handle_xmlrpc_fault_state(self._startresult, result, xmlrpc.Faults.ALREADY_STARTED)
+                            self.ctl.output(self._startresult(result))
+                            self.ctl.handle_xmlrpc_fault_state(result, xmlrpc.Faults.ALREADY_STARTED)
                     except xmlrpclib.Fault as e:
                         if e.faultCode == xmlrpc.Faults.BAD_NAME:
                             error = "%s: ERROR (no such group)" % group_name
@@ -805,7 +804,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
                                   'name': process_name,
                                   'group': group_name,
                                   'description': e.faultString}
-                        self.ctl.handle_xmlrpc_fault_state(self._startresult, error, xmlrpc.Faults.ALREADY_STARTED)
+                        self.ctl.output(self._startresult(error))
+                        self.ctl.handle_xmlrpc_fault_state(error, xmlrpc.Faults.ALREADY_STARTED)
                     else:
                         name = make_namespec(group_name, process_name)
                         self.ctl.output('%s: started' % name)
@@ -853,7 +853,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
         if 'all' in names:
             results = supervisor.stopAllProcesses()
             for result in results:
-                self.ctl.handle_xmlrpc_fault_state(self._stopresult, result, xmlrpc.Faults.NOT_RUNNING)
+                self.ctl.output(self._stopresult(result))
+                self.ctl.handle_xmlrpc_fault_state(result, xmlrpc.Faults.NOT_RUNNING)
         else:
             for name in names:
                 group_name, process_name = split_namespec(name)
@@ -862,7 +863,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
                         results = supervisor.stopProcessGroup(group_name)
 
                         for result in results:
-                            self.ctl.handle_xmlrpc_fault_state(self._stopresult, result, xmlrpc.Faults.NOT_RUNNING)
+                            self.ctl.output(self._stopresult(result))
+                            self.ctl.handle_xmlrpc_fault_state(result, xmlrpc.Faults.NOT_RUNNING)
                     except xmlrpclib.Fault as e:
                         if e.faultCode == xmlrpc.Faults.BAD_NAME:
                             error = "%s: ERROR (no such group)" % group_name
@@ -879,7 +881,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
                                  'name': process_name,
                                  'group': group_name,
                                  'description': e.faultString}
-                        self.ctl.handle_xmlrpc_fault_state(self._stopresult, error, xmlrpc.Faults.NOT_RUNNING)
+                        self.ctl.output(self._stopresult(error))
+                        self.ctl.handle_xmlrpc_fault_state(error, xmlrpc.Faults.NOT_RUNNING)
                     else:
                         name = make_namespec(group_name, process_name)
                         self.ctl.output('%s: stopped' % name)
@@ -910,7 +913,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
             results = supervisor.signalAllProcesses(sig)
 
             for result in results:
-                self.ctl.handle_xmlrpc_fault_state(self._signalresult, result)
+                self.ctl.output(self._signalresult(result))
+                self.ctl.handle_xmlrpc_fault_state(result)
         else:
             for name in names:
                 group_name, process_name = split_namespec(name)
@@ -920,7 +924,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
                             group_name, sig
                         )
                         for result in results:
-                            self.ctl.handle_xmlrpc_fault_state(self._signalresult, result)
+                            self.ctl.output(self._signalresult(result))
+                            self.ctl.handle_xmlrpc_fault_state(result)
                     except xmlrpclib.Fault as e:
                         if e.faultCode == xmlrpc.Faults.BAD_NAME:
                             error = "%s: ERROR (no such group)" % group_name
@@ -936,7 +941,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
                                  'name': process_name,
                                  'group': group_name,
                                  'description': e.faultString}
-                        self.ctl.handle_xmlrpc_fault_state(self._signalresult, error)
+                        self.ctl.output(self._signalresult(error))
+                        self.ctl.handle_xmlrpc_fault_state(error)
                     else:
                         name = make_namespec(group_name, process_name)
                         self.ctl.output('%s: signalled' % name)
@@ -1274,7 +1280,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
         if 'all' in names:
             results = supervisor.clearAllProcessLogs()
             for result in results:
-                self.ctl.handle_xmlrpc_fault_state(self._clearresult, result)
+                self.ctl.output(self._clearresult(result))
+                self.ctl.handle_xmlrpc_fault_state(result)
         else:
             for name in names:
                 group_name, process_name = split_namespec(name)
@@ -1285,7 +1292,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
                              'name': process_name,
                              'group': group_name,
                              'description': e.faultString}
-                    self.ctl.handle_xmlrpc_fault_state(self._clearresult, error)
+                    self.ctl.output(self._clearresult(error))
+                    self.ctl.handle_xmlrpc_fault_state(error)
                 else:
                     name = make_namespec(group_name, process_name)
                     self.ctl.output('%s: cleared' % name)
