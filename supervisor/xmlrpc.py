@@ -46,11 +46,6 @@ class Faults(object):
     CANT_REREAD = 92
 
 
-DEAD_PROGRAM_FAULTS = (Faults.SPAWN_ERROR,
-                       Faults.ABNORMAL_TERMINATION,
-                       Faults.NOT_RUNNING)
-
-
 def getFaultDescription(code):
     for faultname in Faults.__dict__:
         if getattr(Faults, faultname) == code:
