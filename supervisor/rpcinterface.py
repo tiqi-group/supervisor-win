@@ -187,6 +187,11 @@ class SupervisorNamespaceRPCInterface(object):
         added = [group.name for group in added]
         changed = [group.name for group in changed]
         removed = [group.name for group in removed]
+
+        self.supervisord.options.logger.info(
+            'configuration reloaded (added: %s changed: %s removed: %s)' % (
+                added, changed, removed))
+
         return [[added, changed, removed]]  # cannot return len > 1, apparently
 
     def addProcessGroup(self, name):
