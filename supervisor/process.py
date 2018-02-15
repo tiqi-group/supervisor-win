@@ -929,6 +929,9 @@ class ProcessGroupBase(object):
             dispatchers.update(process.dispatchers)
         return dispatchers
 
+    def before_remove(self):
+        pass
+
 
 class ProcessGroup(ProcessGroupBase):
     def transition(self):
@@ -957,12 +960,10 @@ class EventListenerPool(ProcessGroupBase):
     def __init__(self, config):
         ProcessGroupBase.__init__(self, config)
         self.event_buffer = []
-        for event_type in self.config.pool_events:
-            events.subscribe(event_type, self._acceptEvent)
-        events.subscribe(events.EventRejectedEvent, self.handle_rejected)
         self.serial = -1
         self.last_dispatch = 0
         self.dispatch_throttle = 0  # in seconds: .00195 is an interesting one
+        self._subscribe()
 
     def handle_rejected(self, event):
         process = event.process
@@ -987,6 +988,9 @@ class EventListenerPool(ProcessGroupBase):
                 if now - self.last_dispatch < self.dispatch_throttle:
                     return
             self.dispatch()
+
+    def before_remove(self):
+        self._unsubscribe()
 
     def dispatch(self):
         while self.event_buffer:
@@ -1080,6 +1084,16 @@ class EventListenerPool(ProcessGroupBase):
         return ('ver:%(ver)s server:%(sid)s serial:%(serial)s '
                 'pool:%(pool_name)s poolserial:%(pool_serial)s '
                 'eventname:%(event_name)s len:%(len)s\n%(payload)s' % D)
+
+    def _subscribe(self):
+        for event_type in self.config.pool_events:
+            events.subscribe(event_type, self._acceptEvent)
+        events.subscribe(events.EventRejectedEvent, self.handle_rejected)
+
+    def _unsubscribe(self):
+        for event_type in self.config.pool_events:
+            events.unsubscribe(event_type, self._acceptEvent)
+        events.unsubscribe(events.EventRejectedEvent, self.handle_rejected)
 
 
 class GlobalSerial(object):
