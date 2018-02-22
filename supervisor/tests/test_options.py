@@ -2704,7 +2704,7 @@ class ServerOptionsTests(unittest.TestCase):
         #instance.poller.after_daemonize.assert_called_once_with()
 
 
-class TestProcessConfig(unittest.TestCase):
+class ProcessConfigTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.options import ProcessConfig
         return ProcessConfig
@@ -2727,6 +2727,22 @@ class TestProcessConfig(unittest.TestCase):
             defaults[name] = 10
         defaults.update(kw)
         return self._getTargetClass()(*arg, **defaults)
+
+    def test_get_path_env_is_None_delegates_to_options(self):
+        options = DummyOptions()
+        instance = self._makeOne(options, environment=None)
+        self.assertEqual(instance.get_path(), options.get_path())
+
+    def test_get_path_env_dict_with_no_PATH_delegates_to_options(self):
+        options = DummyOptions()
+        instance = self._makeOne(options, environment={'FOO': '1'})
+        self.assertEqual(instance.get_path(), options.get_path())
+
+    def test_get_path_env_dict_with_PATH_uses_it(self):
+        options = DummyOptions()
+        instance = self._makeOne(options, environment={'PATH': '/a:/b:/c'})
+        self.assertNotEqual(instance.get_path(), options.get_path())
+        self.assertEqual(instance.get_path(), ['/a', '/b', '/c'])
 
     def test_create_autochildlogs(self):
         options = DummyOptions()
@@ -2833,7 +2849,7 @@ class EventListenerConfigTests(unittest.TestCase):
                 self.assertEqual(pipes['stderr'], sys.stderr)
 
 
-class FastCGIProcessConfigTest(unittest.TestCase):
+class FastCGIProcessConfigTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.options import FastCGIProcessConfig
         return FastCGIProcessConfig
