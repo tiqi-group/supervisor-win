@@ -3,12 +3,9 @@ import shlex
 import signal
 import socket
 
-from supervisor.compat import (
-    urlparse,
-    long
-)
+from supervisor.compat import urlparse
+from supervisor.compat import long
 from supervisor.loggers import getLevelNumByDescription
-from supervisor.medusa import text_socket
 from supervisor.utils import raise_not_implemented
 
 
@@ -16,8 +13,9 @@ def process_or_group_name(name):
     """Ensures that a process or group name is not created with
        characters that break the eventlistener protocol"""
     s = str(name).strip()
-    if ' ' in s or ':' in s:
-        raise ValueError("Invalid name: " + repr(name))
+    for character in ' :/':
+        if character in s:
+            raise ValueError("Invalid name: %r because of character: %r" % (name, character))
     return s
 
 
