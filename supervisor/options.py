@@ -15,44 +15,40 @@ import warnings
 
 import pkg_resources
 
-from supervisor import (
-    helpers,
-    loggers,
-    states,
-    xmlrpc,
-    poller
-)
-from supervisor.compat import (
-    PY3,
-    ConfigParser,
-    as_bytes, as_string,
-    xmlrpclib,
-    StringIO,
-    basestring
-)
-from supervisor.datatypes import (
-    process_or_group_name,
-    boolean,
-    integer,
-    existing_dirpath,
-    byte_size,
-    signal_number,
-    list_of_exitcodes,
-    dict_of_key_value_pairs,
-    logfile_name,
-    list_of_strings,
-    octal_type,
-    existing_directory,
-    logging_level,
-    inet_address,
-    InetStreamSocketConfig,
-    url,
-    Automatic,
-    auto_restart,
-    profile_options
-)
-from supervisor.medusa import asyncore_25 as asyncore
+from supervisor import helpers
+from supervisor.compat import ConfigParser
+from supervisor.compat import as_bytes, as_string
+from supervisor.compat import xmlrpclib
+from supervisor.compat import StringIO
+from supervisor.compat import basestring
+
 from supervisor.utils import raise_not_implemented
+from supervisor.medusa import asyncore_25 as asyncore
+
+from supervisor.datatypes import process_or_group_name
+from supervisor.datatypes import boolean
+from supervisor.datatypes import integer
+from supervisor.datatypes import existing_dirpath
+from supervisor.datatypes import byte_size
+from supervisor.datatypes import signal_number
+from supervisor.datatypes import list_of_exitcodes
+from supervisor.datatypes import dict_of_key_value_pairs
+from supervisor.datatypes import logfile_name
+from supervisor.datatypes import list_of_strings
+from supervisor.datatypes import octal_type
+from supervisor.datatypes import existing_directory
+from supervisor.datatypes import logging_level
+from supervisor.datatypes import inet_address
+from supervisor.datatypes import InetStreamSocketConfig
+from supervisor.datatypes import url
+from supervisor.datatypes import Automatic
+from supervisor.datatypes import auto_restart
+from supervisor.datatypes import profile_options
+
+from supervisor import loggers
+from supervisor import states
+from supervisor import xmlrpc
+from supervisor import poller
 
 
 def _read_version_txt():

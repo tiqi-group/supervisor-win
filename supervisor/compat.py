@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import sys
 
-PY3 = sys.version_info[0] == 3
+PY2 = sys.version_info[0] == 2
 
 
 class _Stream(object):
@@ -19,29 +19,7 @@ class _Stream(object):
             self.value.decode(encoding, 'ignore' if ignore else 'strict')
 
 
-if PY3:  # pragma: no cover
-    long = int
-    basestring = str
-    unichr = chr
-    raw_input = input
-
-    class unicode(str):
-        def __init__(self, string, encoding, errors):
-            str.__init__(self, string)
-
-    def as_bytes(s, encoding='utf-8', ignore=False):
-        return _Stream(s, bytes).encode(encoding=encoding, ignore=ignore)
-
-    def as_string(s, encoding='utf-8', ignore=False):
-        return _Stream(s, str).decode(encoding=encoding, ignore=ignore)
-
-    from functools import reduce
-
-    def is_text_stream(stream):
-        import _io
-        return isinstance(stream, _io._TextIOBase)
-
-else:  # pragma: no cover
+if PY2:  # pragma: no cover
     long = long
     raw_input = raw_input
     unicode = unicode
@@ -69,6 +47,19 @@ else:  # pragma: no cover
         except ImportError:
             import io
             return isinstance(stream, io.TextIOWrapper)
+else: # pragma: no cover
+    long = int
+    basestring = str
+    raw_input = input
+    class unicode(str):
+        def __init__(self, string, encoding, errors):
+            str.__init__(self, string)
+    def as_bytes(s): return s if isinstance(s,bytes) else s.encode('utf8')
+    def as_string(s): return s if isinstance(s,str) else s.decode('utf8')
+
+    def is_text_stream(stream):
+        import _io
+        return isinstance(stream, _io._TextIOBase)
 
 def total_ordering(cls):  # pragma: no cover
     """Class decorator that fills in missing ordering methods"""
@@ -175,10 +166,10 @@ try:  # pragma: no cover
 except ImportError:  # pragma: no cover
     from base64 import decodestring, encodestring
 
-if PY3:  # pragma: no cover
-    func_attribute = '__func__'
-else:  # pragma: no cover
+if PY2:  # pragma: no cover
     func_attribute = 'im_func'
+else:  # pragma: no cover
+    func_attribute = '__func__'
 
 try:  # pragma: no cover
     from xmlrpc.client import Fault

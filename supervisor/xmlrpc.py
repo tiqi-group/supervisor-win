@@ -7,22 +7,22 @@ import traceback
 import types
 from xml.etree.ElementTree import iterparse
 
-from supervisor.compat import (
-    xmlrpclib,
-    func_attribute,
-    StringIO,
-    urllib,
-    as_bytes,
-    as_string,
-    encodestring,
-    decodestring,
-    httplib,
-    PY3
-)
-from supervisor.http import NOT_DONE_YET
+from supervisor.compat import xmlrpclib
+from supervisor.compat import func_attribute
+from supervisor.compat import StringIO
+from supervisor.compat import urllib
+from supervisor.compat import as_bytes
+from supervisor.compat import as_string
+from supervisor.compat import encodestring
+from supervisor.compat import decodestring
+from supervisor.compat import httplib
+from supervisor.compat import PY2
+
 from supervisor.medusa.http_server import get_header
 from supervisor.medusa.xmlrpc_handler import xmlrpc_handler
 from supervisor.medusa import producers
+
+from supervisor.http import NOT_DONE_YET
 
 
 class Faults(object):
@@ -382,7 +382,7 @@ class supervisor_xmlrpc_handler(xmlrpc_handler):
                 # contains non-ASCII characters. It's a bit of a kludge to
                 # do it conditionally here, but it's down to how underlying
                 # libs behave
-                if not PY3:
+                if PY2:
                     data = data.encode('ascii', 'xmlcharrefreplace')
                 params, method = self.loads(data)
             except:

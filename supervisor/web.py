@@ -13,7 +13,7 @@ from supervisor.compat import parse_qs
 from supervisor.compat import parse_qsl
 from supervisor.compat import as_bytes
 from supervisor.compat import as_string
-from supervisor.compat import PY3
+from supervisor.compat import PY2
 from supervisor.compat import unicode
 from supervisor.http import NOT_DONE_YET
 from supervisor.medusa import producers
@@ -128,7 +128,7 @@ class DeferredWebProducer(object):
             )
         else:
             # fix AttributeError: 'unicode' object has no attribute 'more'
-            if (not PY3) and (len(self.request.outgoing) > 0):
+            if PY2 and (len(self.request.outgoing) > 0):
                 body = self.request.outgoing[0]
                 if isinstance(body, unicode):
                     self.request.outgoing[0] = producers.simple_producer(body)
