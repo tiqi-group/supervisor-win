@@ -480,7 +480,7 @@ class ServerOptionsTests(unittest.TestCase):
         instance.realize(args=[])
         options = instance.configroot.supervisord
         self.assertEqual(options.directory, tempfile.gettempdir())
-        self.assertEqual(options.umask, 18)  # 022 in Py2, 0o22 in Py3
+        self.assertEqual(options.umask, 0o22)
         self.assertEqual(options.logfile, 'supervisord.log')
         self.assertEqual(options.logfile_maxbytes, 1000 * 1024 * 1024)
         self.assertEqual(options.logfile_backups, 5)
@@ -629,8 +629,8 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(instance.uid, None)
         self.assertEqual(instance.gid, None)
         self.assertEqual(instance.directory, tempfile.gettempdir())
-        self.assertEqual(instance.umask, 18)  # 022 in Py2, 0o22 in Py3
-        self.assertEqual(instance.logfile, os.path.join(here, 'supervisord.log'))
+        self.assertEqual(instance.umask, 0o22)
+        self.assertEqual(instance.logfile, os.path.join(here,'supervisord.log'))
         self.assertEqual(instance.logfile_maxbytes, 1000 * 1024 * 1024)
         self.assertEqual(instance.logfile_backups, 5)
         self.assertEqual(instance.loglevel, 40)

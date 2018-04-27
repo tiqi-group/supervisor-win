@@ -1259,8 +1259,7 @@ class ServerOptions(Options):
         elif stat.S_ISDIR(st[stat.ST_MODE]):
             raise NotExecutable("command at %r is a directory" % filename)
 
-        elif not (stat.S_IMODE(st[stat.ST_MODE]) & 73):
-            # 73 is spelled 0111 in py2, 0o111 in py3
+        elif not (stat.S_IMODE(st[stat.ST_MODE]) & 0o111):
             raise NotExecutable("command at %r is not executable" % filename)
 
         elif not os.access(filename, os.X_OK):
