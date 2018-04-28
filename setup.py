@@ -84,7 +84,6 @@ dist = setup(
     packages=find_packages(),
     install_requires=requires,
     extras_require={
-        'iterparse': ['cElementTree >= 1.0.2'],
         'testing': testing_extras,
         },
     tests_require=tests_require,
