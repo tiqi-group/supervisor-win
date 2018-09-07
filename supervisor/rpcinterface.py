@@ -9,7 +9,10 @@ from supervisor.compat import (
     as_bytes,
     unicode
 )
-from supervisor.datatypes import signal_number
+from supervisor.datatypes import (
+    Automatic,
+    signal_number,
+    )
 from supervisor.events import (
     RemoteCommunicationEvent,
     notify
@@ -621,8 +624,9 @@ class SupervisorNamespaceRPCInterface(object):
                      'stderr_logfile_backups': pconfig.stderr_logfile_backups,
                      'stderr_logfile_maxbytes': pconfig.stderr_logfile_maxbytes,
                     }
-                # no support for None in xml-rpc
-                d.update((k, '') for k, v in d.items() if v is None)
+                # no support for these types in xml-rpc
+                d.update((k, 'auto') for k, v in d.items() if v is Automatic)
+                d.update((k, 'none') for k, v in d.items() if v is None)
                 configinfo.append(d)
 
         configinfo.sort(key=lambda r: r['name'])
