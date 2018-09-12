@@ -102,9 +102,14 @@ def dict_of_key_value_pairs(arg):
 
 
 class Automatic(object):
-    pass
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return self.value
 
 
+Automatic = Automatic('auto')
 LOGFILE_NONES = ('none', 'off', None)
 LOGFILE_AUTOS = (Automatic, 'auto')
 
