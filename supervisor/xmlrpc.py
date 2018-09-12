@@ -61,7 +61,7 @@ class RPCError(Exception):
             self.text = '%s: %s' % (self.text, extra)
 
 
-class DeferredXMLRPCResponse:
+class DeferredXMLRPCResponse(object):
     """ A medusa producer that implements a deferred callback; requires
     a subclass of asynchat.async_chat that handles NOT_DONE_YET sentinel """
     CONNECTION = re.compile('Connection: (.*)', re.IGNORECASE)
@@ -154,7 +154,7 @@ def xmlrpc_marshal(value):
     return body
 
 
-class SystemNamespaceRPCInterface:
+class SystemNamespaceRPCInterface(object):
     def __init__(self, namespaces):
         self.namespaces = {}
         for name, inst in namespaces:
@@ -302,7 +302,7 @@ class AttrDict(dict):
         return self[name]
 
 
-class RootRPCInterface:
+class RootRPCInterface(object):
     def __init__(self, subinterfaces):
         for name, rpcinterface in subinterfaces:
             setattr(self, name, rpcinterface)

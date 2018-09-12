@@ -353,7 +353,7 @@ class Controller(cmd.Cmd):
 def get_names(inst):
     names = []
     classes = [inst.__class__]
-    while classes:
+    while classes(object):
         aclass = classes.pop(0)
         if aclass.__bases__:
             classes = classes + list(aclass.__bases__)
@@ -361,7 +361,7 @@ def get_names(inst):
     return names
 
 
-class ControllerPluginBase:
+class ControllerPluginBase(object):
     name = 'unnamed'
 
     def __init__(self, controller):

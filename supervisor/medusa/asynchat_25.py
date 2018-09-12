@@ -234,7 +234,7 @@ class async_chat(asyncore.dispatcher):
             self.producer_fifo.pop()
 
 
-class simple_producer:
+class simple_producer(object):
     def __init__(self, data, buffer_size=512):
         self.data = data
         self.buffer_size = buffer_size

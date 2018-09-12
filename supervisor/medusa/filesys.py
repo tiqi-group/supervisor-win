@@ -16,7 +16,8 @@
 
 from supervisor.compat import long
 
-class abstract_filesystem:
+
+class abstract_filesystem(object):
     def __init__ (self):
         pass
 
@@ -81,7 +82,7 @@ def safe_stat (path):
     except:
         return None
 
-class os_filesystem:
+class os_filesystem(object):
     path_module = os.path
 
     # set this to zero if you want to disable pathname globbing.
@@ -272,7 +273,7 @@ class msdos_filesystem (os_filesystem):
 # Note: this is most likely how I will handle ~user directories
 # with the http server.
 
-class merged_filesystem:
+class merged_filesystem(object):
     def __init__ (self, *fsys):
         pass
 
@@ -380,7 +381,7 @@ def ls_date (now, t):
 # Producers
 # ===========================================================================
 
-class list_producer:
+class list_producer(object):
     def __init__ (self, list, func=None):
         self.list = list
         self.func = func

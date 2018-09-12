@@ -27,7 +27,8 @@ import stat         # v
 #  o    socket channel
 #  o    syslog output...
 
-class file_logger:
+
+class file_logger(object):
 
     # pass this either a path or a file object.
     def __init__ (self, file, flush=1, mode='a'):
@@ -161,7 +162,7 @@ class socket_logger (asynchat.async_chat):
             self.socket.push (message)
 
 # log to multiple places
-class multi_logger:
+class multi_logger(object):
     def __init__ (self, loggers):
         self.loggers = loggers
 
@@ -172,7 +173,8 @@ class multi_logger:
         for logger in self.loggers:
             logger.log (message)
 
-class resolving_logger:
+
+class resolving_logger(object):
     """Feed (ip, message) combinations into this logger to get a
     resolved hostname in front of the message.  The message will not
     be logged until the PTR request finishes (or fails)."""
@@ -181,7 +183,7 @@ class resolving_logger:
         self.resolver = resolver
         self.logger = logger
 
-    class logger_thunk:
+    class logger_thunk(object):
         def __init__ (self, message, logger):
             self.message = message
             self.logger = logger
@@ -200,7 +202,7 @@ class resolving_logger:
                         )
                 )
 
-class unresolving_logger:
+class unresolving_logger(object):
     """Just in case you don't want to resolve"""
     def __init__ (self, logger):
         self.logger = logger
@@ -214,7 +216,8 @@ def strip_eol (line):
         line = line[:-1]
     return line
 
-class tail_logger:
+
+class tail_logger(object):
     """Keep track of the last <size> log messages"""
     def __init__ (self, logger, size=500):
         self.size = size

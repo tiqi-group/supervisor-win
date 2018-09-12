@@ -15,7 +15,7 @@
 from supervisor.compat import long
 
 
-class counter:
+class counter(object):
     """general-purpose counter"""
 
     def __init__(self, initial_value=0):

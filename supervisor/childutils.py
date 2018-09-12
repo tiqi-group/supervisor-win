@@ -35,7 +35,8 @@ def get_asctime(now=None):
     asctime = '%s,%03d' % (part1, msecs)
     return asctime
 
-class ProcessCommunicationsProtocol:
+
+class ProcessCommunicationsProtocol(object):
     def send(self, msg, fp=sys.stdout):
         fp.write(ProcessCommunicationEvent.BEGIN_TOKEN)
         fp.write(msg)
@@ -47,9 +48,11 @@ class ProcessCommunicationsProtocol:
     def stderr(self, msg):
         return self.send(msg, sys.stderr)
 
+
 pcomm = ProcessCommunicationsProtocol()
 
-class EventListenerProtocol:
+
+class EventListenerProtocol(object):
     def wait(self, stdin=sys.stdin, stdout=sys.stdout):
         self.ready(stdout)
         line = stdin.readline()
@@ -74,5 +77,6 @@ class EventListenerProtocol:
                                data)
         stdout.write(result)
         stdout.flush()
+
 
 listener = EventListenerProtocol()

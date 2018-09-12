@@ -1,7 +1,8 @@
 # This module must not depend on any other non-stdlib module to prevent
 # circular import problems.
 
-class ProcessStates:
+
+class ProcessStates(object):
     STOPPED = 0
     STARTING = 10
     RUNNING = 20
@@ -10,6 +11,7 @@ class ProcessStates:
     EXITED = 100
     FATAL = 200
     UNKNOWN = 1000
+
 
 STOPPED_STATES = (ProcessStates.STOPPED,
                   ProcessStates.EXITED,
@@ -27,11 +29,13 @@ def getProcessStateDescription(code):
         if getattr(ProcessStates, statename) == code:
             return statename
 
-class SupervisorStates:
+
+class SupervisorStates(object):
     FATAL = 2
     RUNNING = 1
     RESTARTING = 0
     SHUTDOWN = -1
+
 
 def getSupervisorStateDescription(code):
     for statename in SupervisorStates.__dict__:
@@ -39,11 +43,12 @@ def getSupervisorStateDescription(code):
             return statename
 
 
-class EventListenerStates:
+class EventListenerStates(object):
     READY = 10 # the process ready to be sent an event from supervisor
     BUSY = 20 # event listener is processing an event sent to it by supervisor
     ACKNOWLEDGED = 30 # the event listener processed an event
     UNKNOWN = 40 # the event listener is in an unknown state
+
 
 def getEventListenerStateDescription(code):
     for statename in EventListenerStates.__dict__:

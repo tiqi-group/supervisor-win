@@ -2,7 +2,7 @@ import select
 import errno
 
 
-class BasePoller:
+class BasePoller(object):
     def __init__(self, options):
         self.options = options
         self.initialize()

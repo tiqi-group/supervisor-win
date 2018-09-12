@@ -37,7 +37,7 @@ unquote = http_server.unquote
 from supervisor.medusa.counter import counter
 
 
-class default_handler:
+class default_handler(object):
     valid_commands = ['GET', 'HEAD']
 
     IDENT = 'Default HTTP Request Handler'

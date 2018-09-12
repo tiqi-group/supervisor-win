@@ -34,7 +34,7 @@ from supervisor.xmlrpc import RPCError
 from supervisor.rpcinterface import SupervisorNamespaceRPCInterface
 
 
-class DeferredWebProducer:
+class DeferredWebProducer(object):
     """ A medusa producer that implements a deferred callback; requires
     a subclass of asynchat.async_chat that handles NOT_DONE_YET sentinel """
     CONNECTION = re.compile('Connection: (.*)', re.IGNORECASE)
@@ -156,12 +156,12 @@ class DeferredWebProducer:
             self.request.channel.close_when_done()
 
 
-class ViewContext:
+class ViewContext(object):
     def __init__(self, **kw):
         self.__dict__.update(kw)
 
 
-class MeldView:
+class MeldView(object):
     content_type = 'text/html'
     delay = .5
 
@@ -538,7 +538,7 @@ class StatusView(MeldView):
         return as_string(root.write_xhtmlstring())
 
 
-class OKView:
+class OKView(object):
     delay = 0
 
     def __init__(self, context):

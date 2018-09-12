@@ -101,7 +101,7 @@ def dict_of_key_value_pairs(arg):
     return D
 
 
-class Automatic:
+class Automatic(object):
     pass
 
 
@@ -123,7 +123,7 @@ def logfile_name(val):
         return existing_dirpath(val)
 
 
-class RangeCheckedConversion:
+class RangeCheckedConversion(object):
     """Conversion helper that range checks another conversion."""
 
     def __init__(self, conversion, min=None, max=None):
@@ -164,7 +164,7 @@ def inet_address(s):
     return host, port
 
 
-class SocketAddress:
+class SocketAddress(object):
     def __init__(self, s):
         # returns (family, address) tuple
         if "/" in s or s.find(os.sep) >= 0 or ":" not in s:
@@ -175,7 +175,7 @@ class SocketAddress:
             self.address = inet_address(s)
 
 
-class SocketConfig:
+class SocketConfig(object):
     """ Abstract base class which provides a uniform abstraction
     for TCP vs Unix sockets """
     url = ''  # socket url

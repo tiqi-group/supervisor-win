@@ -524,7 +524,7 @@ def close_all(map=None):
 if os.name == 'posix':
     import fcntl
 
-    class file_wrapper:
+    class file_wrapper(object):
         # here we override just enough to make a file
         # look like a socket for the purposes of asyncore.
 

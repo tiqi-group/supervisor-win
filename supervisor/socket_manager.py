@@ -1,6 +1,7 @@
 import socket
 
-class Proxy:
+
+class Proxy(object):
     """ Class for wrapping a shared resource object and getting
         notified when it's deleted
     """
@@ -19,7 +20,8 @@ class Proxy:
     def _get(self):
         return self.object
 
-class ReferenceCounter:
+
+class ReferenceCounter(object):
     """ Class for tracking references to a shared resource
     """
 
@@ -43,7 +45,8 @@ class ReferenceCounter:
         if self.ref_count == 0:
             self.on_zero()
 
-class SocketManager:
+
+class SocketManager(object):
     """ Class for managing sockets in servers that create/bind/listen
         before forking multiple child processes to accept()
         Sockets are managed at the process group level and referenced counted

@@ -13,7 +13,8 @@ producer, then wrap this with the 'chunked' transfer-encoding producer.
 
 from asynchat import find_prefix_at_end
 
-class simple_producer:
+
+class simple_producer(object):
     """producer for a string"""
     def __init__ (self, data, buffer_size=1024):
         self.data = data
@@ -29,7 +30,8 @@ class simple_producer:
             self.data = ''
             return result
 
-class scanning_producer:
+
+class scanning_producer(object):
     """like simple_producer, but more efficient for large strings"""
     def __init__ (self, data, buffer_size=1024):
         self.data = data
@@ -49,7 +51,8 @@ class scanning_producer:
         else:
             return ''
 
-class lines_producer:
+
+class lines_producer(object):
     """producer for a list of lines"""
 
     def __init__ (self, lines):
@@ -63,7 +66,8 @@ class lines_producer:
         else:
             return ''
 
-class buffer_list_producer:
+
+class buffer_list_producer(object):
     """producer for a list of strings"""
 
     # i.e., data == ''.join(buffers)
@@ -80,7 +84,8 @@ class buffer_list_producer:
             self.index += 1
             return data
 
-class file_producer:
+
+class file_producer(object):
     """producer wrapper for file[-like] objects"""
 
     # match http_channel's outgoing buffer size
@@ -110,7 +115,8 @@ class file_producer:
 # don't try to print from within any of the methods
 # of this object.
 
-class output_producer:
+
+class output_producer(object):
     """Acts like an output file; suitable for capturing sys.stdout"""
     def __init__ (self):
         self.data = ''
@@ -140,9 +146,10 @@ class output_producer:
         else:
             return ''
 
-class composite_producer:
+
+class composite_producer(object):
     """combine a fifo of producers into one"""
-    def __init__ (self, producers):
+    def __init__(self, producers):
         self.producers = producers
 
     def more (self):
@@ -157,7 +164,7 @@ class composite_producer:
             return ''
 
 
-class globbing_producer:
+class globbing_producer(object):
     """
     'glob' the output from a producer into a particular buffer size.
     helps reduce the number of calls to send().  [this appears to
@@ -181,7 +188,7 @@ class globbing_producer:
         return r
 
 
-class hooked_producer:
+class hooked_producer(object):
     """
     A producer that will call <function> when it empties,.
     with an argument of the number of bytes produced.  Useful
@@ -213,7 +220,8 @@ class hooked_producer:
 # Blessing, and it really ought to be used even with normal files.
 # How beautifully it blends with the concept of the producer.
 
-class chunked_producer:
+
+class chunked_producer(object):
     """A producer that implements the 'chunked' transfer coding for HTTP/1.1.
     Here is a sample usage:
             request['Transfer-Encoding'] = 'chunked'
@@ -246,7 +254,8 @@ try:
 except ImportError:
     zlib = None
 
-class compressed_producer:
+
+class compressed_producer(object):
     """
     Compress another producer on-the-fly, using ZLIB
     """
@@ -278,7 +287,8 @@ class compressed_producer:
         else:
             return ''
 
-class escaping_producer:
+
+class escaping_producer(object):
 
     """A producer that escapes a sequence of characters"""
     # Common usage: escaping the CRLF.CRLF sequence in SMTP, NNTP, etc...

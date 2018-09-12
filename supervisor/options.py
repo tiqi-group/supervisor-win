@@ -1934,7 +1934,7 @@ def _init_signames():
     _signames = d
 
 
-class SignalReceiver:
+class SignalReceiver(object):
     def __init__(self):
         self._signals_recvd = []
 

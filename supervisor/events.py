@@ -105,7 +105,7 @@ class SupervisorStoppingEvent(SupervisorStateChangeEvent):
     pass
 
 
-class EventRejectedEvent:  # purposely does not subclass Event
+class EventRejectedEvent(object):  # purposely does not subclass Event
     def __init__(self, process, event):
         self.process = process
         self.event = event
@@ -221,7 +221,7 @@ class Tick3600Event(TickEvent):
 TICK_EVENTS = [Tick5Event, Tick60Event, Tick3600Event]  # imported elsewhere
 
 
-class EventTypes:
+class EventTypes(object):
     EVENT = Event  # abstract
     PROCESS_STATE = ProcessStateEvent  # abstract
     PROCESS_STATE_STOPPED = ProcessStateStoppedEvent

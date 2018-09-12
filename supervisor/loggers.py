@@ -17,7 +17,7 @@ from supervisor.compat import syslog
 from supervisor.compat import long
 
 
-class LevelsByName:
+class LevelsByName(object):
     CRIT = 50  # messages that probably require immediate user attention
     ERRO = 40  # messages that indicate a potentially ignorable error condition
     WARN = 30  # messages that indicate issues which aren't errors
@@ -27,7 +27,7 @@ class LevelsByName:
     BLAT = 3  # messages useful for developers trying to debug supervisor
 
 
-class LevelsByDescription:
+class LevelsByDescription(object):
     critical = LevelsByName.CRIT
     error = LevelsByName.ERRO
     warn = LevelsByName.WARN
@@ -119,7 +119,7 @@ class StreamHandler(Handler):
         pass
 
 
-class BoundIO:
+class BoundIO(object):
     def __init__(self, maxbytes, buf=''):
         self.maxbytes = maxbytes
         self.buf = buf
@@ -272,7 +272,7 @@ class RotatingFileHandler(FileHandler):
         self.stream = open(self.baseFilename, 'w')
 
 
-class LogRecord:
+class LogRecord(object):
     def __init__(self, level, msg, **kw):
         self.level = level
         self.msg = msg
@@ -295,7 +295,7 @@ class LogRecord:
         return self.dictrepr
 
 
-class Logger:
+class Logger(object):
     def __init__(self, level=None, handlers=None):
         if level is None:
             level = LevelsByName.INFO

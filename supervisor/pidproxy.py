@@ -9,7 +9,7 @@ import signal
 import time
 
 
-class PidProxy:
+class PidProxy(object):
     pid = None
 
     def __init__(self, args):
