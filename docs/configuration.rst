@@ -746,11 +746,16 @@ where specified.
   request, :program:`supervisord` will restart the process if it exits
   with an exit code that is not defined in this list.
 
-  *Default*: 0,2
+  *Default*: 0
 
   *Required*:  No.
 
   *Introduced*: 3.0
+
+  .. note::
+
+      In Supervisor versions prior to 4.0, the default was ``0,2``.  In
+      Supervisor 4.0, the default was changed to ``0``.
 
 ``stopsignal``
 
@@ -1079,7 +1084,7 @@ where specified.
    autorestart=unexpected
    startsecs=10
    startretries=3
-   exitcodes=0,2
+   exitcodes=0
    stopsignal=TERM
    stopwaitsecs=10
    stopasgroup=false
@@ -1325,7 +1330,7 @@ above constraints and additions.
    autorestart=unexpected
    startsecs=1
    startretries=3
-   exitcodes=0,2
+   exitcodes=0
    stopsignal=QUIT
    stopasgroup=false
    killasgroup=false
@@ -1408,7 +1413,7 @@ above constraints and additions.
    autorestart=unexpected
    startsecs=1
    startretries=3
-   exitcodes=0,2
+   exitcodes=0
    stopsignal=QUIT
    stopwaitsecs=10
    stopasgroup=false
