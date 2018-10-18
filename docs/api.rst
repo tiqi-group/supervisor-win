@@ -3,15 +3,27 @@
 XML-RPC API Documentation
 =========================
 
-To use the XML-RPC interface, connect to supervisor's HTTP port
-with any XML-RPC client library and run commands against it.  An
-example of doing this using Python's ``xmlrpclib`` client library
+To use the XML-RPC interface, first make sure you have configured the interface
+factory properly by setting the default factory. See :ref:`rpcinterface_factories`.
+
+Then you can connect to supervisor's HTTP port
+with any XML-RPC client library and run commands against it.
+
+An example of doing this using Python2's ``xmlrpclib`` client library
 is as follows.
 
 .. code-block:: python
 
     import xmlrpclib
     server = xmlrpclib.Server('http://localhost:9001/RPC2')
+
+An example of doing this using Python3's ``xmlrpc.client`` library
+is as follows.
+
+.. code-block:: python
+
+    from xmlrpc.client import ServerProxy
+    server = ServerProxy('http://localhost:9001/RPC2')
 
 You may call methods against :program:`supervisord` and its
 subprocesses by using the ``supervisor`` namespace.  An example is
@@ -368,4 +380,3 @@ System Methods
     .. automethod:: methodSignature
 
     .. automethod:: multicall
-
