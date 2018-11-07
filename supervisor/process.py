@@ -1,25 +1,24 @@
 import errno
 import os
 import shlex
-import signal
 import subprocess
 import time
 import traceback
+import signal
+from functools import total_ordering
 import win32api
 import win32job
 import win32process
 import win32con
 
+from supervisor.compat import maxint
+from supervisor.compat import as_bytes
 from supervisor.compat import as_string
 from supervisor.compat import PY2
 from supervisor import events, helpers
-from supervisor.compat import (
-    StringIO,
-    as_bytes,
-    maxint,
-    total_ordering,
-    unicode
-)
+from supervisor.compat import StringIO
+from supervisor.compat import unicode
+
 from supervisor.datatypes import RestartUnconditionally
 from supervisor.dispatchers import EventListenerStates
 from supervisor.helpers import DummyPopen

@@ -6,7 +6,7 @@ import sys
 import tempfile
 
 from supervisor.helpers import DummyPopen
-from supervisor.compat import total_ordering
+from functools import total_ordering
 from supervisor.compat import Fault
 from supervisor.compat import as_bytes
 
