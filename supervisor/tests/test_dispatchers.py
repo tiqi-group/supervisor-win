@@ -359,7 +359,7 @@ class POutputDispatcherTests(unittest.TestCase):
         options = DummyOptions()
         from supervisor.loggers import getLogger
         options.getLogger = getLogger # actually use real logger
-        logfile = '/tmp/log'
+        logfile = os.path.join(tempfile.gettempdir(), 'log.txt')
         config = DummyPConfig(options, 'process1', '/bin/process1',
                               stdout_logfile=logfile,
                               stdout_capture_maxbytes=10000)
