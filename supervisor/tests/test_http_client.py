@@ -105,16 +105,6 @@ class HTTPHandlerTests(unittest.TestCase):
         self.assertEqual(sockets, [(socket.AF_INET, socket.SOCK_STREAM)])
         self.assertEqual(connects, [('localhost', 8080)])
 
-    def test_get_explicit_unix_domain_socket(self):
-        inst = self._makeOne()
-        sockets = []
-        connects = []
-        inst.create_socket = lambda *arg: sockets.append(arg)
-        inst.connect = lambda tup: connects.append(tup)
-        inst.get('unix:///a/b/c', '')
-        self.assertEqual(sockets, [(socket.AF_UNIX, socket.SOCK_STREAM)])
-        self.assertEqual(connects, ['/a/b/c'])
-
     def test_close(self):
         inst = self._makeOne()
         dels = []
