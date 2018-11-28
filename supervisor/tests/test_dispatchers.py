@@ -739,7 +739,7 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         options = DummyOptions()
         options.readfd_result = 'supercalifragilisticexpialidocious'
         config = DummyPConfig(options, 'process1', '/bin/process1',
-                              stdout_logfile='/tmp/foo')
+                              stdout_logfile=os.path.join(tempfile.gettempdir(), 'foo.txt'))
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
         self.assertEqual(dispatcher.handle_read_event(), None)
