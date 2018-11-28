@@ -408,7 +408,7 @@ class POutputDispatcherTests(unittest.TestCase):
         options = DummyOptions()
         options.strip_ansi = True
         config = DummyPConfig(options, 'process1', '/bin/process1',
-                              stdout_logfile='/tmp/foo')
+                              stdout_logfile=os.path.join(tempfile.gettempdir(), 'foo.txt'))
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
         ansi = '\x1b[34mHello world... this is longer than a token!\x1b[0m'
