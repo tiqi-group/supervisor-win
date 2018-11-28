@@ -1086,7 +1086,7 @@ class PEventListenerDispatcherTests(unittest.TestCase):
     def test_ctor_logfile_only(self):
         options = DummyOptions()
         config = DummyPConfig(options, 'process1', '/bin/process1',
-                              stdout_logfile='/tmp/foo')
+                              stdout_logfile=os.path.join(tempfile.gettempdir(), 'foo.txt'))
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
         self.assertEqual(dispatcher.process, process)
