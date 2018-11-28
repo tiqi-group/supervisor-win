@@ -353,7 +353,7 @@ class Controller(cmd.Cmd):
 def get_names(inst):
     names = []
     classes = [inst.__class__]
-    while classes(object):
+    while classes:
         aclass = classes.pop(0)
         if aclass.__bases__:
             classes = classes + list(aclass.__bases__)
