@@ -534,14 +534,10 @@ class TopLevelFunctionTests(unittest.TestCase):
             self.assertEqual(exc.args[0], 'Cannot determine socket type 999')
 
     def test_make_http_servers_noauth(self):
-        socketfile = tempfile.mktemp()
         inet = {'family':socket.AF_INET, 'host':'localhost', 'port':17735,
                 'username':None, 'password':None, 'section':'inet_http_server'}
-        unix = {'family':socket.AF_UNIX, 'file':socketfile, 'chmod':448, # 0700 in Py2, 0o700 in Py3
-                'chown':(-1, -1), 'username':None, 'password':None,
-                'section':'unix_http_server'}
-        servers = self._make_http_servers([inet, unix])
-        self.assertEqual(len(servers), 2)
+        servers = self._make_http_servers([inet])
+        self.assertEqual(len(servers), 1)
 
         inetdata = servers[0]
         self.assertEqual(inetdata[0], inet)
@@ -553,11 +549,6 @@ class TopLevelFunctionTests(unittest.TestCase):
             'Supervisor Web UI HTTP Request Handler',
             'Default HTTP Request Handler'
             ]
-        self.assertEqual([x.IDENT for x in server.handlers], idents)
-
-        unixdata = servers[1]
-        self.assertEqual(unixdata[0], unix)
-        server = unixdata[1]
         self.assertEqual([x.IDENT for x in server.handlers], idents)
 
     def test_make_http_servers_withauth(self):
