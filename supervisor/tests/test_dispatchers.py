@@ -282,7 +282,7 @@ class POutputDispatcherTests(unittest.TestCase):
         # than the capture token to make it out.
         options = DummyOptions()
         config = DummyPConfig(options, 'process1', '/bin/process1',
-                              stdout_logfile='/tmp/foo',
+                              stdout_logfile=os.path.join(tempfile.gettempdir(), 'foo.txt'),
                               stdout_capture_maxbytes=100)
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
