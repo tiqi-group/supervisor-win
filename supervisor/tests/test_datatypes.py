@@ -528,11 +528,6 @@ class SocketAddressTests(unittest.TestCase):
     def _makeOne(self, s):
         return self._getTargetClass()(s)
 
-    def test_unix_socket(self):
-        addr = self._makeOne('/foo/bar')
-        self.assertEqual(addr.family, socket.AF_UNIX)
-        self.assertEqual(addr.address, '/foo/bar')
-
     def test_inet_socket(self):
         addr = self._makeOne('localhost:8080')
         self.assertEqual(addr.family, socket.AF_INET)
