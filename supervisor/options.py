@@ -42,7 +42,6 @@ from datatypes import logging_level
 from datatypes import colon_separated_user_group
 from datatypes import inet_address
 from datatypes import InetStreamSocketConfig
-from datatypes import UnixStreamSocketConfig
 from datatypes import url
 from datatypes import Automatic
 from datatypes import auto_restart
@@ -808,23 +807,7 @@ class ServerOptions(Options):
 
     def parse_fcgi_socket(self, sock, proc_uid, socket_owner, socket_mode):
         if sock.startswith('unix://'):
-            path = sock[7:]
-            # Check it's an absolute path
-            if not os.path.isabs(path):
-                raise ValueError("Unix socket path %s is not an absolute path",
-                                 path)
-            path = normalize_path(path)
-
-            if socket_owner is None and False:
-                uid = os.getuid()
-                if proc_uid is not None and proc_uid != uid:
-                    socket_owner = (proc_uid, gid_for_uid(proc_uid))
-
-            if socket_mode is None:
-                socket_mode = 448  # 0700 in Py2, 0o700 Py3
-
-            return UnixStreamSocketConfig(path, owner=socket_owner,
-                                          mode=socket_mode)
+            raise ValueError("Unix socket is not supported on windows")
 
         if socket_owner is not None or socket_mode is not None:
             raise ValueError("socket_owner and socket_mode params should"

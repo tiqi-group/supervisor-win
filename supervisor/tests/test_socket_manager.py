@@ -14,7 +14,6 @@ except ImportError:
 
 from supervisor.tests.base import DummySocketConfig
 from supervisor.tests.base import DummyLogger
-from supervisor.datatypes import UnixStreamSocketConfig
 from supervisor.datatypes import InetStreamSocketConfig
 
 class TestObject:
@@ -130,16 +129,6 @@ class SocketManagerTest(unittest.TestCase):
         sock = sock_manager.get_socket()
         self.assertEqual(sock.getsockname(), ('127.0.0.1', 51041))
 
-    def test_unix(self):
-        (tf_fd, tf_name) = tempfile.mkstemp()
-        conf = UnixStreamSocketConfig(tf_name)
-        sock_manager = self._makeOne(conf)
-        self.assertEqual(sock_manager.socket_config, conf)
-        sock = sock_manager.get_socket()
-        self.assertEqual(sock.getsockname(), tf_name)
-        sock = None
-        os.close(tf_fd)
-
     def test_socket_lifecycle(self):
         conf = DummySocketConfig(2)
         sock_manager = self._makeOne(conf)
@@ -214,11 +203,6 @@ class SocketManagerTest(unittest.TestCase):
         sock_manager2 = self._makeOne(conf)
         self.assertRaises(socket.error, sock_manager2.get_socket)
         del sock
-
-    def test_unix_bad_sock(self):
-        conf = UnixStreamSocketConfig('/notthere/foo.sock')
-        sock_manager = self._makeOne(conf)
-        self.assertRaises(socket.error, sock_manager.get_socket)
 
     def test_close_requires_prepared_socket(self):
         conf = InetStreamSocketConfig('127.0.0.1', 51041)
