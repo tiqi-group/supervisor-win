@@ -14,11 +14,11 @@ if PY3:  # pragma: no cover
         def __init__(self, string, encoding, errors):
             str.__init__(self, string)
 
-    def as_bytes(s):
-        return s if isinstance(s, bytes) else s.encode('utf8')
+    def as_bytes(s, encoding='utf-8', force_type=False):
+        return s if isinstance(s, bytes) else s.encode(encoding, 'strict' if not force_type else 'ignore')
 
-    def as_string(s):
-        return s if isinstance(s, str) else s.decode('utf8')
+    def as_string(s, encoding='utf-8', force_type=False):
+        return s if isinstance(s, str) else s.decode(encoding, 'strict' if not force_type else 'ignore')
 
     from functools import reduce
 
@@ -28,11 +28,11 @@ else:  # pragma: no cover
     unicode = unicode
     basestring = basestring
 
-    def as_bytes(s):
-        return s if isinstance(s, str) else s.encode('utf-8')
+    def as_bytes(s, encoding='utf-8', force_type=False):
+        return s if isinstance(s, str) else s.encode(encoding, 'strict' if not force_type else 'ignore')
 
-    def as_string(s):
-        return s if isinstance(s, unicode) else s.decode('utf-8')
+    def as_string(s, encoding='utf-8', force_type=False):
+        return s if isinstance(s, unicode) else s.decode(encoding, 'strict' if not force_type else 'ignore')
 
     reduce = reduce
 

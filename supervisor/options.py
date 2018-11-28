@@ -1,4 +1,5 @@
 import Queue
+import codecs
 import socket
 import getopt
 import os
@@ -1811,7 +1812,7 @@ def readFile(filename, offset, length):
     abslength = abs(length)
 
     try:
-        with open(filename, 'rb') as f:
+        with codecs.open(filename, 'rb', encoding='UTF-8') as f:
             if absoffset != offset:
                 # negative offset returns offset bytes from tail of the file
                 if length:

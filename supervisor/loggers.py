@@ -12,9 +12,13 @@ import errno
 import sys
 import time
 import traceback
-
-from supervisor.compat import syslog
-from supervisor.compat import long
+import codecs
+from supervisor.compat import (
+    syslog,
+    as_string,
+    as_bytes,
+    long
+)
 
 
 class LevelsByName(object):
@@ -56,6 +60,7 @@ def getLevelNumByDescription(description):
 class Handler(object):
     fmt = '%(message)s'
     level = LevelsByName.INFO
+    encoding = 'UTF-8'
 
     def __init__(self, stream=None):
         self.stream = stream
@@ -93,10 +98,14 @@ class Handler(object):
     def emit(self, record):
         try:
             msg = self.fmt % record.asdict()
-            try:
-                self.stream.write(msg)
-            except UnicodeError:
-                self.stream.write(msg.encode("UTF-8"))
+            if hasattr(self.stream, 'encoding'):
+                self.stream.write(as_string(msg,
+                                            encoding=self.encoding,
+                                            force_type=True))
+            else:
+                self.stream.write(as_bytes(msg,
+                                           encoding=self.encoding,
+                                           force_type=True))
             self.flush()
         except:
             self.handleError()
@@ -148,13 +157,13 @@ class FileHandler(Handler):
     """
 
     def __init__(self, filename, mode="a"):
-        Handler.__init__(self, open(filename, mode))
+        Handler.__init__(self, codecs.open(filename, mode, encoding=self.encoding))
         self.baseFilename = filename
         self.mode = mode
 
     def reopen(self):
         self.close()
-        self.stream = open(self.baseFilename, self.mode)
+        self.stream = codecs.open(self.baseFilename, self.mode, encoding=self.encoding)
         self.closed = False
 
     def remove(self):
@@ -269,7 +278,7 @@ class RotatingFileHandler(FileHandler):
                     self.removeAndRename(sfn, dfn)
             dfn = self.baseFilename + ".1"
             self.removeAndRename(self.baseFilename, dfn)
-        self.stream = open(self.baseFilename, 'w')
+        self.stream = codecs.open(self.baseFilename, 'w', encoding=self.encoding)
 
 
 class LogRecord(object):
@@ -375,7 +384,7 @@ class SyslogHandler(Handler):
                 try:
                     self._syslog(msg)
                 except UnicodeError:
-                    self._syslog(msg.encode("UTF-8"))
+                    self._syslog(as_string(msg, encoding=self.encoding))
         except:
             self.handleError()
 
