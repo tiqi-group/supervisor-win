@@ -561,15 +561,11 @@ class TopLevelFunctionTests(unittest.TestCase):
         self.assertEqual([x.IDENT for x in server.handlers], idents)
 
     def test_make_http_servers_withauth(self):
-        socketfile = tempfile.mktemp()
         inet = {'family':socket.AF_INET, 'host':'localhost', 'port':17736,
                 'username':'username', 'password':'password',
                 'section':'inet_http_server'}
-        unix = {'family':socket.AF_UNIX, 'file':socketfile, 'chmod':448, # 0700 in Py2, 0o700 in Py3
-                'chown':(-1, -1), 'username':'username', 'password':'password',
-                'section':'unix_http_server'}
-        servers = self._make_http_servers([inet, unix])
-        self.assertEqual(len(servers), 2)
+        servers = self._make_http_servers([inet])
+        self.assertEqual(len(servers), 1)
         from supervisor.http import supervisor_auth_handler
         for config, server in servers:
             for handler in server.handlers:
