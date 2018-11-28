@@ -256,29 +256,6 @@ class RangeCheckedConversionTests(unittest.TestCase):
         self.assertEqual(conversion(0), 0)
 
 
-class NameToGidTests(unittest.TestCase):
-    def _callFUT(self, arg):
-        return datatypes.name_to_gid(arg)
-
-    @patch("grp.getgrnam", Mock(return_value=[0,0,42]))
-    def test_gets_gid_from_group_name(self):
-        gid = self._callFUT("foo")
-        self.assertEqual(gid, 42)
-
-    @patch("grp.getgrgid", Mock(return_value=[0,0,42]))
-    def test_gets_gid_from_group_id(self):
-        gid = self._callFUT("42")
-        self.assertEqual(gid, 42)
-
-    @patch("grp.getgrnam", Mock(side_effect=KeyError("bad group name")))
-    def test_raises_for_bad_group_name(self):
-        self.assertRaises(ValueError, self._callFUT, "foo")
-
-    @patch("grp.getgrgid", Mock(side_effect=KeyError("bad group id")))
-    def test_raises_for_bad_group_id(self):
-        self.assertRaises(ValueError, self._callFUT, "42")
-
-
 class OctalTypeTests(unittest.TestCase):
     def _callFUT(self, arg):
         return datatypes.octal_type(arg)

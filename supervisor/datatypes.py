@@ -265,20 +265,7 @@ def name_to_gid(name):
     """ Find a group ID from a string containing a group name or ID.
         Raises ValueError if the string can't be resolved to a valid
         group ID on the system. """
-    try:
-        gid = int(name)
-    except ValueError:
-        try:
-            grprec = grp.getgrnam(name)
-        except KeyError:
-            raise ValueError("Invalid group name %s" % name)
-        gid = grprec[2]
-    else:
-        try:
-            grp.getgrgid(gid)  # check if gid is valid
-        except KeyError:
-            raise ValueError("Invalid group id %s" % name)
-    return gid
+    raise NotImplementedError("unavailable on windows")
 
 
 def gid_for_uid(uid):
