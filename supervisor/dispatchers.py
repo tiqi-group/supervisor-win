@@ -260,9 +260,14 @@ class POutputDispatcher(PDispatcher):
 
     def handle_read_event(self):
         data = self.process.config.options.readfd(self.fd)
-        if data:
+        if data is not None:  # empty queue
             self.output_buffer += data
             self.record_output()
+            if not data:
+                # if we get no data back from the pipe, it means that the
+                # child process has ended.  See
+                # mail.python.org/pipermail/python-dev/2004-August/046850.html
+                self.close()
 
 
 class PEventListenerDispatcher(PDispatcher):
@@ -330,7 +335,7 @@ class PEventListenerDispatcher(PDispatcher):
                 if self.process.config.options.strip_ansi:
                     data = stripEscapes(data)
                 self.childlog.info(data)
-        else:
+        elif data is not None and not data:
             # if we get no data back from the pipe, it means that the
             # child process has ended.  See
             # mail.python.org/pipermail/python-dev/2004-August/046850.html

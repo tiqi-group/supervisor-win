@@ -1337,7 +1337,7 @@ class ServerOptions(Options):
         try:
             data = std_queue.get_nowait()
         except Queue.Empty:
-            data = ''
+            data = None
         return data
 
     def write(self, fd, data):
