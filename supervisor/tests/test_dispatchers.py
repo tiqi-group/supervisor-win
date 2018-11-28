@@ -1,3 +1,4 @@
+import tempfile
 import unittest
 import os
 import sys
@@ -124,7 +125,7 @@ class POutputDispatcherTests(unittest.TestCase):
     def test_toggle_capturemode_sends_event(self):
         options = DummyOptions()
         config = DummyPConfig(options, 'process1', '/bin/process1',
-                              stdout_logfile='/tmp/foo',
+                              stdout_logfile=os.path.join(tempfile.gettempdir(), 'foo.txt'),
                               stdout_capture_maxbytes=500)
         process = DummyProcess(config)
         process.pid = 4000
