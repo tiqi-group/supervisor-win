@@ -149,20 +149,23 @@ class TailFProducerTests(unittest.TestCase):
 
     def test_handle_more_follow_file_recreated(self):
         request = DummyRequest('/logtail/foo', None, None, None)
-        f = tempfile.NamedTemporaryFile()
-        f.write(as_bytes('a' * 80))
-        f.flush()
-        producer = self._makeOne(request, f.name, 80)
+        tmpfile = tempfile.NamedTemporaryFile(delete=False)
+        tmpfile.write(as_bytes('a' * 80))
+        tmpfile.flush()
+        producer = self._makeOne(request, tmpfile.name, 80)
         result = producer.more()
         self.assertEqual(result, as_bytes('a' * 80))
-        f.close()
-        f2 = open(f.name, 'wb')
+        producer._close()
+        tmpfile.close()
+        os.remove(tmpfile.name)
+        f2 = open(tmpfile.name, 'wb')
         try:
             f2.write(as_bytes('b' * 80))
             f2.close()
             result = producer.more()
         finally:
-            os.unlink(f2.name)
+            producer._close()
+            os.remove(f2.name)
         self.assertEqual(result, as_bytes('b' * 80))
 
     def test_handle_more_follow_file_gone(self):
