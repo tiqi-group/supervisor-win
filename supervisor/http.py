@@ -827,13 +827,6 @@ def make_http_servers(options, supervisord):
             host, port = config['host'], config['port']
 
             hs = supervisor_af_inet_http_server(host, port, logger_object=wrapper)
-
-        elif family == socket.AF_UNIX:
-            socketname = config['file']
-            sockchmod = config['chmod']
-            sockchown = config['chown']
-            hs = supervisor_af_unix_http_server(socketname, sockchmod, sockchown,
-                                                logger_object=wrapper)
         else:
             raise ValueError('Cannot determine socket type %r' % family)
 
