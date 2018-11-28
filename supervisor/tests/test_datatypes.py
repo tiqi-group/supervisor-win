@@ -396,7 +396,7 @@ class ExistingDirpathTests(unittest.TestCase):
     def test_expands_home(self):
         home = os.path.expanduser('~')
         if os.path.exists(home):
-            path = self._callFUT('~/foo')
+            path = self._callFUT(os.path.join('~', 'foo'))
             self.assertEqual(os.path.join(home, 'foo'), path)
 
     def test_expands_here(self):
