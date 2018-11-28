@@ -222,7 +222,7 @@ class RotatingFileHandler(FileHandler):
             import win32con
         except ImportError:
             raise ImportWarning("log rotation requires the installation of the \"pywin32\" library.\n"
-                                "Download and install from https://sourceforge.net/projects/pywin32")
+                                "Download and install from https://github.com/mhammond/pywin32/releases")
         import msvcrt
         win32api.SetHandleInformation(
             msvcrt.get_osfhandle(self.stream.fileno()),
