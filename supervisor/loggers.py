@@ -157,13 +157,21 @@ class FileHandler(Handler):
     """
 
     def __init__(self, filename, mode="a"):
-        Handler.__init__(self, codecs.open(filename, mode, encoding=self.encoding))
+        Handler.__init__(self, self._openfile(filename, mode))
         self.baseFilename = filename
         self.mode = mode
 
+    def _openfile(self, filename, mode):
+        """opens a file in standard encoding
+        :rtype: file
+        """
+        return codecs.open(filename, mode,
+                           encoding=self.encoding,
+                           buffering=0)
+
     def reopen(self):
         self.close()
-        self.stream = codecs.open(self.baseFilename, self.mode, encoding=self.encoding)
+        self.stream = self._openfile(self.baseFilename, self.mode)
         self.closed = False
 
     def remove(self):
