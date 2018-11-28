@@ -403,7 +403,7 @@ class ExistingDirpathTests(unittest.TestCase):
         datatypes.here = os.path.dirname(__file__)
         try:
             expected = os.path.join(datatypes.here, 'foo')
-            self.assertEqual(self._callFUT('%(here)s/foo'), expected)
+            self.assertEqual(self._callFUT(os.path.join('%(here)s', 'foo')), expected)
         finally:
             datatypes.here = None
 
