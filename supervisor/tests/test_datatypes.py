@@ -489,47 +489,6 @@ class SocketAddressTests(unittest.TestCase):
         self.assertEqual(addr.family, socket.AF_INET)
         self.assertEqual(addr.address, ('localhost', 8080))
 
-class ColonSeparatedUserGroupTests(unittest.TestCase):
-    def _callFUT(self, arg):
-        return datatypes.colon_separated_user_group(arg)
-
-    def test_ok_username(self):
-        self.assertEqual(self._callFUT('root')[0], 0)
-
-    def test_missinguser_username(self):
-        self.assertRaises(ValueError,
-                          self._callFUT, 'godihopethisuserdoesntexist')
-
-    def test_missinguser_username_and_groupname(self):
-        self.assertRaises(ValueError,
-                          self._callFUT, 'godihopethisuserdoesntexist:foo')
-
-    def test_separated_user_group_returns_both(self):
-        name_to_uid = Mock(return_value=12)
-        name_to_gid = Mock(return_value=34)
-
-        @patch("supervisor.datatypes.name_to_uid", name_to_uid)
-        @patch("supervisor.datatypes.name_to_gid", name_to_gid)
-        def colon_separated(value):
-            return self._callFUT(value)
-
-        uid, gid = colon_separated("foo:bar")
-        name_to_uid.assert_called_with("foo")
-        self.assertEqual(12, uid)
-        name_to_gid.assert_called_with("bar")
-        self.assertEqual(34, gid)
-
-    def test_separated_user_group_returns_user_only(self):
-        name_to_uid = Mock(return_value=42)
-
-        @patch("supervisor.datatypes.name_to_uid", name_to_uid)
-        def colon_separated(value):
-            return self._callFUT(value)
-
-        uid, gid = colon_separated("foo")
-        name_to_uid.assert_called_with("foo")
-        self.assertEqual(42, uid)
-        self.assertEqual(-1, gid)
 
 class SignalNumberTests(unittest.TestCase):
     def _callFUT(self, arg):

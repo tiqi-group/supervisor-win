@@ -241,17 +241,7 @@ def colon_separated_user_group(arg):
         a tuple (uid, gid).  If the string only contains a user like 'user'
         then (uid, -1) will be returned.  Raises ValueError if either
         the user or group can't be resolved to valid IDs on the system. """
-    try:
-        parts = arg.split(':', 1)
-        if len(parts) == 1:
-            uid = name_to_uid(parts[0])
-            gid = -1
-        else:
-            uid = name_to_uid(parts[0])
-            gid = name_to_gid(parts[1])
-        return (uid, gid)
-    except:
-        raise ValueError('Invalid user:group definition %s' % arg)
+    raise NotImplementedError("unavailable on windows")
 
 
 def name_to_uid(name):
@@ -269,8 +259,7 @@ def name_to_gid(name):
 
 
 def gid_for_uid(uid):
-    pwrec = pwd.getpwuid(uid)
-    return pwrec[3]
+    raise NotImplementedError("unavailable on windows")
 
 
 def octal_type(arg):
