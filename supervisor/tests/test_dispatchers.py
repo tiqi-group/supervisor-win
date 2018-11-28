@@ -699,7 +699,7 @@ class PEventListenerDispatcherTests(unittest.TestCase):
     def test_handle_read_event_calls_handle_listener_state_change(self):
         options = DummyOptions()
         config = DummyPConfig(options, 'process1', '/bin/process1',
-                              stdout_logfile='/tmp/foo')
+                              stdout_logfile=os.path.join(tempfile.gettempdir(), 'foo.txt'))
         process = DummyProcess(config)
         from supervisor.dispatchers import EventListenerStates
         process.listener_state = EventListenerStates.ACKNOWLEDGED
