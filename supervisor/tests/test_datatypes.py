@@ -11,6 +11,7 @@ from supervisor.compat import maxint
 
 from supervisor import datatypes
 
+
 class ProcessOrGroupName(unittest.TestCase):
     def _callFUT(self, arg):
         return datatypes.process_or_group_name(arg)
@@ -27,6 +28,7 @@ class ProcessOrGroupName(unittest.TestCase):
         name = "foo:bar"
         self.assertRaises(ValueError, self._callFUT, name)
 
+
 class IntegerTests(unittest.TestCase):
     def _callFUT(self, arg):
         return datatypes.integer(arg)
@@ -35,10 +37,11 @@ class IntegerTests(unittest.TestCase):
         self.assertEqual(self._callFUT('1'), 1)
 
     def test_converts_numeric_overflowing_int(self):
-        self.assertEqual(self._callFUT(str(maxint+1)), maxint+1)
+        self.assertEqual(self._callFUT(str(maxint + 1)), maxint + 1)
 
     def test_raises_for_non_numeric(self):
         self.assertRaises(ValueError, self._callFUT, 'abc')
+
 
 class BooleanTests(unittest.TestCase):
     def _callFUT(self, arg):
@@ -64,6 +67,7 @@ class BooleanTests(unittest.TestCase):
         self.assertRaises(ValueError,
                           self._callFUT, 'not-a-value')
 
+
 class ListOfStringsTests(unittest.TestCase):
     def _callFUT(self, arg):
         return datatypes.list_of_strings(arg)
@@ -81,6 +85,7 @@ class ListOfStringsTests(unittest.TestCase):
         self.assertRaises(ValueError,
                           self._callFUT, 42)
 
+
 class ListOfIntsTests(unittest.TestCase):
     def _callFUT(self, arg):
         return datatypes.list_of_ints(arg)
@@ -89,10 +94,10 @@ class ListOfIntsTests(unittest.TestCase):
         self.assertEqual(self._callFUT(''), [])
 
     def test_returns_list_of_ints_by_comma_split(self):
-        self.assertEqual(self._callFUT('1,42'), [1,42])
+        self.assertEqual(self._callFUT('1,42'), [1, 42])
 
     def test_returns_ints_even_if_whitespace_in_string(self):
-        self.assertEqual(self._callFUT(' 1 , 42 '), [1,42])
+        self.assertEqual(self._callFUT(' 1 , 42 '), [1, 42])
 
     def test_raises_value_error_when_comma_split_fails(self):
         self.assertRaises(ValueError,
@@ -102,12 +107,13 @@ class ListOfIntsTests(unittest.TestCase):
         self.assertRaises(ValueError,
                           self._callFUT, '1, bad, 42')
 
+
 class ListOfExitcodesTests(unittest.TestCase):
     def _callFUT(self, arg):
         return datatypes.list_of_exitcodes(arg)
 
     def test_returns_list_of_ints_from_csv(self):
-        self.assertEqual(self._callFUT('1,2,3'), [1,2,3])
+        self.assertEqual(self._callFUT('1,2,3'), [1, 2, 3])
 
     def test_returns_list_of_ints_from_one(self):
         self.assertEqual(self._callFUT('1'), [1])
@@ -116,6 +122,7 @@ class ListOfExitcodesTests(unittest.TestCase):
         self.assertRaises(ValueError, self._callFUT, 'a,b,c')
         self.assertRaises(ValueError, self._callFUT, '1024')
         self.assertRaises(ValueError, self._callFUT, '-1,1')
+
 
 class DictOfKeyValuePairsTests(unittest.TestCase):
     def _callFUT(self, arg):
@@ -198,6 +205,7 @@ class DictOfKeyValuePairsTests(unittest.TestCase):
         self.assertRaises(ValueError,
                           self._callFUT, kvp)
 
+
 class LogfileNameTests(unittest.TestCase):
     def _callFUT(self, arg):
         return datatypes.logfile_name(arg)
@@ -235,6 +243,7 @@ class LogfileNameTests(unittest.TestCase):
             self.assertEqual(actual, path)
         finally:
             datatypes.existing_dirpath = func
+
 
 class RangeCheckedConversionTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -279,6 +288,7 @@ class OctalTypeTests(unittest.TestCase):
             expected = '1.2 can not be converted to an octal type'
             self.assertEqual(e.args[0], expected)
 
+
 class ExistingDirectoryTests(unittest.TestCase):
     def _callFUT(self, arg):
         return datatypes.existing_directory(arg)
@@ -317,6 +327,7 @@ class ExistingDirectoryTests(unittest.TestCase):
             self.assertEqual(self._callFUT('%(here)s'), datatypes.here)
         finally:
             datatypes.here = None
+
 
 class ExistingDirpathTests(unittest.TestCase):
     def _callFUT(self, arg):
@@ -363,6 +374,7 @@ class ExistingDirpathTests(unittest.TestCase):
         finally:
             datatypes.here = None
 
+
 class LoggingLevelTests(unittest.TestCase):
     def _callFUT(self, arg):
         return datatypes.logging_level(arg)
@@ -374,6 +386,7 @@ class LoggingLevelTests(unittest.TestCase):
     def test_raises_for_bad_level_name(self):
         self.assertRaises(ValueError,
                           self._callFUT, "foo")
+
 
 class UrlTests(unittest.TestCase):
     def _callFUT(self, arg):
@@ -398,6 +411,7 @@ class UrlTests(unittest.TestCase):
     def test_rejects_unix_scheme_with_slashes_but_no_path(self):
         bad_url = "unix://"
         self.assertRaises(ValueError, self._callFUT, bad_url)
+
 
 class InetStreamSocketConfigTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -435,7 +449,7 @@ class InetStreamSocketConfigTests(unittest.TestCase):
         sock = conf.create_and_bind()
         reuse = sock.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR)
         self.assertTrue(reuse)
-        self.assertEqual(conf.addr(), sock.getsockname()) #verifies that bind was called
+        self.assertEqual(conf.addr(), sock.getsockname())  # verifies that bind was called
         sock.close()
 
     def test_same_urls_are_equal(self):
@@ -476,6 +490,7 @@ class InetAddressTests(unittest.TestCase):
         host, port = self._callFUT('localhost:80')
         self.assertEqual(host, 'localhost')
         self.assertEqual(port, 80)
+
 
 class SocketAddressTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -519,6 +534,7 @@ class SignalNumberTests(unittest.TestCase):
             expected = "value BADSIG is not a valid signal name"
             self.assertEqual(e.args[0], expected)
 
+
 class AutoRestartTests(unittest.TestCase):
     def _callFUT(self, arg):
         return datatypes.auto_restart(arg)
@@ -543,6 +559,7 @@ class AutoRestartTests(unittest.TestCase):
             self.fail()
         except ValueError as e:
             self.assertEqual(e.args[0], "invalid 'autorestart' value 'bad'")
+
 
 class ProfileOptionsTests(unittest.TestCase):
     def _callFUT(self, arg):

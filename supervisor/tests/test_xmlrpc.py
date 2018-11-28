@@ -7,6 +7,7 @@ from supervisor.tests.base import DummySupervisorRPCNamespace
 from supervisor.compat import xmlrpclib
 from supervisor.compat import httplib
 
+
 class GetFaultDescriptionTests(unittest.TestCase):
     def test_returns_description_for_known_fault(self):
         from supervisor import xmlrpc
@@ -17,6 +18,7 @@ class GetFaultDescriptionTests(unittest.TestCase):
         from supervisor import xmlrpc
         desc = xmlrpc.getFaultDescription(999999)
         self.assertEqual(desc, 'UNKNOWN')
+
 
 class RPCErrorTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -36,6 +38,7 @@ class RPCErrorTests(unittest.TestCase):
         e = self._makeOne(xmlrpc.Faults.FAILED, 'oops')
         self.assertEqual(e.text, 'FAILED: oops')
 
+
 class XMLRPCMarshallingTests(unittest.TestCase):
     def test_xmlrpc_marshal(self):
         from supervisor import xmlrpc
@@ -44,6 +47,7 @@ class XMLRPCMarshallingTests(unittest.TestCase):
         fault = xmlrpclib.Fault(1, 'foo')
         data = xmlrpc.xmlrpc_marshal(fault)
         self.assertEqual(data, xmlrpclib.dumps(fault))
+
 
 class XMLRPCHandlerTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -65,6 +69,7 @@ class XMLRPCHandlerTests(unittest.TestCase):
         class DummyRequest2:
             def __init__(self, uri):
                 self.uri = uri
+
         supervisor = DummySupervisor()
         subinterfaces = [('supervisor', DummySupervisorRPCNamespace())]
         handler = self._makeOne(supervisor, subinterfaces)
@@ -83,8 +88,8 @@ class XMLRPCHandlerTests(unittest.TestCase):
         self.assertEqual(logdata[-2],
                          'XML-RPC method called: supervisor.noSuchMethod()')
         self.assertEqual(logdata[-1],
-           ('XML-RPC method supervisor.noSuchMethod() returned fault: '
-            '[1] UNKNOWN_METHOD'))
+                         ('XML-RPC method supervisor.noSuchMethod() returned fault: '
+                          '[1] UNKNOWN_METHOD'))
         self.assertEqual(len(request.producers), 1)
         xml_response = request.producers[0]
         self.assertRaises(xmlrpclib.Fault, xmlrpclib.loads, xml_response)
@@ -99,9 +104,9 @@ class XMLRPCHandlerTests(unittest.TestCase):
         logdata = supervisor.options.logger.data
         self.assertEqual(len(logdata), 2)
         self.assertEqual(logdata[-2],
-               'XML-RPC method called: supervisor.getAPIVersion()')
+                         'XML-RPC method called: supervisor.getAPIVersion()')
         self.assertEqual(logdata[-1],
-            'XML-RPC method supervisor.getAPIVersion() returned successfully')
+                         'XML-RPC method supervisor.getAPIVersion() returned successfully')
         self.assertEqual(len(request.producers), 1)
         xml_response = request.producers[0]
         response = xmlrpclib.loads(xml_response)
@@ -124,9 +129,9 @@ class XMLRPCHandlerTests(unittest.TestCase):
         logdata = supervisor.options.logger.data
         self.assertEqual(len(logdata), 2)
         self.assertEqual(logdata[-2],
-               'XML-RPC method called: supervisor.getAPIVersion()')
+                         'XML-RPC method called: supervisor.getAPIVersion()')
         self.assertEqual(logdata[-1],
-            'XML-RPC method supervisor.getAPIVersion() returned successfully')
+                         'XML-RPC method supervisor.getAPIVersion() returned successfully')
         self.assertEqual(len(request.producers), 1)
         xml_response = request.producers[0]
         response = xmlrpclib.loads(xml_response)
@@ -147,7 +152,7 @@ class XMLRPCHandlerTests(unittest.TestCase):
         logdata = supervisor.options.logger.data
         self.assertEqual(len(logdata), 1)
         self.assertEqual(logdata[-1],
-               'XML-RPC request received with no method name')
+                         'XML-RPC request received with no method name')
         self.assertEqual(len(request.producers), 0)
         self.assertEqual(request._error, 400)
 
@@ -161,7 +166,7 @@ class XMLRPCHandlerTests(unittest.TestCase):
         logdata = supervisor.options.logger.data
         self.assertEqual(len(logdata), 2)
         self.assertEqual(logdata[-2],
-               'XML-RPC method called: supervisor.raiseError()')
+                         'XML-RPC method called: supervisor.raiseError()')
         self.assertTrue(logdata[-1].startswith('Traceback'))
         self.assertTrue(logdata[-1].endswith('ValueError: error\n'))
         self.assertEqual(len(request.producers), 0)
@@ -172,11 +177,13 @@ class XMLRPCHandlerTests(unittest.TestCase):
             def foo(self):
                 def inner(self):
                     return 1
+
                 inner.delay = .05
                 return inner
+
         supervisor = DummySupervisor()
         subinterfaces = [('supervisor', DummySupervisorRPCNamespace()),
-                          ('ns1', DummyRPCNamespace())]
+                         ('ns1', DummyRPCNamespace())]
         handler = self._makeOne(supervisor, subinterfaces)
         data = xmlrpclib.dumps((), 'ns1.foo')
         request = DummyRequest('/what/ever', None, None, None)
@@ -184,9 +191,9 @@ class XMLRPCHandlerTests(unittest.TestCase):
         logdata = supervisor.options.logger.data
         self.assertEqual(len(logdata), 2)
         self.assertEqual(logdata[-2],
-               'XML-RPC method called: ns1.foo()')
+                         'XML-RPC method called: ns1.foo()')
         self.assertEqual(logdata[-1],
-            'XML-RPC method ns1.foo() returned successfully')
+                         'XML-RPC method ns1.foo() returned successfully')
         self.assertEqual(len(request.producers), 0)
         self.assertEqual(request._done, False)
 
@@ -275,6 +282,7 @@ class XMLRPCHandlerTests(unittest.TestCase):
         self.assertEqual(params[10], [12, 'abc', 'def', 34])
         self.assertEqual(params[11], {'k': [1, {}]})
 
+
 class TraverseTests(unittest.TestCase):
     def test_underscore(self):
         from supervisor import xmlrpc
@@ -292,12 +300,15 @@ class TraverseTests(unittest.TestCase):
     def test_success(self):
         from supervisor import xmlrpc
         L = []
+
         class Dummy:
             def foo(self, a):
                 L.append(a)
+
         dummy = Dummy()
         xmlrpc.traverse(dummy, 'foo', [1])
         self.assertEqual(L, [1])
+
 
 class SupervisorTransportTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -317,8 +328,8 @@ class SupervisorTransportTests(unittest.TestCase):
 
     def test_ctor_unknown(self):
         self.assertRaises(ValueError,
-            self._makeOne, 'user', 'pass', 'unknown:///foo/bar'
-            )
+                          self._makeOne, 'user', 'pass', 'unknown:///foo/bar'
+                          )
 
     def test__get_connection_http_9001(self):
         transport = self._makeOne('user', 'pass', 'http://127.0.0.1:9001/')
@@ -337,8 +348,10 @@ class SupervisorTransportTests(unittest.TestCase):
     def test_request_non_200_response(self):
         transport = self._makeOne('user', 'pass', 'http://127.0.0.1/')
         dummy_conn = DummyConnection(400, '')
+
         def getconn():
             return dummy_conn
+
         transport._get_connection = getconn
         self.assertRaises(xmlrpclib.ProtocolError,
                           transport.request, 'localhost', '/', '')
@@ -348,8 +361,10 @@ class SupervisorTransportTests(unittest.TestCase):
     def test_request_400_response(self):
         transport = self._makeOne('user', 'pass', 'http://127.0.0.1/')
         dummy_conn = DummyConnection(400, '')
+
         def getconn():
             return dummy_conn
+
         transport._get_connection = getconn
         self.assertRaises(xmlrpclib.ProtocolError,
                           transport.request, 'localhost', '/', '')
@@ -375,8 +390,10 @@ class SupervisorTransportTests(unittest.TestCase):
         </params>
         </methodResponse>"""
         dummy_conn = DummyConnection(200, response)
+
         def getconn():
             return dummy_conn
+
         transport._get_connection = getconn
         result = transport.request('localhost', '/', '')
         self.assertEqual(transport.connection, dummy_conn)
@@ -390,6 +407,7 @@ class SupervisorTransportTests(unittest.TestCase):
                          'Basic dXNlcjpwYXNz')
         self.assertEqual(dummy_conn.requestargs[3]['Accept'], 'text/xml')
         self.assertEqual(result, ('South Dakota',))
+
 
 class TestDeferredXMLRPCResponse(unittest.TestCase):
     def _getTargetClass(self):
@@ -417,12 +435,13 @@ class TestDeferredXMLRPCResponse(unittest.TestCase):
         inst = self._makeOne()
         inst.finished = True
         result = inst.more()
-        self.assertEqual(result,  '')
+        self.assertEqual(result, '')
 
     def test_more_callback_returns_not_done_yet(self):
         from supervisor.http import NOT_DONE_YET
         def callback():
             return NOT_DONE_YET
+
         callback.delay = 1
         inst = self._makeOne(callback=callback)
         self.assertEqual(inst.more(), NOT_DONE_YET)
@@ -431,6 +450,7 @@ class TestDeferredXMLRPCResponse(unittest.TestCase):
         from supervisor.xmlrpc import RPCError, Faults
         def callback():
             raise RPCError(Faults.UNKNOWN_METHOD)
+
         callback.delay = 1
         inst = self._makeOne(callback=callback)
         self.assertEqual(inst.more(), None)
@@ -441,6 +461,7 @@ class TestDeferredXMLRPCResponse(unittest.TestCase):
     def test_more_callback_returns_value(self):
         def callback():
             return 'abc'
+
         callback.delay = 1
         inst = self._makeOne(callback=callback)
         self.assertEqual(inst.more(), None)
@@ -451,6 +472,7 @@ class TestDeferredXMLRPCResponse(unittest.TestCase):
     def test_more_callback_raises_unexpected_exception(self):
         def callback():
             raise ValueError('foo')
+
         callback.delay = 1
         inst = self._makeOne(callback=callback)
         inst.traceback = Dummy()
@@ -498,6 +520,7 @@ class TestDeferredXMLRPCResponse(unittest.TestCase):
         self.assertEqual(len(inst.request.producers), 1)
         self.assertEqual(inst.request.headers['Connection'], 'close')
 
+
 class TestSystemNamespaceRPCInterface(unittest.TestCase):
     def _makeOne(self, namespaces=()):
         from supervisor.xmlrpc import SystemNamespaceRPCInterface
@@ -513,12 +536,14 @@ class TestSystemNamespaceRPCInterface(unittest.TestCase):
              'system.methodSignature',
              'system.multicall',
              ]
-            )
+        )
 
     def test_listMethods_omits_underscore_attrs(self):
         class DummyNamespace(object):
             def foo(self): pass
+
             def _bar(self): pass
+
         ns1 = DummyNamespace()
         inst = self._makeOne([('ns1', ns1)])
         result = inst.listMethods()
@@ -530,7 +555,7 @@ class TestSystemNamespaceRPCInterface(unittest.TestCase):
              'system.methodSignature',
              'system.multicall'
              ]
-            )
+        )
 
     def test_methodHelp_known_method(self):
         inst = self._makeOne()
@@ -557,23 +582,24 @@ class TestSystemNamespaceRPCInterface(unittest.TestCase):
         class DummyNamespace(object):
             def foo(self):
                 """ @param string name The thing"""
+
         ns1 = DummyNamespace()
         inst = self._makeOne([('ns1', ns1)])
         self.assertRaises(RPCError, inst.methodSignature, 'ns1.foo')
 
     def test_multicall_recursion_forbidden(self):
         inst = self._makeOne()
-        call = {'methodName':'system.multicall'}
+        call = {'methodName': 'system.multicall'}
         multiproduce = inst.multicall([call])
         result = multiproduce()
         self.assertEqual(
             result,
             [{'faultCode': 2, 'faultString': 'INCORRECT_PARAMETERS'}]
-            )
+        )
 
     def test_multicall_other_exception(self):
         inst = self._makeOne()
-        call = {} # no methodName
+        call = {}  # no methodName
         multiproduce = inst.multicall([call])
         result = multiproduce()
         self.assertEqual(len(result), 1)
@@ -594,52 +620,59 @@ class TestSystemNamespaceRPCInterface(unittest.TestCase):
 
         ns1 = DummyNamespace()
         inst = self._makeOne([('ns1', ns1)])
-        multiproduce = inst.multicall([{'methodName':'ns1.foo'}])
+        multiproduce = inst.multicall([{'methodName': 'ns1.foo'}])
         result = multiproduce()
         self.assertEqual(
             result, [{'faultString': 'UNKNOWN_METHOD', 'faultCode': 1}]
-            )
+        )
 
     def test_multicall_callback_returns_function_returns_NOT_DONE_YET(self):
         from supervisor.http import NOT_DONE_YET
         class DummyNamespace(object):
             def __init__(self):
                 self.results = [NOT_DONE_YET, 1]
+
             def foo(self):
                 """ @param string name The thing"""
+
                 def inner():
                     return self.results.pop(0)
+
                 return inner
+
         ns1 = DummyNamespace()
         inst = self._makeOne([('ns1', ns1)])
-        multiproduce = inst.multicall([{'methodName':'ns1.foo'}])
+        multiproduce = inst.multicall([{'methodName': 'ns1.foo'}])
         result = multiproduce()
         self.assertEqual(
             result,
             NOT_DONE_YET
-            )
+        )
         result = multiproduce()
         self.assertEqual(
             result,
             [1]
-            )
+        )
 
     def test_multicall_callback_returns_function_raises_RPCError(self):
         from supervisor.xmlrpc import Faults, RPCError
         class DummyNamespace(object):
             def foo(self):
                 """ @param string name The thing"""
+
                 def inner():
                     raise RPCError(Faults.UNKNOWN_METHOD)
+
                 return inner
+
         ns1 = DummyNamespace()
         inst = self._makeOne([('ns1', ns1)])
-        multiproduce = inst.multicall([{'methodName':'ns1.foo'}])
+        multiproduce = inst.multicall([{'methodName': 'ns1.foo'}])
         result = multiproduce()
         self.assertEqual(
             result,
             [{'faultString': 'UNKNOWN_METHOD', 'faultCode': 1}],
-            )
+        )
 
 
 class Test_gettags(unittest.TestCase):
@@ -653,7 +686,7 @@ class Test_gettags(unittest.TestCase):
         self.assertEqual(
             result,
             [(0, None, None, None, ''), (0, 'foo', '', '', '')]
-            )
+        )
 
     def test_two_atparts(self):
         lines = '@foo array'
@@ -661,7 +694,7 @@ class Test_gettags(unittest.TestCase):
         self.assertEqual(
             result,
             [(0, None, None, None, ''), (0, 'foo', 'array', '', '')]
-            )
+        )
 
     def test_three_atparts(self):
         lines = '@foo array name'
@@ -669,7 +702,7 @@ class Test_gettags(unittest.TestCase):
         self.assertEqual(
             result,
             [(0, None, None, None, ''), (0, 'foo', 'array', 'name', '')]
-            )
+        )
 
     def test_four_atparts(self):
         lines = '@foo array name text'
@@ -677,7 +710,8 @@ class Test_gettags(unittest.TestCase):
         self.assertEqual(
             result,
             [(0, None, None, None, ''), (0, 'foo', 'array', 'name', 'text')]
-            )
+        )
+
 
 class DummyResponse:
     def __init__(self, status=200, body='', reason='reason'):
@@ -688,11 +722,14 @@ class DummyResponse:
     def read(self):
         return self.body
 
+
 class Dummy(object):
     pass
 
+
 class DummyConnection:
     closed = False
+
     def __init__(self, status=200, body='', reason='reason'):
         self.response = DummyResponse(status, body, reason)
 
@@ -705,4 +742,3 @@ class DummyConnection:
 
     def close(self):
         self.closed = True
-

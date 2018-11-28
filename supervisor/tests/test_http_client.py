@@ -3,6 +3,7 @@ import sys
 import unittest
 from supervisor.compat import StringIO
 
+
 class ListenerTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.http_client import Listener
@@ -49,6 +50,7 @@ class ListenerTests(unittest.TestCase):
         inst = self._makeOne()
         self.assertEqual(inst.close(None), None)
 
+
 class HTTPHandlerTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.http_client import HTTPHandler
@@ -63,7 +65,7 @@ class HTTPHandlerTests(unittest.TestCase):
             username,
             password,
             map=socket_map,
-            )
+        )
 
     def _makeListener(self):
         listener = DummyListener()
@@ -81,7 +83,7 @@ class HTTPHandlerTests(unittest.TestCase):
             inst.get,
             'nothttp://localhost',
             '/abc'
-            )
+        )
 
     def test_get_implied_port_80(self):
         inst = self._makeOne()
@@ -140,7 +142,7 @@ class HTTPHandlerTests(unittest.TestCase):
         self.assertEqual(
             inst.listener.error_msg,
             'Cannot connect, error: None (None)',
-            )
+        )
         self.assertEqual(closed, [True])
         self.assertTrue(inst.error_handled)
 
@@ -166,7 +168,7 @@ class HTTPHandlerTests(unittest.TestCase):
              '\r\n',
              '\r\n',
              '\r\n']
-            )
+        )
 
     def test_handle_connect_with_password(self):
         inst = self._makeOne()
@@ -180,21 +182,21 @@ class HTTPHandlerTests(unittest.TestCase):
         self.assertTrue(inst.connected)
         self.assertEqual(
             pushed,
-             ['GET / HTTP/1.1',
-              '\r\n',
-              'Host: localhost',
-              '\r\n',
-              'Accept-Encoding: chunked',
-              '\r\n',
-              'Accept: */*',
-              '\r\n',
-              'User-agent: Supervisor HTTP Client',
-              '\r\n',
-              'Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=',
-              '\r\n',
-              '\r\n',
-              '\r\n'],
-            )
+            ['GET / HTTP/1.1',
+             '\r\n',
+             'Host: localhost',
+             '\r\n',
+             'Accept-Encoding: chunked',
+             '\r\n',
+             'Accept: */*',
+             '\r\n',
+             'User-agent: Supervisor HTTP Client',
+             '\r\n',
+             'Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=',
+             '\r\n',
+             '\r\n',
+             '\r\n'],
+        )
 
     def test_feed(self):
         inst = self._makeOne()
@@ -259,7 +261,7 @@ class HTTPHandlerTests(unittest.TestCase):
         self.assertEqual(
             inst.listener.error_msg,
             'Cannot read, status code 201'
-            )
+        )
         self.assertEqual(closed, [True])
 
     def test_headers_empty_line_nonchunked(self):
@@ -386,11 +388,13 @@ class HTTPHandlerTests(unittest.TestCase):
         self.assertEqual(dones, [True])
         self.assertEqual(closes, [True])
 
+
 class DummyListener(object):
     closed = None
     error_url = None
     error_msg = None
     done = False
+
     def __init__(self):
         self.fed_data = []
 
@@ -415,7 +419,9 @@ class DummyListener(object):
     def done(self, url):
         self.done = True
 
+
 class DummySocket(object):
     closed = False
+
     def close(self):
         self.closed = True

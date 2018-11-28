@@ -17,10 +17,11 @@ from supervisor.compat import StringIO
 
 try:
     import pstats
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     # Debian-packaged pythons may not have the pstats module
     # unless the "python-profiler" package is installed.
     pstats = None
+
 
 class EntryPointTests(unittest.TestCase):
     def test_main_noprofile(self):
@@ -67,6 +68,7 @@ class EntryPointTests(unittest.TestCase):
             self.assertTrue(output.find('cumulative time, call count') != -1,
                             output)
 
+
 class SupervisordTests(unittest.TestCase):
     def tearDown(self):
         from supervisor.events import clear
@@ -82,7 +84,7 @@ class SupervisordTests(unittest.TestCase):
     def test_main_first(self):
         options = DummyOptions()
         pconfig = DummyPConfig(options, 'foo', 'foo', '/bin/foo')
-        gconfigs = [DummyPGroupConfig(options,'foo', pconfigs=[pconfig])]
+        gconfigs = [DummyPGroupConfig(options, 'foo', pconfigs=[pconfig])]
         options.process_group_configs = gconfigs
         options.test = True
         options.first = True
@@ -107,7 +109,7 @@ class SupervisordTests(unittest.TestCase):
     def test_main_notfirst(self):
         options = DummyOptions()
         pconfig = DummyPConfig(options, 'foo', 'foo', '/bin/foo')
-        gconfigs = [DummyPGroupConfig(options,'foo', pconfigs=[pconfig])]
+        gconfigs = [DummyPGroupConfig(options, 'foo', pconfigs=[pconfig])]
         options.process_group_configs = gconfigs
         options.test = True
         options.first = False
@@ -138,11 +140,11 @@ class SupervisordTests(unittest.TestCase):
         process.killing = 1
         process.laststop = None
         process.waitstatus = None, None
-        options.pidhistory = {1:process}
+        options.pidhistory = {1: process}
         supervisord = self._makeOne(options)
 
         supervisord.reap(once=True)
-        self.assertEqual(process.finished, (1,1))
+        self.assertEqual(process.finished, (1, 1))
 
     def test_reap_recursionguard(self):
         options = DummyOptions()
@@ -159,15 +161,15 @@ class SupervisordTests(unittest.TestCase):
         process.killing = 1
         process.laststop = None
         process.waitstatus = None, None
-        options.pidhistory = {1:process}
+        options.pidhistory = {1: process}
         supervisord = self._makeOne(options)
 
         supervisord.reap(recursionguard=99)
-        self.assertEqual(process.finished, (1,1))
+        self.assertEqual(process.finished, (1, 1))
 
     def test_reap_unknown_pid(self):
         options = DummyOptions()
-        options.waitpid_return = 2, 0 # pid, status
+        options.waitpid_return = 2, 0  # pid, status
         pconfig = DummyPConfig(options, 'process', 'process', '/bin/process1')
         process = DummyProcess(pconfig)
         process.drained = False
@@ -233,7 +235,7 @@ class SupervisordTests(unittest.TestCase):
     def test_handle_sigusr2(self):
         options = DummyOptions()
         options._signal = signal.SIGUSR2
-        pconfig1 = DummyPConfig(options, 'process1', 'process1','/bin/process1')
+        pconfig1 = DummyPConfig(options, 'process1', 'process1', '/bin/process1')
         from supervisor.process import ProcessStates
         process1 = DummyProcess(pconfig1, state=ProcessStates.STOPPING)
         process1.delay = time.time() - 1
@@ -243,7 +245,7 @@ class SupervisordTests(unittest.TestCase):
             options, 'foo',
             pconfigs=pconfigs)
         dummypgroup = DummyProcessGroup(options)
-        supervisord.process_groups = {None:dummypgroup}
+        supervisord.process_groups = {None: dummypgroup}
         supervisord.handle_signal()
         self.assertEqual(supervisord.options.mood, 1)
         self.assertEqual(options.logs_reopened, True)
@@ -331,7 +333,7 @@ class SupervisordTests(unittest.TestCase):
                 'stopsignal': None, 'stopwaitsecs': 10,
                 'stopasgroup': False,
                 'killasgroup': False,
-                'exitcodes': (0,2), 'environment': None, 'serverurl': None,
+                'exitcodes': (0, 2), 'environment': None, 'serverurl': None,
             }
             result.update(params)
             return ProcessConfig(options, **result)
@@ -376,7 +378,7 @@ class SupervisordTests(unittest.TestCase):
     def test_add_process_group(self):
         options = DummyOptions()
         pconfig = DummyPConfig(options, 'foo', 'foo', '/bin/foo')
-        gconfig = DummyPGroupConfig(options,'foo', pconfigs=[pconfig])
+        gconfig = DummyPGroupConfig(options, 'foo', pconfigs=[pconfig])
         options.process_group_configs = [gconfig]
         supervisord = self._makeOne(options)
 
@@ -394,12 +396,14 @@ class SupervisordTests(unittest.TestCase):
     def test_add_process_group_event(self):
         from supervisor import events
         L = []
+
         def callback(event):
             L.append(1)
+
         events.subscribe(events.ProcessGroupAddedEvent, callback)
         options = DummyOptions()
         pconfig = DummyPConfig(options, 'foo', 'foo', '/bin/foo')
-        gconfig = DummyPGroupConfig(options,'foo', pconfigs=[pconfig])
+        gconfig = DummyPGroupConfig(options, 'foo', pconfigs=[pconfig])
         options.process_group_configs = [gconfig]
         supervisord = self._makeOne(options)
 
@@ -431,12 +435,14 @@ class SupervisordTests(unittest.TestCase):
     def test_remove_process_group_event(self):
         from supervisor import events
         L = []
+
         def callback(event):
             L.append(1)
+
         events.subscribe(events.ProcessGroupRemovedEvent, callback)
         options = DummyOptions()
         pconfig = DummyPConfig(options, 'foo', 'foo', '/bin/foo')
-        gconfig = DummyPGroupConfig(options,'foo', pconfigs=[pconfig])
+        gconfig = DummyPGroupConfig(options, 'foo', pconfigs=[pconfig])
         options.process_group_configs = [gconfig]
         supervisord = self._makeOne(options)
 
@@ -451,8 +457,10 @@ class SupervisordTests(unittest.TestCase):
     def test_runforever_emits_generic_startup_event(self):
         from supervisor import events
         L = []
+
         def callback(event):
             L.append(1)
+
         events.subscribe(events.SupervisorStateChangeEvent, callback)
         options = DummyOptions()
         supervisord = self._makeOne(options)
@@ -463,8 +471,10 @@ class SupervisordTests(unittest.TestCase):
     def test_runforever_emits_generic_specific_event(self):
         from supervisor import events
         L = []
+
         def callback(event):
             L.append(2)
+
         events.subscribe(events.SupervisorRunningEvent, callback)
         options = DummyOptions()
         options.test = True
@@ -484,13 +494,13 @@ class SupervisordTests(unittest.TestCase):
         options = DummyOptions()
         options.poller.result = [6], [7, 8]
         supervisord = self._makeOne(options)
-        pconfig = DummyPConfig(options, 'foo', '/bin/foo',)
+        pconfig = DummyPConfig(options, 'foo', '/bin/foo', )
         gconfig = DummyPGroupConfig(options, pconfigs=[pconfig])
         pgroup = DummyProcessGroup(gconfig)
         readable = DummyDispatcher(readable=True)
         writable = DummyDispatcher(writable=True)
         error = DummyDispatcher(writable=True, error=OSError)
-        pgroup.dispatchers = {6:readable, 7:writable, 8:error}
+        pgroup.dispatchers = {6: readable, 7: writable, 8: error}
         supervisord.process_groups = {'foo': pgroup}
         options.test = True
         supervisord.runforever()
@@ -503,12 +513,12 @@ class SupervisordTests(unittest.TestCase):
         options = DummyOptions()
         options.poller.result = [6], []
         supervisord = self._makeOne(options)
-        pconfig = DummyPConfig(options, 'foo', '/bin/foo',)
+        pconfig = DummyPConfig(options, 'foo', '/bin/foo', )
         gconfig = DummyPGroupConfig(options, pconfigs=[pconfig])
         pgroup = DummyProcessGroup(gconfig)
         from supervisor.medusa import asyncore_25 as asyncore
         exitnow = DummyDispatcher(readable=True, error=asyncore.ExitNow)
-        pgroup.dispatchers = {6:exitnow}
+        pgroup.dispatchers = {6: exitnow}
         supervisord.process_groups = {'foo': pgroup}
         options.test = True
         self.assertRaises(asyncore.ExitNow, supervisord.runforever)
@@ -517,12 +527,12 @@ class SupervisordTests(unittest.TestCase):
         options = DummyOptions()
         options.poller.result = [], [6]
         supervisord = self._makeOne(options)
-        pconfig = DummyPConfig(options, 'foo', '/bin/foo',)
+        pconfig = DummyPConfig(options, 'foo', '/bin/foo', )
         gconfig = DummyPGroupConfig(options, pconfigs=[pconfig])
         pgroup = DummyProcessGroup(gconfig)
         from supervisor.medusa import asyncore_25 as asyncore
         exitnow = DummyDispatcher(readable=True, error=asyncore.ExitNow)
-        pgroup.dispatchers = {6:exitnow}
+        pgroup.dispatchers = {6: exitnow}
         supervisord.process_groups = {'foo': pgroup}
         options.test = True
         self.assertRaises(asyncore.ExitNow, supervisord.runforever)
@@ -531,11 +541,11 @@ class SupervisordTests(unittest.TestCase):
         options = DummyOptions()
         options.poller.result = [6], []
         supervisord = self._makeOne(options)
-        pconfig = DummyPConfig(options, 'foo', '/bin/foo',)
+        pconfig = DummyPConfig(options, 'foo', '/bin/foo', )
         gconfig = DummyPGroupConfig(options, pconfigs=[pconfig])
         pgroup = DummyProcessGroup(gconfig)
         notimpl = DummyDispatcher(readable=True, error=NotImplementedError)
-        pgroup.dispatchers = {6:notimpl}
+        pgroup.dispatchers = {6: notimpl}
         supervisord.process_groups = {'foo': pgroup}
         options.test = True
         supervisord.runforever()
@@ -545,11 +555,11 @@ class SupervisordTests(unittest.TestCase):
         options = DummyOptions()
         options.poller.result = [], [6]
         supervisord = self._makeOne(options)
-        pconfig = DummyPConfig(options, 'foo', '/bin/foo',)
+        pconfig = DummyPConfig(options, 'foo', '/bin/foo', )
         gconfig = DummyPGroupConfig(options, pconfigs=[pconfig])
         pgroup = DummyProcessGroup(gconfig)
         notimpl = DummyDispatcher(readable=True, error=NotImplementedError)
-        pgroup.dispatchers = {6:notimpl}
+        pgroup.dispatchers = {6: notimpl}
         supervisord.process_groups = {'foo': pgroup}
         options.test = True
         supervisord.runforever()
@@ -563,8 +573,10 @@ class SupervisordTests(unittest.TestCase):
         supervisord.process_groups = {'foo': pgroup}
         supervisord.options.mood = -1
         L = []
+
         def callback(event):
             L.append(event)
+
         from supervisor import events
         events.subscribe(events.SupervisorStateChangeEvent, callback)
         from supervisor.medusa import asyncore_25 as asyncore
@@ -579,12 +591,14 @@ class SupervisordTests(unittest.TestCase):
     def test_exit(self):
         options = DummyOptions()
         supervisord = self._makeOne(options)
-        pconfig = DummyPConfig(options, 'foo', '/bin/foo',)
+        pconfig = DummyPConfig(options, 'foo', '/bin/foo', )
         gconfig = DummyPGroupConfig(options, pconfigs=[pconfig])
         pgroup = DummyProcessGroup(gconfig)
         L = []
+
         def callback():
             L.append(1)
+
         supervisord.process_groups = {'foo': pgroup}
         supervisord.options.mood = 0
         supervisord.options.test = True
@@ -595,14 +609,16 @@ class SupervisordTests(unittest.TestCase):
     def test_exit_delayed(self):
         options = DummyOptions()
         supervisord = self._makeOne(options)
-        pconfig = DummyPConfig(options, 'foo', '/bin/foo',)
+        pconfig = DummyPConfig(options, 'foo', '/bin/foo', )
         process = DummyProcess(pconfig)
         gconfig = DummyPGroupConfig(options, pconfigs=[pconfig])
         pgroup = DummyProcessGroup(gconfig)
         pgroup.unstopped_processes = [process]
         L = []
+
         def callback():
             L.append(1)
+
         supervisord.process_groups = {'foo': pgroup}
         supervisord.options.mood = 0
         supervisord.options.test = True
@@ -618,8 +634,10 @@ class SupervisordTests(unittest.TestCase):
     def test_tick(self):
         from supervisor import events
         L = []
+
         def callback(event):
             L.append(event)
+
         events.subscribe(events.TickEvent, callback)
         options = DummyOptions()
         supervisord = self._makeOne(options)
@@ -651,9 +669,10 @@ class SupervisordTests(unittest.TestCase):
         self.assertEqual(len(L), 6)
         self.assertEqual(L[-1].__class__, events.Tick3600Event)
 
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
 
+
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')
-

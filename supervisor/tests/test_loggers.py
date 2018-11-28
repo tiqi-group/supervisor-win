@@ -14,11 +14,13 @@ from supervisor.compat import StringIO
 from supervisor.tests.base import mock
 from supervisor.tests.base import DummyStream
 
+
 class LevelTests(unittest.TestCase):
     def test_LOG_LEVELS_BY_NUM_doesnt_include_builtins(self):
         from supervisor import loggers
         for level_name in loggers.LOG_LEVELS_BY_NUM.values():
             self.assertFalse(level_name.startswith('_'))
+
 
 class HandlerTests:
     def setUp(self):
@@ -41,8 +43,9 @@ class HandlerTests:
             level=loggers.LevelsByName.INFO,
             msg=msg,
             exc_info=None
-            )
+        )
         return record
+
 
 class BareHandlerTests(HandlerTests, unittest.TestCase):
     def _getTargetClass(self):
@@ -52,12 +55,12 @@ class BareHandlerTests(HandlerTests, unittest.TestCase):
     def test_flush_stream_flush_raises_IOError_EPIPE(self):
         stream = DummyStream(error=IOError(errno.EPIPE))
         inst = self._makeOne(stream=stream)
-        self.assertEqual(inst.flush(), None) # does not raise
+        self.assertEqual(inst.flush(), None)  # does not raise
 
     def test_flush_stream_flush_raises_IOError_not_EPIPE(self):
         stream = DummyStream(error=IOError(errno.EALREADY))
         inst = self._makeOne(stream=stream)
-        self.assertRaises(IOError, inst.flush) # non-EPIPE IOError raises
+        self.assertRaises(IOError, inst.flush)  # non-EPIPE IOError raises
 
     def test_close_already_closed(self):
         stream = DummyStream()
@@ -84,16 +87,18 @@ class BareHandlerTests(HandlerTests, unittest.TestCase):
         # on python 3, StringIO has fileno() but calling it raises
         stream = StringIO()
         inst = self._makeOne(stream=stream)
-        inst.close() # shouldn't raise
+        inst.close()  # shouldn't raise
         self.assertTrue(inst.closed)
 
     def test_close_stream_handles_fileno_ioerror(self):
         stream = DummyStream()
+
         def raise_ioerror():
             raise IOError()
+
         stream.fileno = raise_ioerror
         inst = self._makeOne(stream=stream)
-        inst.close() # shouldn't raise
+        inst.close()  # shouldn't raise
         self.assertTrue(inst.closed)
 
     def test_emit_gardenpath(self):
@@ -121,6 +126,7 @@ class BareHandlerTests(HandlerTests, unittest.TestCase):
         inst.emit(record)
         self.assertEqual(stream.flushed, False)
         self.assertEqual(stream.written, '')
+
 
 class FileHandlerTests(HandlerTests, unittest.TestCase):
     def _getTargetClass(self):
@@ -178,7 +184,7 @@ class FileHandlerTests(HandlerTests, unittest.TestCase):
         handler = self._makeOne(self.filename)
         os.remove(self.filename)
         self.assertFalse(os.path.exists(self.filename), self.filename)
-        handler.remove() # should not raise
+        handler.remove()  # should not raise
         self.assertFalse(os.path.exists(self.filename), self.filename)
 
     def test_remove_raises(self):
@@ -220,6 +226,7 @@ class FileHandlerTests(HandlerTests, unittest.TestCase):
         self.assertTrue(dummy_stderr.written.endswith('OSError\n'),
                         dummy_stderr.written)
 
+
 class RotatingFileHandlerTests(FileHandlerTests):
 
     def _getTargetClass(self):
@@ -229,7 +236,7 @@ class RotatingFileHandlerTests(FileHandlerTests):
     def test_ctor(self):
         handler = self._makeOne(self.filename)
         self.assertEqual(handler.mode, 'a')
-        self.assertEqual(handler.maxBytes, 512*1024*1024)
+        self.assertEqual(handler.maxBytes, 512 * 1024 * 1024)
         self.assertEqual(handler.backupCount, 10)
         handler.close()
 
@@ -237,31 +244,31 @@ class RotatingFileHandlerTests(FileHandlerTests):
         handler = self._makeOne(self.filename, maxBytes=10, backupCount=2)
         record = self._makeLogRecord('a' * 4)
 
-        handler.emit(record) # 4 bytes
+        handler.emit(record)  # 4 bytes
         self.assertFalse(os.path.exists(self.filename + '.1'))
         self.assertFalse(os.path.exists(self.filename + '.2'))
 
-        handler.emit(record) # 8 bytes
+        handler.emit(record)  # 8 bytes
         self.assertFalse(os.path.exists(self.filename + '.1'))
         self.assertFalse(os.path.exists(self.filename + '.2'))
 
-        handler.emit(record) # 12 bytes, do rollover
+        handler.emit(record)  # 12 bytes, do rollover
         self.assertTrue(os.path.exists(self.filename + '.1'))
         self.assertFalse(os.path.exists(self.filename + '.2'))
 
-        handler.emit(record) # 16 bytes
+        handler.emit(record)  # 16 bytes
         self.assertTrue(os.path.exists(self.filename + '.1'))
         self.assertFalse(os.path.exists(self.filename + '.2'))
 
-        handler.emit(record) # 20 bytes
+        handler.emit(record)  # 20 bytes
         self.assertTrue(os.path.exists(self.filename + '.1'))
         self.assertFalse(os.path.exists(self.filename + '.2'))
 
-        handler.emit(record) # 24 bytes, do rollover
+        handler.emit(record)  # 24 bytes, do rollover
         self.assertTrue(os.path.exists(self.filename + '.1'))
         self.assertTrue(os.path.exists(self.filename + '.2'))
 
-        handler.emit(record) # 28 bytes
+        handler.emit(record)  # 28 bytes
         handler.close()
         self.assertTrue(os.path.exists(self.filename + '.1'))
         self.assertTrue(os.path.exists(self.filename + '.2'))
@@ -269,17 +276,17 @@ class RotatingFileHandlerTests(FileHandlerTests):
         with open(self.filename, 'r') as f:
             self.assertEqual(f.read(), 'a' * 4)
 
-        with open(self.filename+'.1', 'r') as f:
+        with open(self.filename + '.1', 'r') as f:
             self.assertEqual(f.read(), 'a' * 12)
 
-        with open(self.filename+'.2', 'r') as f:
+        with open(self.filename + '.2', 'r') as f:
             self.assertEqual(f.read(), 'a' * 12)
 
     def test_current_logfile_removed(self):
         handler = self._makeOne(self.filename, maxBytes=6, backupCount=1)
         record = self._makeLogRecord('a' * 4)
 
-        handler.emit(record) # 4 bytes
+        handler.emit(record)  # 4 bytes
         self.assertTrue(os.path.exists(self.filename))
         self.assertFalse(os.path.exists(self.filename + '.1'))
 
@@ -287,7 +294,7 @@ class RotatingFileHandlerTests(FileHandlerTests):
         os.unlink(self.filename)
         self.assertFalse(os.path.exists(self.filename))
 
-        handler.emit(record) # 8 bytes, do rollover
+        handler.emit(record)  # 8 bytes, do rollover
         handler.close()
         self.assertTrue(os.path.exists(self.filename))
         self.assertFalse(os.path.exists(self.filename + '.1'))
@@ -319,6 +326,7 @@ class RotatingFileHandlerTests(FileHandlerTests):
     def test_removeAndRename_remove_raises_ENOENT(self):
         def remove(fn):
             raise OSError(errno.ENOENT)
+
         inst = self._makeOne(self.filename)
         renames = []
         inst._remove = remove
@@ -331,6 +339,7 @@ class RotatingFileHandlerTests(FileHandlerTests):
     def test_removeAndRename_remove_raises_other_than_ENOENT(self):
         def remove(fn):
             raise OSError(errno.EAGAIN)
+
         inst = self._makeOne(self.filename)
         inst._remove = remove
         inst._exists = lambda v: True
@@ -340,6 +349,7 @@ class RotatingFileHandlerTests(FileHandlerTests):
     def test_removeAndRename_rename_raises_ENOENT(self):
         def rename(s, d):
             raise OSError(errno.ENOENT)
+
         inst = self._makeOne(self.filename)
         inst._rename = rename
         inst._exists = lambda v: False
@@ -349,6 +359,7 @@ class RotatingFileHandlerTests(FileHandlerTests):
     def test_removeAndRename_rename_raises_other_than_ENOENT(self):
         def rename(s, d):
             raise OSError(errno.EAGAIN)
+
         inst = self._makeOne(self.filename)
         inst._rename = rename
         inst._exists = lambda v: False
@@ -389,6 +400,7 @@ class BoundIOTests(unittest.TestCase):
         io = self._makeOne(1, 'a')
         io.close()
         self.assertEqual(io.buf, '')
+
 
 class LoggerTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -490,6 +502,7 @@ class MockSysLog(mock.Mock):
             message.encode()
         super(MockSysLog, self).__call__(*args, **kwargs)
 
+
 class SyslogHandlerTests(HandlerTests, unittest.TestCase):
     def setUp(self):
         pass
@@ -507,13 +520,13 @@ class SyslogHandlerTests(HandlerTests, unittest.TestCase):
         class Record(object):
             def asdict(self):
                 raise TypeError
+
         record = Record()
         handler = self._makeOne()
         handled = []
         handler.handleError = lambda: handled.append(True)
         handler.emit(record)
         self.assertEqual(handled, [True])
-
 
     @mock.patch('syslog.syslog', MockSysLog())
     def test_emit_ascii_noerror(self):
@@ -539,13 +552,16 @@ class SyslogHandlerTests(HandlerTests, unittest.TestCase):
             record = self._makeLogRecord('fií')
             handler.emit(record)
             syslog.syslog.assert_called_with('fií')
+
         def test_emit_unicode_witherror(self):
             handler = self._makeOne()
             called = []
+
             def fake_syslog(msg):
                 if not called:
                     called.append(msg)
                     raise UnicodeError
+
             handler._syslog = fake_syslog
             record = self._makeLogRecord('fií')
             handler.emit(record)
@@ -558,30 +574,39 @@ class SyslogHandlerTests(HandlerTests, unittest.TestCase):
             record = self._makeLogRecord(inp)
             handler.emit(record)
             syslog.syslog.assert_called_with('fi\xc3\xad')
+
         def test_emit_unicode_witherror(self):
             handler = self._makeOne()
             called = []
+
             def fake_syslog(msg):
                 if not called:
                     called.append(msg)
                     raise UnicodeError
+
             handler._syslog = fake_syslog
             record = self._makeLogRecord(as_string('fií'))
             handler.emit(record)
             self.assertEqual(called, [as_string('fi\xc3\xad')])
 
+
 class DummyHandler:
     close = False
+
     def __init__(self, level):
         self.level = level
         self.records = []
+
     def emit(self, record):
         self.records.append(record)
+
     def close(self):
         self.closed = True
 
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')

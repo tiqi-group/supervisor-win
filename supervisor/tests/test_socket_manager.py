@@ -16,6 +16,7 @@ from supervisor.tests.base import DummySocketConfig
 from supervisor.tests.base import DummyLogger
 from supervisor.datatypes import InetStreamSocketConfig
 
+
 class TestObject:
 
     def __init__(self):
@@ -26,6 +27,7 @@ class TestObject:
 
     def setValue(self, val):
         self.value = val
+
 
 class ProxyTest(unittest.TestCase):
 
@@ -53,6 +55,7 @@ class ProxyTest(unittest.TestCase):
         gc_collect()
         self.assertTrue(self.on_deleteCalled)
 
+
 class ReferenceCounterTest(unittest.TestCase):
 
     def setUp(self):
@@ -72,7 +75,7 @@ class ReferenceCounterTest(unittest.TestCase):
         return self._getTargetClass()(*args, **kw)
 
     def test_incr_and_decr(self):
-        ctr = self._makeOne(on_zero=self.stop,on_non_zero=self.start)
+        ctr = self._makeOne(on_zero=self.stop, on_non_zero=self.start)
         self.assertFalse(self.running)
         ctr.increment()
         self.assertTrue(self.running)
@@ -88,8 +91,9 @@ class ReferenceCounterTest(unittest.TestCase):
         self.assertEqual(0, ctr.get_count())
 
     def test_decr_at_zero_raises_error(self):
-        ctr = self._makeOne(on_zero=self.stop,on_non_zero=self.start)
+        ctr = self._makeOne(on_zero=self.stop, on_non_zero=self.start)
         self.assertRaises(Exception, ctr.decrement)
+
 
 class SocketManagerTest(unittest.TestCase):
 
@@ -136,7 +140,7 @@ class SocketManagerTest(unittest.TestCase):
         self.assertFalse(sock_manager.is_prepared())
         # Get two socket references
         sock = sock_manager.get_socket()
-        self.assertTrue(sock_manager.is_prepared()) #socket created on demand
+        self.assertTrue(sock_manager.is_prepared())  # socket created on demand
         sock_id = id(sock._get())
         sock2 = sock_manager.get_socket()
         sock2_id = id(sock2._get())
@@ -214,14 +218,17 @@ class SocketManagerTest(unittest.TestCase):
         except Exception as e:
             self.assertEqual(e.args[0], 'Socket has not been prepared')
 
+
 def gc_collect():
     if __pypy__ is not None:
         gc.collect()
         gc.collect()
         gc.collect()
 
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')

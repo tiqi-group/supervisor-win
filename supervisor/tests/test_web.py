@@ -4,6 +4,7 @@ import unittest
 from supervisor.tests.base import DummySupervisor
 from supervisor.tests.base import DummyRequest
 
+
 class DeferredWebProducerTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.web import DeferredWebProducer
@@ -42,8 +43,10 @@ class DeferredWebProducerTests(unittest.TestCase):
 
     def test_more_exception_caught(self):
         request = DummyRequest('/index.html', [], '', '')
+
         def callback(*arg):
             raise ValueError('foo')
+
         callback.delay = 1
         producer = self._makeOne(request, callback)
         self.assertEqual(producer.more(), None)
@@ -60,7 +63,7 @@ class DeferredWebProducerTests(unittest.TestCase):
         callback = lambda *arg: None
         callback.delay = 1
         producer = self._makeOne(request, callback)
-        response = {'headers': {'Location':'abc'}}
+        response = {'headers': {'Location': 'abc'}}
         result = producer.sendresponse(response)
         self.assertEqual(result, None)
         self.assertEqual(request._error, 301)
@@ -72,12 +75,13 @@ class DeferredWebProducerTests(unittest.TestCase):
         callback = lambda *arg: None
         callback.delay = 1
         producer = self._makeOne(request, callback)
-        response = {'body': 'abc', 'headers':{'Content-Type':'text/html'}}
+        response = {'body': 'abc', 'headers': {'Content-Type': 'text/html'}}
         result = producer.sendresponse(response)
         self.assertEqual(result, None)
         self.assertEqual(request.headers['Content-Type'], 'text/html')
         self.assertEqual(request.headers['Content-Length'], 3)
         self.assertEqual(request.producers[0], 'abc')
+
 
 class UIHandlerTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -90,24 +94,24 @@ class UIHandlerTests(unittest.TestCase):
         return handler
 
     def test_handle_request_no_view_method(self):
-        request = DummyRequest('/foo.css', [], '', '', {'PATH_INFO':'/foo.css'})
+        request = DummyRequest('/foo.css', [], '', '', {'PATH_INFO': '/foo.css'})
         handler = self._makeOne()
         data = handler.handle_request(request)
         self.assertEqual(data, None)
 
     def test_handle_request_default(self):
         request = DummyRequest('/index.html', [], '', '',
-                               {'PATH_INFO':'/index.html'})
+                               {'PATH_INFO': '/index.html'})
         handler = self._makeOne()
         data = handler.handle_request(request)
         self.assertEqual(data, None)
         self.assertEqual(request.channel.producer.request, request)
         from supervisor.web import StatusView
-        self.assertEqual(request.channel.producer.callback.__class__,StatusView)
+        self.assertEqual(request.channel.producer.callback.__class__, StatusView)
 
     def test_handle_request_index_html(self):
         request = DummyRequest('/index.html', [], '', '',
-                               {'PATH_INFO':'/index.html'})
+                               {'PATH_INFO': '/index.html'})
         handler = self._makeOne()
         handler.handle_request(request)
         from supervisor.web import StatusView
@@ -117,7 +121,7 @@ class UIHandlerTests(unittest.TestCase):
 
     def test_handle_request_tail_html(self):
         request = DummyRequest('/tail.html', [], '', '',
-                               {'PATH_INFO':'/tail.html'})
+                               {'PATH_INFO': '/tail.html'})
         handler = self._makeOne()
         handler.handle_request(request)
         from supervisor.web import TailView
@@ -127,7 +131,7 @@ class UIHandlerTests(unittest.TestCase):
 
     def test_handle_request_ok_html(self):
         request = DummyRequest('/tail.html', [], '', '',
-                               {'PATH_INFO':'/ok.html'})
+                               {'PATH_INFO': '/ok.html'})
         handler = self._makeOne()
         handler.handle_request(request)
         from supervisor.web import OKView
@@ -169,17 +173,20 @@ class StatusViewTests(unittest.TestCase):
         context.supervisord = DummySupervisor()
         context.template = 'ui/status.html'
         context.response = {}
-        context.form = {'action':'refresh'}
+        context.form = {'action': 'refresh'}
         view = self._makeOne(context)
         data = view.render()
         from supervisor.http import NOT_DONE_YET
         self.assertTrue(data is NOT_DONE_YET, data)
 
+
 class DummyContext:
     pass
 
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')

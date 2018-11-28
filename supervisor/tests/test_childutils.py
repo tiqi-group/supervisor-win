@@ -3,25 +3,26 @@ import time
 import unittest
 from supervisor.compat import StringIO
 
+
 class ChildUtilsTests(unittest.TestCase):
     def test_getRPCInterface(self):
         from supervisor.childutils import getRPCInterface
-        rpc = getRPCInterface({'SUPERVISOR_SERVER_URL':'http://localhost:9001'})
+        rpc = getRPCInterface({'SUPERVISOR_SERVER_URL': 'http://localhost:9001'})
         # we can't really test this thing; its a magic object
         self.assertTrue(rpc is not None)
 
     def test_getRPCTransport_no_uname_pass(self):
         from supervisor.childutils import getRPCTransport
-        t = getRPCTransport({'SUPERVISOR_SERVER_URL':'http://localhost:9001'})
+        t = getRPCTransport({'SUPERVISOR_SERVER_URL': 'http://localhost:9001'})
         self.assertEqual(t.username, '')
         self.assertEqual(t.password, '')
         self.assertEqual(t.serverurl, 'http://localhost:9001')
 
     def test_getRPCTransport_with_uname_pass(self):
         from supervisor.childutils import getRPCTransport
-        env = {'SUPERVISOR_SERVER_URL':'http://localhost:9001',
-               'SUPERVISOR_USERNAME':'chrism',
-               'SUPERVISOR_PASSWORD':'abc123'}
+        env = {'SUPERVISOR_SERVER_URL': 'http://localhost:9001',
+               'SUPERVISOR_USERNAME': 'chrism',
+               'SUPERVISOR_PASSWORD': 'abc123'}
         t = getRPCTransport(env)
         self.assertEqual(t.username, 'chrism')
         self.assertEqual(t.password, 'abc123')
@@ -31,13 +32,13 @@ class ChildUtilsTests(unittest.TestCase):
         from supervisor.childutils import get_headers
         line = 'a:1 b:2'
         result = get_headers(line)
-        self.assertEqual(result, {'a':'1', 'b':'2'})
+        self.assertEqual(result, {'a': '1', 'b': '2'})
 
     def test_eventdata(self):
         from supervisor.childutils import eventdata
         payload = 'a:1 b:2\nthedata\n'
         headers, data = eventdata(payload)
-        self.assertEqual(headers, {'a':'1', 'b':'2'})
+        self.assertEqual(headers, {'a': '1', 'b': '2'})
         self.assertEqual(data, 'thedata\n')
 
     def test_get_asctime(self):
@@ -45,6 +46,7 @@ class ChildUtilsTests(unittest.TestCase):
         timestamp = time.mktime((2009, 1, 18, 22, 14, 7, 0, 0, -1))
         result = get_asctime(timestamp)
         self.assertEqual(result, '2009-01-18 22:14:07,000')
+
 
 class TestProcessCommunicationsProtocol(unittest.TestCase):
     def test_send(self):
@@ -82,18 +84,21 @@ class TestProcessCommunicationsProtocol(unittest.TestCase):
         finally:
             sys.stderr = old
 
+
 class TestEventListenerProtocol(unittest.TestCase):
     def test_wait(self):
         from supervisor.childutils import listener
         class Dummy:
             def readline(self):
                 return 'len:5'
+
             def read(self, *ignored):
                 return 'hello'
+
         stdin = Dummy()
         stdout = StringIO()
         headers, payload = listener.wait(stdin, stdout)
-        self.assertEqual(headers, {'len':'5'})
+        self.assertEqual(headers, {'len': '5'})
         self.assertEqual(payload, 'hello')
         self.assertEqual(stdout.getvalue(), 'READY\n')
 
@@ -134,6 +139,7 @@ class TestEventListenerProtocol(unittest.TestCase):
 
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')

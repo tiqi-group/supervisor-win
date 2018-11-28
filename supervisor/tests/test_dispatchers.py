@@ -9,6 +9,7 @@ from supervisor.tests.base import DummyPConfig
 from supervisor.tests.base import DummyLogger
 from supervisor.tests.base import DummyEvent
 
+
 class PDispatcherTests(unittest.TestCase):
     def setUp(self):
         from supervisor.events import clear
@@ -36,6 +37,7 @@ class PDispatcherTests(unittest.TestCase):
     def test_flush(self):
         inst = self._makeOne()
         self.assertEqual(inst.flush(), None)
+
 
 class POutputDispatcherTests(unittest.TestCase):
     def setUp(self):
@@ -120,7 +122,7 @@ class POutputDispatcherTests(unittest.TestCase):
             dispatcher.handle_error()
         result = options.logger.data[0]
         self.assertTrue(result.startswith(
-            'uncaptured python exception, closing channel'),result)
+            'uncaptured python exception, closing channel'), result)
 
     def test_toggle_capturemode_sends_event(self):
         options = DummyOptions()
@@ -133,8 +135,10 @@ class POutputDispatcherTests(unittest.TestCase):
         dispatcher.capturemode = True
         dispatcher.capturelog.getvalue = lambda: 'hallooo'
         L = []
+
         def doit(event):
             L.append(event)
+
         from supervisor import events
         events.subscribe(events.EventTypes.PROCESS_COMMUNICATION, doit)
         dispatcher.toggle_capturemode()
@@ -180,7 +184,7 @@ class POutputDispatcherTests(unittest.TestCase):
         dispatcher.record_output()
         self.assertEqual(dispatcher.childlog.data, ['a'])
         self.assertEqual(options.logger.data[0],
-             "'process1' stdout output:\na")
+                         "'process1' stdout output:\na")
         self.assertEqual(dispatcher.output_buffer, '')
 
     def test_record_output_emits_stdout_event_when_enabled(self):
@@ -192,8 +196,10 @@ class POutputDispatcherTests(unittest.TestCase):
         dispatcher.output_buffer = 'hello from stdout'
 
         L = []
+
         def doit(event):
             L.append(event)
+
         from supervisor import events
         events.subscribe(events.EventTypes.PROCESS_LOG_STDOUT, doit)
         dispatcher.record_output()
@@ -212,8 +218,10 @@ class POutputDispatcherTests(unittest.TestCase):
         dispatcher.output_buffer = 'hello from stdout'
 
         L = []
+
         def doit(event):
             L.append(event)
+
         from supervisor import events
         events.subscribe(events.EventTypes.PROCESS_LOG_STDOUT, doit)
         dispatcher.record_output()
@@ -229,8 +237,10 @@ class POutputDispatcherTests(unittest.TestCase):
         dispatcher.output_buffer = 'hello from stderr'
 
         L = []
+
         def doit(event):
             L.append(event)
+
         from supervisor import events
         events.subscribe(events.EventTypes.PROCESS_LOG_STDERR, doit)
         dispatcher.record_output()
@@ -249,8 +259,10 @@ class POutputDispatcherTests(unittest.TestCase):
         dispatcher.output_buffer = 'hello from stderr'
 
         L = []
+
         def doit(event):
             L.append(event)
+
         from supervisor import events
         events.subscribe(events.EventTypes.PROCESS_LOG_STDERR, doit)
         dispatcher.record_output()
@@ -274,7 +286,7 @@ class POutputDispatcherTests(unittest.TestCase):
         self.assertEqual(dispatcher.childlog.data,
                          ['stdout string longer than a token'])
         self.assertEqual(options.logger.data[0],
-             "'process1' stdout output:\nstdout string longer than a token")
+                         "'process1' stdout output:\nstdout string longer than a token")
 
     def test_record_output_capturemode_string_not_longer_than_token(self):
         # stdout/stderr goes to the process log and the main log,
@@ -297,15 +309,17 @@ class POutputDispatcherTests(unittest.TestCase):
         from supervisor.events import ProcessCommunicationEvent
         from supervisor.events import subscribe
         events = []
+
         def doit(event):
             events.append(event)
+
         subscribe(ProcessCommunicationEvent, doit)
         BEGIN_TOKEN = ProcessCommunicationEvent.BEGIN_TOKEN
         END_TOKEN = ProcessCommunicationEvent.END_TOKEN
         data = BEGIN_TOKEN + 'hello' + END_TOKEN
         options = DummyOptions()
         from supervisor.loggers import getLogger
-        options.getLogger = getLogger # actually use real logger
+        options.getLogger = getLogger  # actually use real logger
         logfile = os.path.join(tempfile.gettempdir(), 'log.txt')
         config = DummyPConfig(options, 'process1', '/bin/process1',
                               stdout_logfile=logfile,
@@ -339,8 +353,10 @@ class POutputDispatcherTests(unittest.TestCase):
         from supervisor.events import ProcessCommunicationEvent
         from supervisor.events import subscribe
         events = []
+
         def doit(event):
             events.append(event)
+
         subscribe(ProcessCommunicationEvent, doit)
         import string
         # ascii_letters for python 3
@@ -348,7 +364,7 @@ class POutputDispatcherTests(unittest.TestCase):
         digits = string.digits * 4
         BEGIN_TOKEN = ProcessCommunicationEvent.BEGIN_TOKEN
         END_TOKEN = ProcessCommunicationEvent.END_TOKEN
-        data = (letters +  BEGIN_TOKEN + digits + END_TOKEN + letters)
+        data = (letters + BEGIN_TOKEN + digits + END_TOKEN + letters)
 
         # boundaries that split tokens
         broken = data.split(':')
@@ -358,7 +374,7 @@ class POutputDispatcherTests(unittest.TestCase):
 
         options = DummyOptions()
         from supervisor.loggers import getLogger
-        options.getLogger = getLogger # actually use real logger
+        options.getLogger = getLogger  # actually use real logger
         logfile = os.path.join(tempfile.gettempdir(), 'log.txt')
         config = DummyPConfig(options, 'process1', '/bin/process1',
                               stdout_logfile=logfile,
@@ -368,7 +384,7 @@ class POutputDispatcherTests(unittest.TestCase):
         try:
             dispatcher.output_buffer = first
             dispatcher.record_output()
-            [ x.flush() for x in dispatcher.childlog.handlers ]
+            [x.flush() for x in dispatcher.childlog.handlers]
             with open(logfile, 'r') as f:
                 self.assertEqual(f.read(), letters)
             self.assertEqual(dispatcher.output_buffer, first[len(letters):])
@@ -377,7 +393,7 @@ class POutputDispatcherTests(unittest.TestCase):
             dispatcher.output_buffer += second
             dispatcher.record_output()
             self.assertEqual(len(events), 0)
-            [ x.flush() for x in dispatcher.childlog.handlers ]
+            [x.flush() for x in dispatcher.childlog.handlers]
             with open(logfile, 'r') as f:
                 self.assertEqual(f.read(), letters)
             self.assertEqual(dispatcher.output_buffer, first[len(letters):])
@@ -385,7 +401,7 @@ class POutputDispatcherTests(unittest.TestCase):
 
             dispatcher.output_buffer += third
             dispatcher.record_output()
-            [ x.flush() for x in dispatcher.childlog.handlers ]
+            [x.flush() for x in dispatcher.childlog.handlers]
             with open(logfile, 'r') as f:
                 self.assertEqual(f.read(), letters * 2)
             self.assertEqual(len(events), 1)
@@ -460,7 +476,7 @@ class POutputDispatcherTests(unittest.TestCase):
         self.assertEqual(dispatcher.process, process)
         self.assertEqual(dispatcher.channel, 'stdout')
         self.assertEqual(dispatcher.fd, 0)
-        self.assertEqual(dispatcher.capturelog.__class__,DummyLogger)
+        self.assertEqual(dispatcher.capturelog.__class__, DummyLogger)
         self.assertEqual(dispatcher.mainlog, None)
         self.assertEqual(dispatcher.childlog, None)
 
@@ -495,9 +511,8 @@ class POutputDispatcherTests(unittest.TestCase):
         dispatcher = self._makeOne(process)
         dispatcher.close()
         self.assertEqual(dispatcher.closed, True)
-        dispatcher.close() # make sure we don't error if we try to close twice
+        dispatcher.close()  # make sure we don't error if we try to close twice
         self.assertEqual(dispatcher.closed, True)
-
 
     def test_syslog_logfile_deprecated(self):
         import warnings
@@ -509,8 +524,6 @@ class POutputDispatcherTests(unittest.TestCase):
             warnings.simplefilter('always')
             self._makeOne(process)
             self.assertEqual(len(w), 1)
-
-
 
 
 class PInputDispatcherTests(unittest.TestCase):
@@ -625,7 +638,7 @@ class PInputDispatcherTests(unittest.TestCase):
             dispatcher.handle_error()
         result = options.logger.data[0]
         self.assertTrue(result.startswith(
-            'uncaptured python exception, closing channel'),result)
+            'uncaptured python exception, closing channel'), result)
 
     def test_repr(self):
         options = DummyOptions()
@@ -646,8 +659,9 @@ class PInputDispatcherTests(unittest.TestCase):
         dispatcher = self._makeOne(process)
         dispatcher.close()
         self.assertEqual(dispatcher.closed, True)
-        dispatcher.close() # make sure we don't error if we try to close twice
+        dispatcher.close()  # make sure we don't error if we try to close twice
         self.assertEqual(dispatcher.closed, True)
+
 
 class PEventListenerDispatcherTests(unittest.TestCase):
     def setUp(self):
@@ -851,8 +865,10 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         from supervisor.dispatchers import EventListenerStates
         dispatcher = self._makeOne(process)
         process.listener_state = EventListenerStates.BUSY
+
         class Dummy:
             pass
+
         process.group = Dummy()
         process.group.config = Dummy()
         from supervisor.dispatchers import default_handler
@@ -872,8 +888,10 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         from supervisor.dispatchers import EventListenerStates
         dispatcher = self._makeOne(process)
         process.listener_state = EventListenerStates.BUSY
+
         class Dummy:
             pass
+
         process.group = Dummy()
         process.group.config = Dummy()
         from supervisor.dispatchers import default_handler
@@ -890,8 +908,10 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         from supervisor.events import EventRejectedEvent
         from supervisor.events import subscribe
         events = []
+
         def doit(event):
             events.append(event)
+
         subscribe(EventRejectedEvent, doit)
         options = DummyOptions()
         config = DummyPConfig(options, 'process1', '/bin/process1')
@@ -905,7 +925,7 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         self.assertEqual(dispatcher.handle_listener_state_change(), None)
         self.assertEqual(dispatcher.state_buffer, '')
         self.assertEqual(options.logger.data[0],
-                'process1: BUSY -> UNKNOWN (bad result line \'bogus data\')')
+                         'process1: BUSY -> UNKNOWN (bad result line \'bogus data\')')
         self.assertEqual(process.listener_state,
                          EventListenerStates.UNKNOWN)
         self.assertEqual(events[0].process, process)
@@ -918,8 +938,10 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         from supervisor.dispatchers import EventListenerStates
         dispatcher = self._makeOne(process)
         process.listener_state = EventListenerStates.BUSY
+
         class Dummy:
             pass
+
         process.group = Dummy()
         process.group.config = Dummy()
         from supervisor.dispatchers import default_handler
@@ -940,16 +962,21 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         config = DummyPConfig(options, 'process1', '/bin/process1')
         process = DummyProcess(config)
         L = []
+
         def doit(event):
             L.append(event)
+
         from supervisor import events
         subscribe(events.EventRejectedEvent, doit)
         from supervisor.dispatchers import EventListenerStates
         dispatcher = self._makeOne(process)
+
         def handle(event, result):
             pass
+
         class Dummy:
             pass
+
         process.group = Dummy()
         process.group.config = Dummy()
         process.group.config.result_handler = handle
@@ -967,17 +994,22 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         config = DummyPConfig(options, 'process1', '/bin/process1')
         process = DummyProcess(config)
         L = []
+
         def doit(event):
             L.append(event)
+
         from supervisor import events
         subscribe(events.EventRejectedEvent, doit)
         from supervisor.dispatchers import EventListenerStates
         dispatcher = self._makeOne(process)
+
         def rejected(event, result):
             from supervisor.dispatchers import RejectEvent
             raise RejectEvent(result)
+
         class Dummy:
             pass
+
         process.group = Dummy()
         process.group.config = Dummy()
         process.group.config.result_handler = rejected
@@ -996,16 +1028,21 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         config = DummyPConfig(options, 'process1', '/bin/process1')
         process = DummyProcess(config)
         L = []
+
         def doit(event):
             L.append(event)
+
         from supervisor import events
         subscribe(events.EventRejectedEvent, doit)
         from supervisor.dispatchers import EventListenerStates
         dispatcher = self._makeOne(process)
+
         def exception(event, result):
             raise ValueError
+
         class Dummy:
             pass
+
         process.group = Dummy()
         process.group.config = Dummy()
         process.group.config.result_handler = exception
@@ -1030,7 +1067,7 @@ class PEventListenerDispatcherTests(unittest.TestCase):
             dispatcher.handle_error()
         result = options.logger.data[0]
         self.assertTrue(result.startswith(
-            'uncaptured python exception, closing channel'),result)
+            'uncaptured python exception, closing channel'), result)
 
     def test_removelogs(self):
         options = DummyOptions()
@@ -1113,7 +1150,7 @@ class PEventListenerDispatcherTests(unittest.TestCase):
         dispatcher = self._makeOne(process)
         dispatcher.close()
         self.assertEqual(dispatcher.closed, True)
-        dispatcher.close() # make sure we don't error if we try to close twice
+        dispatcher.close()  # make sure we don't error if we try to close twice
         self.assertEqual(dispatcher.closed, True)
 
 
@@ -1134,8 +1171,10 @@ class stripEscapeTests(unittest.TestCase):
         noansi = 'Hello world... this is longer than a token!'
         self.assertEqual(self._callFUT(noansi), noansi)
 
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')

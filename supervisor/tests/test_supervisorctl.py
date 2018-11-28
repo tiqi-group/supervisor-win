@@ -4,6 +4,7 @@ from supervisor.compat import StringIO
 from supervisor.compat import xmlrpclib
 from supervisor.tests.base import DummyRPCServer
 
+
 class fgthread_Tests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.supervisorctl import fgthread
@@ -52,15 +53,18 @@ class fgthread_Tests(unittest.TestCase):
         ctl = DummyController(options)
         inst = self._makeOne(None, ctl)
         inst.killed = True
+
         class DummyCloseable(object):
             def close(self):
                 self.closed = True
+
         inst.output_handler = DummyCloseable()
         inst.error_handler = DummyCloseable()
         inst.kill()
         self.assertTrue(inst.killed)
         self.assertTrue(inst.output_handler.closed)
         self.assertTrue(inst.error_handler.closed)
+
 
 class ControllerTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -98,6 +102,7 @@ class ControllerTests(unittest.TestCase):
         from supervisor.xmlrpc import Faults
         def getVersion():
             raise xmlrpclib.Fault(Faults.UNKNOWN_METHOD, 'duh')
+
         options._server.supervisor.getVersion = getVersion
         controller = self._makeOne(options)
         controller.stdout = StringIO()
@@ -116,6 +121,7 @@ class ControllerTests(unittest.TestCase):
         from supervisor.xmlrpc import Faults
         def f(*arg, **kw):
             raise xmlrpclib.Fault(Faults.FAILED, '')
+
         options._server.supervisor.getVersion = f
         controller = self._makeOne(options)
         controller.stdout = StringIO()
@@ -127,6 +133,7 @@ class ControllerTests(unittest.TestCase):
         import errno
         def raise_fault(*arg, **kw):
             raise socket.error(errno.ECONNREFUSED, 'nobody home')
+
         options._server.supervisor.getVersion = raise_fault
 
         controller = self._makeOne(options)
@@ -144,6 +151,7 @@ class ControllerTests(unittest.TestCase):
         import errno
         def raise_fault(*arg, **kw):
             raise socket.error(errno.ENOENT, 'nobody home')
+
         options._server.supervisor.getVersion = raise_fault
 
         controller = self._makeOne(options)
@@ -161,6 +169,7 @@ class ControllerTests(unittest.TestCase):
         import errno
         def f(*arg, **kw):
             raise socket.error(errno.EBADF, '')
+
         options._server.supervisor.getVersion = f
         controller = self._makeOne(options)
         controller.stdout = StringIO()
@@ -211,7 +220,7 @@ class ControllerTests(unittest.TestCase):
     def test_complete_action_empty(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help']
         result = controller.complete('', 0, line='')
         self.assertEqual(result, 'help ')
@@ -221,7 +230,7 @@ class ControllerTests(unittest.TestCase):
     def test_complete_action_partial(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help']
         result = controller.complete('h', 0, line='h')
         self.assertEqual(result, 'help ')
@@ -231,7 +240,7 @@ class ControllerTests(unittest.TestCase):
     def test_complete_action_whole(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help']
         result = controller.complete('help', 0, line='help')
         self.assertEqual(result, 'help ')
@@ -239,14 +248,14 @@ class ControllerTests(unittest.TestCase):
     def test_complete_unknown_action_uncompletable(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         result = controller.complete('bad', 0, line='bad')
         self.assertEqual(result, None)
 
     def test_complete_unknown_action_arg_uncompletable(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help', 'add']
         result = controller.complete('', 1, line='bad ')
         self.assertEqual(result, None)
@@ -254,7 +263,7 @@ class ControllerTests(unittest.TestCase):
     def test_complete_help_empty(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help', 'start']
         result = controller.complete('', 0, line='help ')
         self.assertEqual(result, 'help ')
@@ -266,7 +275,7 @@ class ControllerTests(unittest.TestCase):
     def test_complete_help_action(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help', 'start']
         result = controller.complete('he', 0, line='help he')
         self.assertEqual(result, 'help ')
@@ -276,7 +285,7 @@ class ControllerTests(unittest.TestCase):
     def test_complete_start_empty(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help', 'start']
         result = controller.complete('', 0, line='start ')
         self.assertEqual(result, 'foo ')
@@ -292,7 +301,7 @@ class ControllerTests(unittest.TestCase):
     def test_complete_start_no_colon(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help', 'start']
         result = controller.complete('f', 0, line='start f')
         self.assertEqual(result, 'foo ')
@@ -302,7 +311,7 @@ class ControllerTests(unittest.TestCase):
     def test_complete_start_with_colon(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help', 'start']
         result = controller.complete('foo:', 0, line='start foo:')
         self.assertEqual(result, 'foo:foo ')
@@ -314,7 +323,7 @@ class ControllerTests(unittest.TestCase):
     def test_complete_start_uncompletable(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help', 'start']
         result = controller.complete('bad', 0, line='start bad')
         self.assertEqual(result, None)
@@ -322,19 +331,21 @@ class ControllerTests(unittest.TestCase):
     def test_complete_caches_process_info(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help', 'start']
         result = controller.complete('', 0, line='start ')
         self.assertNotEqual(result, None)
+
         def f(*arg, **kw):
             raise Exception("should not have called getAllProcessInfo")
+
         controller.options._server.supervisor.getAllProcessInfo = f
         controller.complete('', 1, line='start ')
 
     def test_complete_add_empty(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help', 'add']
         result = controller.complete('', 0, line='add ')
         self.assertEqual(result, 'foo ')
@@ -348,7 +359,7 @@ class ControllerTests(unittest.TestCase):
     def test_complete_add_uncompletable(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help', 'add']
         result = controller.complete('bad', 0, line='add bad')
         self.assertEqual(result, None)
@@ -356,7 +367,7 @@ class ControllerTests(unittest.TestCase):
     def test_complete_add_group(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help', 'add']
         result = controller.complete('f', 0, line='add f')
         self.assertEqual(result, 'foo ')
@@ -366,7 +377,7 @@ class ControllerTests(unittest.TestCase):
     def test_complete_reload_arg_uncompletable(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help', 'reload']
         result = controller.complete('', 1, line='reload ')
         self.assertEqual(result, None)
@@ -374,7 +385,7 @@ class ControllerTests(unittest.TestCase):
     def test_complete_semicolon_separated_commands(self):
         options = DummyClientOptions()
         controller = self._makeOne(options)
-        controller.stdout=StringIO()
+        controller.stdout = StringIO()
         controller.vocab = ['help', 'start']
         result = controller.complete('f', 0, line='help;start f')
         self.assertEqual(result, 'foo ')
@@ -430,7 +441,7 @@ class ControllerTests(unittest.TestCase):
 
     def test_real_controller_initialization(self):
         from supervisor.options import ClientOptions
-        args = [] # simulating starting without parameters
+        args = []  # simulating starting without parameters
         options = ClientOptions()
 
         # No default config file search in case they would exist
@@ -438,7 +449,7 @@ class ControllerTests(unittest.TestCase):
         options.searchpaths = []
 
         options.realize(args, doc=__doc__)
-        self._makeOne(options) # should not raise
+        self._makeOne(options)  # should not raise
 
 
 class TestControllerPluginBase(unittest.TestCase):
@@ -471,6 +482,7 @@ class TestControllerPluginBase(unittest.TestCase):
         self.assertEqual(result, None)
         self.assertEqual(plugin.ctl.stdout.getvalue(), 'no help on foo\n')
         self.assertEqual(len(plugin.ctl.topics_printed), 0)
+
 
 class TestDefaultControllerPlugin(unittest.TestCase):
 
@@ -580,8 +592,10 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         plugin = self._makeOne()
         plugin.ctl.upcheck = lambda: False
         called = []
+
         def f(*arg, **kw):
             called.append(True)
+
         plugin.ctl.options._server.supervisor.readProcessStdoutLog = f
         plugin.do_tail('foo')
         self.assertEqual(called, [])
@@ -596,8 +610,10 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         plugin = self._makeOne()
         plugin.ctl.upcheck = lambda: False
         called = []
+
         def f(*arg, **kw):
             called.append(True)
+
         plugin.ctl.options._server.supervisor.getAllProcessInfo = f
         plugin.do_status('')
         self.assertEqual(called, [])
@@ -612,10 +628,11 @@ class TestDefaultControllerPlugin(unittest.TestCase):
     def test_status_table_process_column_expands(self):
         plugin = self._makeOne()
         options = plugin.ctl.options
+
         def f(*arg, **kw):
             from supervisor.states import ProcessStates
-            return [{'name': 'foo'*50, # long name
-                     'group':'foo',
+            return [{'name': 'foo' * 50,  # long name
+                     'group': 'foo',
                      'pid': 11,
                      'state': ProcessStates.RUNNING,
                      'statename': 'RUNNING',
@@ -623,19 +640,20 @@ class TestDefaultControllerPlugin(unittest.TestCase):
                      'stop': 0,
                      'spawnerr': '',
                      'now': 0,
-                     'description':'foo description'},
+                     'description': 'foo description'},
                     {
-                    'name': 'bar', # short name
-                    'group': 'bar',
-                    'pid': 12,
-                    'state': ProcessStates.FATAL,
-                    'statename': 'RUNNING',
-                    'start': 0,
-                    'stop': 0,
-                    'spawnerr': '',
-                    'now': 0,
-                    'description': 'bar description',
+                        'name': 'bar',  # short name
+                        'group': 'bar',
+                        'pid': 12,
+                        'state': ProcessStates.FATAL,
+                        'statename': 'RUNNING',
+                        'start': 0,
+                        'stop': 0,
+                        'spawnerr': '',
+                        'now': 0,
+                        'description': 'bar description',
                     }]
+
         options._server.supervisor.getAllProcessInfo = f
         self.assertEqual(plugin.do_status(''), None)
         lines = plugin.ctl.stdout.getvalue().split("\n")
@@ -819,8 +837,10 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         plugin = self._makeOne()
         plugin.ctl.upcheck = lambda: False
         called = []
+
         def f(*arg, **kw):
             called.append(True)
+
         supervisor = plugin.ctl.options._server.supervisor
         supervisor.startAllProcesses = f
         supervisor.startProcessGroup = f
@@ -910,8 +930,10 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         plugin = self._makeOne()
         plugin.ctl.upcheck = lambda: False
         called = []
+
         def f(*arg, **kw):
             called.append(True)
+
         supervisor = plugin.ctl.options._server.supervisor
         supervisor.stopAllProcesses = f
         supervisor.stopProcessGroup = f
@@ -1007,8 +1029,10 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         plugin = self._makeOne()
         plugin.ctl.upcheck = lambda: False
         called = []
+
         def f(*arg, **kw):
             called.append(True)
+
         supervisor = plugin.ctl.options._server.supervisor
         supervisor.signalAllProcesses = f
         supervisor.signalProcessGroup = f
@@ -1049,8 +1073,10 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         plugin = self._makeOne()
         plugin.ctl.upcheck = lambda: False
         called = []
+
         def f(*arg, **kw):
             called.append(True)
+
         supervisor = plugin.ctl.options._server.supervisor
         supervisor.stopAllProcesses = f
         supervisor.stopProcessGroup = f
@@ -1112,8 +1138,10 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         plugin = self._makeOne()
         plugin.ctl.upcheck = lambda: False
         called = []
+
         def f(*arg, **kw):
             called.append(True)
+
         supervisor = plugin.ctl.options._server.supervisor
         supervisor.clearAllProcessLogs = f
         supervisor.clearProcessLogs = f
@@ -1160,8 +1188,10 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         plugin = self._makeOne()
         plugin.ctl.upcheck = lambda: False
         called = []
+
         def f(*arg, **kw):
             called.append(True)
+
         plugin.ctl.options._server.supervisor.getSupervisorVersion = f
         plugin.do_version('')
         self.assertEqual(called, [])
@@ -1206,6 +1236,7 @@ class TestDefaultControllerPlugin(unittest.TestCase):
 
         def raise_fault(*arg, **kw):
             raise xmlrpclib.Fault(xmlrpc.Faults.SHUTDOWN_STATE, 'bye')
+
         plugin.ctl.options._server.supervisor.shutdown = raise_fault
 
         result = plugin.do_shutdown('')
@@ -1219,6 +1250,7 @@ class TestDefaultControllerPlugin(unittest.TestCase):
 
         def raise_fault(*arg, **kw):
             raise xmlrpclib.Fault(xmlrpc.Faults.CANT_REREAD, 'ouch')
+
         plugin.ctl.options._server.supervisor.shutdown = raise_fault
 
         self.assertRaises(xmlrpclib.Fault,
@@ -1231,6 +1263,7 @@ class TestDefaultControllerPlugin(unittest.TestCase):
 
         def raise_fault(*arg, **kw):
             raise socket.error(errno.ECONNREFUSED, 'nobody home')
+
         plugin.ctl.options._server.supervisor.shutdown = raise_fault
 
         result = plugin.do_shutdown('')
@@ -1246,6 +1279,7 @@ class TestDefaultControllerPlugin(unittest.TestCase):
 
         def raise_fault(*arg, **kw):
             raise socket.error(errno.ENOENT, 'no file')
+
         plugin.ctl.options._server.supervisor.shutdown = raise_fault
 
         result = plugin.do_shutdown('')
@@ -1261,6 +1295,7 @@ class TestDefaultControllerPlugin(unittest.TestCase):
 
         def raise_fault(*arg, **kw):
             raise socket.error(errno.EPERM, 'denied')
+
         plugin.ctl.options._server.supervisor.shutdown = raise_fault
 
         self.assertRaises(socket.error,
@@ -1291,6 +1326,7 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         from supervisor import xmlrpc
         def reloadConfig(*arg, **kw):
             raise xmlrpclib.Fault(xmlrpc.Faults.CANT_REREAD, 'cant')
+
         plugin.ctl.options._server.supervisor.reloadConfig = reloadConfig
         plugin.do_reread(None)
         self.assertEqual(plugin.ctl.stdout.getvalue(),
@@ -1301,6 +1337,7 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         from supervisor import xmlrpc
         def reloadConfig(*arg, **kw):
             raise xmlrpclib.Fault(xmlrpc.Faults.SHUTDOWN_STATE, '')
+
         plugin.ctl.options._server.supervisor.reloadConfig = reloadConfig
         plugin.do_reread(None)
         self.assertEqual(plugin.ctl.stdout.getvalue(),
@@ -1311,25 +1348,26 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         from supervisor import xmlrpc
         def reloadConfig(*arg, **kw):
             raise xmlrpclib.Fault(xmlrpc.Faults.FAILED, '')
+
         plugin.ctl.options._server.supervisor.reloadConfig = reloadConfig
         self.assertRaises(xmlrpclib.Fault, plugin.do_reread, '')
 
     def test__formatConfigInfo(self):
-        info = { 'group': 'group1',
-                 'name': 'process1',
-                 'inuse': True,
-                 'autostart': True,
-                 'process_prio': 999,
-                 'group_prio': 999 }
+        info = {'group': 'group1',
+                'name': 'process1',
+                'inuse': True,
+                'autostart': True,
+                'process_prio': 999,
+                'group_prio': 999}
         plugin = self._makeOne()
         result = plugin._formatConfigInfo(info)
         self.assertTrue('in use' in result)
-        info = { 'group': 'group1',
-                 'name': 'process1',
-                 'inuse': False,
-                 'autostart': False,
-                 'process_prio': 999,
-                 'group_prio': 999 }
+        info = {'group': 'group1',
+                'name': 'process1',
+                'inuse': False,
+                'autostart': False,
+                'process_prio': 999,
+                'group_prio': 999}
         result = plugin._formatConfigInfo(info)
         self.assertTrue('avail' in result)
 
@@ -1345,11 +1383,11 @@ class TestDefaultControllerPlugin(unittest.TestCase):
 
         class FakeSupervisor(object):
             def getAllConfigInfo(self):
-                return [{ 'group': 'group1', 'name': 'process1',
-                          'inuse': False, 'autostart': False,
-                          'process_prio': 999, 'group_prio': 999 }]
+                return [{'group': 'group1', 'name': 'process1',
+                         'inuse': False, 'autostart': False,
+                         'process_prio': 999, 'group_prio': 999}]
 
-        plugin.ctl.get_supervisor = lambda : FakeSupervisor()
+        plugin.ctl.get_supervisor = lambda: FakeSupervisor()
         plugin.ctl.output = calls.append
         result = plugin.do_avail('')
         self.assertEqual(result, None)
@@ -1361,6 +1399,7 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         def getAllConfigInfo():
             from supervisor import xmlrpc
             raise xmlrpclib.Fault(xmlrpc.Faults.SHUTDOWN_STATE, '')
+
         supervisor.getAllConfigInfo = getAllConfigInfo
 
         result = plugin.do_avail('')
@@ -1375,6 +1414,7 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         def getAllConfigInfo():
             from supervisor import xmlrpc
             raise xmlrpclib.Fault(xmlrpc.Faults.FAILED, '')
+
         supervisor.getAllConfigInfo = getAllConfigInfo
 
         self.assertRaises(xmlrpclib.Fault, plugin.do_avail, '')
@@ -1462,9 +1502,11 @@ class TestDefaultControllerPlugin(unittest.TestCase):
     def test_update_not_on_shutdown(self):
         plugin = self._makeOne()
         supervisor = plugin.ctl.options._server.supervisor
+
         def reloadConfig():
             from supervisor import xmlrpc
             raise xmlrpclib.Fault(xmlrpc.Faults.SHUTDOWN_STATE, 'blah')
+
         supervisor.reloadConfig = reloadConfig
         supervisor.processes = ['removed']
         plugin.do_update('')
@@ -1476,6 +1518,7 @@ class TestDefaultControllerPlugin(unittest.TestCase):
 
         def reloadConfig():
             return [[['new_proc'], [], []]]
+
         supervisor.reloadConfig = reloadConfig
 
         result = plugin.do_update('')
@@ -1488,6 +1531,7 @@ class TestDefaultControllerPlugin(unittest.TestCase):
 
         def reloadConfig():
             return [[['added1', 'added2'], ['changed'], ['removed']]]
+
         supervisor.reloadConfig = reloadConfig
         supervisor.processes = ['changed', 'removed']
 
@@ -1513,7 +1557,6 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         self.assertEqual(sorted(supervisor.processes),
                          sorted(['changed', 'added1', 'added2']))
 
-
     def test_update_changed_procs(self):
         from supervisor import xmlrpc
 
@@ -1521,47 +1564,51 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         supervisor = plugin.ctl.options._server.supervisor
 
         calls = []
+
         def reloadConfig():
             return [[[], ['changed_group'], []]]
+
         supervisor.reloadConfig = reloadConfig
         supervisor.startProcess = lambda x: calls.append(('start', x))
 
-        supervisor.addProcessGroup('changed_group') # fake existence
-        results = [{'name':        'changed_process',
-                    'group':       'changed_group',
-                    'status':      xmlrpc.Faults.SUCCESS,
+        supervisor.addProcessGroup('changed_group')  # fake existence
+        results = [{'name': 'changed_process',
+                    'group': 'changed_group',
+                    'status': xmlrpc.Faults.SUCCESS,
                     'description': 'blah'}]
+
         def stopProcessGroup(name):
             calls.append(('stop', name))
             return results
+
         supervisor.stopProcessGroup = stopProcessGroup
 
         plugin.do_update('')
         self.assertEqual(calls, [('stop', 'changed_group')])
 
-        supervisor.addProcessGroup('changed_group') # fake existence
+        supervisor.addProcessGroup('changed_group')  # fake existence
         calls[:] = []
-        results[:] = [{'name':        'changed_process1',
-                       'group':       'changed_group',
-                       'status':      xmlrpc.Faults.NOT_RUNNING,
+        results[:] = [{'name': 'changed_process1',
+                       'group': 'changed_group',
+                       'status': xmlrpc.Faults.NOT_RUNNING,
                        'description': 'blah'},
-                      {'name':        'changed_process2',
-                       'group':       'changed_group',
-                       'status':      xmlrpc.Faults.FAILED,
+                      {'name': 'changed_process2',
+                       'group': 'changed_group',
+                       'status': xmlrpc.Faults.FAILED,
                        'description': 'blah'}]
 
         plugin.do_update('')
         self.assertEqual(calls, [('stop', 'changed_group')])
 
-        supervisor.addProcessGroup('changed_group') # fake existence
+        supervisor.addProcessGroup('changed_group')  # fake existence
         calls[:] = []
-        results[:] = [{'name':        'changed_process1',
-                       'group':       'changed_group',
-                       'status':      xmlrpc.Faults.FAILED,
+        results[:] = [{'name': 'changed_process1',
+                       'group': 'changed_group',
+                       'status': xmlrpc.Faults.FAILED,
                        'description': 'blah'},
-                      {'name':        'changed_process2',
-                       'group':       'changed_group',
-                       'status':      xmlrpc.Faults.SUCCESS,
+                      {'name': 'changed_process2',
+                       'group': 'changed_group',
+                       'status': xmlrpc.Faults.SUCCESS,
                        'description': 'blah'}]
 
         plugin.do_update('')
@@ -1575,33 +1622,35 @@ class TestDefaultControllerPlugin(unittest.TestCase):
 
         def reloadConfig():
             return [[[], [], ['removed_group']]]
+
         supervisor.reloadConfig = reloadConfig
 
-        results = [{'name':        'removed_process',
-                    'group':       'removed_group',
-                    'status':      xmlrpc.Faults.SUCCESS,
+        results = [{'name': 'removed_process',
+                    'group': 'removed_group',
+                    'status': xmlrpc.Faults.SUCCESS,
                     'description': 'blah'}]
         supervisor.processes = ['removed_group']
 
         def stopProcessGroup(name):
             return results
+
         supervisor.stopProcessGroup = stopProcessGroup
 
         plugin.do_update('')
         self.assertEqual(supervisor.processes, [])
 
-        results[:] = [{'name':        'removed_process',
-                       'group':       'removed_group',
-                       'status':      xmlrpc.Faults.NOT_RUNNING,
+        results[:] = [{'name': 'removed_process',
+                       'group': 'removed_group',
+                       'status': xmlrpc.Faults.NOT_RUNNING,
                        'description': 'blah'}]
         supervisor.processes = ['removed_group']
 
         plugin.do_update('')
         self.assertEqual(supervisor.processes, [])
 
-        results[:] = [{'name':        'removed_process',
-                       'group':       'removed_group',
-                       'status':      xmlrpc.Faults.FAILED,
+        results[:] = [{'name': 'removed_process',
+                       'group': 'removed_group',
+                       'status': xmlrpc.Faults.FAILED,
                        'description': 'blah'}]
         supervisor.processes = ['removed_group']
 
@@ -1615,6 +1664,7 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         def reloadConfig():
             from supervisor import xmlrpc
             raise xmlrpclib.Fault(xmlrpc.Faults.FAILED, 'FAILED')
+
         supervisor.reloadConfig = reloadConfig
 
         self.assertRaises(xmlrpclib.Fault, plugin.do_update, '')
@@ -1658,8 +1708,10 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         plugin = self._makeOne()
         plugin.ctl.upcheck = lambda: False
         called = []
+
         def f(*arg, **kw):
             called.append(True)
+
         plugin.ctl.options._server.supervisor.getPID = f
         plugin.do_pid('')
         self.assertEqual(called, [])
@@ -1748,8 +1800,10 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         plugin = self._makeOne()
         plugin.ctl.upcheck = lambda: False
         called = []
+
         def f(*arg, **kw):
             called.append(True)
+
         plugin.ctl.options._server.supervisor.readLog = f
         plugin.do_maintail('')
         self.assertEqual(called, [])
@@ -1796,8 +1850,10 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         plugin = self._makeOne()
         plugin.ctl.upcheck = lambda: False
         called = []
+
         def f(*arg, **kw):
             called.append(True)
+
         plugin.ctl.options._server.supervisor.getProcessInfo = f
         plugin.do_fg('foo')
         self.assertEqual(called, [])
@@ -1814,13 +1870,17 @@ class TestDefaultControllerPlugin(unittest.TestCase):
         out = plugin.ctl.stdout.getvalue()
         self.assertTrue("Exit the supervisor shell" in out)
 
+
 class DummyListener:
     def __init__(self):
         self.errors = []
+
     def error(self, url, msg):
         self.errors.append((url, msg))
+
     def close(self, url):
         self.closed = url
+
 
 class DummyPluginFactory:
     def __init__(self, ctl, **kw):
@@ -1828,6 +1888,7 @@ class DummyPluginFactory:
 
     def do_help(self, arg):
         self.ctl.stdout.write('foo helped')
+
 
 class DummyClientOptions:
     def __init__(self):
@@ -1844,8 +1905,10 @@ class DummyClientOptions:
     def getServerProxy(self):
         return self._server
 
+
 class DummyController:
     nohelp = 'no help on %s'
+
     def __init__(self, options):
         self.options = options
         self.topics_printed = []
@@ -1870,6 +1933,7 @@ class DummyController:
     def print_topics(self, doc_headers, cmds_doc, rows, cols):
         self.topics_printed.append((doc_headers, cmds_doc, rows, cols))
 
+
 class DummyPlugin:
     def __init__(self, controller=None):
         self.ctl = controller
@@ -1877,9 +1941,10 @@ class DummyPlugin:
     def do_help(self, arg):
         self.helped = True
 
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
 
+
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')
-

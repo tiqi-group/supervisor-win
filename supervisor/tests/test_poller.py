@@ -13,6 +13,7 @@ from supervisor.tests.base import DummyOptions
 # not available
 SkipTestCase = object
 
+
 class BasePollerTests(unittest.TestCase):
     def _makeOne(self, options):
         from supervisor.poller import BasePoller
@@ -42,6 +43,7 @@ class BasePollerTests(unittest.TestCase):
         inst = self._makeOne(None)
         self.assertEqual(inst.after_daemonize(), None)
 
+
 class SelectPollerTests(unittest.TestCase):
 
     def _makeOne(self, options):
@@ -51,13 +53,13 @@ class SelectPollerTests(unittest.TestCase):
         poller = self._makeOne(DummyOptions())
         poller.register_readable(6)
         poller.register_readable(7)
-        self.assertEqual(sorted(poller.readables), [6,7])
+        self.assertEqual(sorted(poller.readables), [6, 7])
 
     def test_register_writable(self):
         poller = self._makeOne(DummyOptions())
         poller.register_writable(6)
         poller.register_writable(7)
-        self.assertEqual(sorted(poller.writables), [6,7])
+        self.assertEqual(sorted(poller.writables), [6, 7])
 
     def test_unregister(self):
         poller = self._makeOne(DummyOptions())
@@ -111,10 +113,12 @@ class SelectPollerTests(unittest.TestCase):
         poller.register_readable(6)
         self.assertRaises(select.error, poller.poll, 1)
 
+
 if implements_kqueue():
     KQueuePollerTestsBase = unittest.TestCase
 else:
     KQueuePollerTestsBase = SkipTestCase
+
 
 class KQueuePollerTests(KQueuePollerTestsBase):
 
@@ -163,7 +167,7 @@ class KQueuePollerTests(KQueuePollerTestsBase):
         poller.register_readable(7)
         poller.register_writable(8)
         readables, writables = poller.poll(1000)
-        self.assertEqual(readables, [6,7])
+        self.assertEqual(readables, [6, 7])
         self.assertEqual(writables, [8])
 
     def test_poll_ignores_eintr(self):
@@ -244,6 +248,7 @@ if implements_poll():
 else:
     PollerPollTestsBase = SkipTestCase
 
+
 class PollerPollTests(PollerPollTestsBase):
 
     def _makeOne(self, options):
@@ -255,7 +260,7 @@ class PollerPollTests(PollerPollTestsBase):
         poller._poller = select_poll
         poller.register_readable(6)
         poller.register_readable(7)
-        self.assertEqual(select_poll.registered_as_readable, [6,7])
+        self.assertEqual(select_poll.registered_as_readable, [6, 7])
 
     def test_register_writable(self):
         select_poll = DummySelectPoll()
@@ -276,7 +281,7 @@ class PollerPollTests(PollerPollTestsBase):
         poller.register_writable(8)
         poller.register_readable(9)
         readables, writables = poller.poll(1000)
-        self.assertEqual(readables, [6,7,9])
+        self.assertEqual(readables, [6, 7, 9])
         self.assertEqual(writables, [8])
 
     def test_poll_ignores_eintr(self):
@@ -307,10 +312,12 @@ class PollerPollTests(PollerPollTestsBase):
         self.assertEqual(readables, [7])
         self.assertEqual(select_poll.unregistered, [6])
 
+
 class DummySelect(object):
     """
     Fake implementation of select.select()
     """
+
     def __init__(self, result=None, error=None):
         result = result or {}
         self.readables = result.get('readables', [])
@@ -322,10 +329,12 @@ class DummySelect(object):
             raise select.error(self.error)
         return self.readables, self.writables, []
 
+
 class DummySelectPoll(object):
     """
     Fake implementation of select.poll()
     """
+
     def __init__(self, result=None, error=None):
         self.result = result or []
         self.error = error
@@ -354,6 +363,7 @@ class DummyKQueue(object):
     """
     Fake implementation of select.kqueue()
     """
+
     def __init__(self, result=None, raise_errno_poll=None, raise_errno_register=None):
         self.result = result or []
         self.errno_poll = raise_errno_poll
@@ -362,7 +372,7 @@ class DummyKQueue(object):
         self.registered_flags = []
 
     def control(self, kevents, max_events, timeout=None):
-        if kevents is None:    # being called on poll()
+        if kevents is None:  # being called on poll()
             self.assert_max_events_on_poll(max_events)
             self.raise_error(self.errno_poll)
             return self.build_result()
@@ -378,16 +388,17 @@ class DummyKQueue(object):
         raise ex
 
     def build_result(self):
-        return [FakeKEvent(ident, filter) for ident,filter in self.result]
+        return [FakeKEvent(ident, filter) for ident, filter in self.result]
 
     def assert_max_events_on_poll(self, max_events):
         assert max_events == KQueuePoller.max_events, (
-            "`max_events` parameter of `kqueue.control() should be %d"
-            % KQueuePoller.max_events)
+                "`max_events` parameter of `kqueue.control() should be %d"
+                % KQueuePoller.max_events)
 
     def assert_max_events_on_register(self, max_events):
         assert max_events == 0, (
             "`max_events` parameter of `kqueue.control()` should be 0 on register")
+
 
 class FakeKEvent(object):
     def __init__(self, ident, filter):
@@ -397,6 +408,7 @@ class FakeKEvent(object):
 
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')

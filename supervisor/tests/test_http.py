@@ -19,6 +19,7 @@ from supervisor.tests.base import DummyRequest
 
 from supervisor.http import NOT_DONE_YET
 
+
 class HandlerTests:
     def _makeOne(self, supervisord):
         return self._getTargetClass()(supervisord)
@@ -27,9 +28,11 @@ class HandlerTests:
         class FakeRequest:
             def __init__(self, uri):
                 self.uri = uri
+
         supervisor = DummySupervisor()
         handler = self._makeOne(supervisor)
         self.assertEqual(handler.match(FakeRequest(handler.path)), True)
+
 
 class LogtailHandlerTests(HandlerTests, unittest.TestCase):
     def _getTargetClass(self):
@@ -67,10 +70,11 @@ class LogtailHandlerTests(HandlerTests, unittest.TestCase):
             self.assertEqual(request._error, None)
             from supervisor.medusa import http_date
             self.assertEqual(request.headers['Last-Modified'],
-                http_date.build_http_date(os.stat(t)[stat.ST_MTIME]))
+                             http_date.build_http_date(os.stat(t)[stat.ST_MTIME]))
             self.assertEqual(request.headers['Content-Type'], 'text/plain')
             self.assertEqual(len(request.producers), 1)
             self.assertEqual(request._done, True)
+
 
 class MainLogTailHandlerTests(HandlerTests, unittest.TestCase):
     def _getTargetClass(self):
@@ -103,7 +107,7 @@ class MainLogTailHandlerTests(HandlerTests, unittest.TestCase):
             self.assertEqual(request._error, None)
             from supervisor.medusa import http_date
             self.assertEqual(request.headers['Last-Modified'],
-                http_date.build_http_date(os.stat(t)[stat.ST_MTIME]))
+                             http_date.build_http_date(os.stat(t)[stat.ST_MTIME]))
             self.assertEqual(request.headers['Content-Type'], 'text/plain')
             self.assertEqual(len(request.producers), 1)
             self.assertEqual(request._done, True)
@@ -182,10 +186,11 @@ class TailFProducerTests(unittest.TestCase):
         with open(filename, 'wb') as f:
             f.write(as_bytes('b' * 80))
         try:
-            result = producer.more() # should open in new file
+            result = producer.more()  # should open in new file
             self.assertEqual(result, as_bytes('b' * 80))
         finally:
-             os.unlink(f.name)
+            os.unlink(f.name)
+
 
 class DeferringChunkedProducerTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -224,6 +229,7 @@ class DeferringChunkedProducerTests(unittest.TestCase):
         producer = self._makeOne(None)
         self.assertEqual(producer.more(), '')
 
+
 class DeferringCompositeProducerTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.http import deferring_composite_producer
@@ -250,12 +256,13 @@ class DeferringCompositeProducerTests(unittest.TestCase):
         producer = self._makeOne([wrapped])
         self.assertEqual(producer.more(), '')
 
+
 class DeferringGlobbingProducerTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.http import deferring_globbing_producer
         return deferring_globbing_producer
 
-    def _makeOne(self, producer, buffer_size=1<<16):
+    def _makeOne(self, producer, buffer_size=1 << 16):
         return self._getTargetClass()(producer, buffer_size)
 
     def test_more_not_done_yet(self):
@@ -277,6 +284,7 @@ class DeferringGlobbingProducerTests(unittest.TestCase):
         producer = self._makeOne(wrapped)
         self.assertEqual(producer.more(), '')
 
+
 class DeferringHookedProducerTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.http import deferring_hooked_producer
@@ -293,8 +301,10 @@ class DeferringHookedProducerTests(unittest.TestCase):
     def test_more_string(self):
         wrapped = DummyProducer('hello')
         L = []
+
         def callback(bytes):
             L.append(bytes)
+
         producer = self._makeOne(wrapped, callback)
         self.assertEqual(producer.more(), 'hello')
         self.assertEqual(L, [])
@@ -304,8 +314,10 @@ class DeferringHookedProducerTests(unittest.TestCase):
     def test_more_nodata(self):
         wrapped = DummyProducer()
         L = []
+
         def callback(bytes):
             L.append(bytes)
+
         producer = self._makeOne(wrapped, callback)
         self.assertEqual(producer.more(), '')
         self.assertEqual(L, [0])
@@ -314,31 +326,35 @@ class DeferringHookedProducerTests(unittest.TestCase):
         producer = self._makeOne(None, None)
         self.assertEqual(producer.more(), '')
 
+
 class Test_deferring_http_request(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.http import deferring_http_request
         return deferring_http_request
 
     def _makeOne(
-        self,
-        channel=None,
-        req='GET / HTTP/1.0',
-        command='GET',
-        uri='/',
-        version='1.0',
-        header=(),
-        ):
+            self,
+            channel=None,
+            req='GET / HTTP/1.0',
+            command='GET',
+            uri='/',
+            version='1.0',
+            header=(),
+    ):
         return self._getTargetClass()(
             channel, req, command, uri, version, header
-            )
+        )
 
     def _makeChannel(self):
         class Channel:
             closed = False
+
             def close_when_done(self):
                 self.closed = True
+
             def push_with_producer(self, producer):
                 self.producer = producer
+
         return Channel()
 
     def test_done_http_10_nokeepalive(self):
@@ -353,7 +369,7 @@ class Test_deferring_http_request(unittest.TestCase):
             channel=channel,
             version='1.0',
             header=['Connection: Keep-Alive'],
-            )
+        )
 
         inst.done()
         self.assertTrue(channel.closed)
@@ -364,7 +380,7 @@ class Test_deferring_http_request(unittest.TestCase):
             channel=channel,
             version='1.0',
             header=['Connection: Keep-Alive'],
-            )
+        )
         inst.reply_headers['Content-Length'] = 1
         inst.done()
         self.assertEqual(inst['Connection'], 'Keep-Alive')
@@ -376,7 +392,7 @@ class Test_deferring_http_request(unittest.TestCase):
             channel=channel,
             version='1.1',
             header=['Connection: close']
-            )
+        )
         inst.done()
         self.assertTrue(channel.closed)
 
@@ -385,7 +401,7 @@ class Test_deferring_http_request(unittest.TestCase):
         inst = self._makeOne(
             channel=channel,
             version='1.1',
-            )
+        )
         inst.reply_headers['Transfer-Encoding'] = 'notchunked'
         inst.done()
         self.assertTrue(channel.closed)
@@ -395,7 +411,7 @@ class Test_deferring_http_request(unittest.TestCase):
         inst = self._makeOne(
             channel=channel,
             version='1.1',
-            )
+        )
         inst.reply_headers['Transfer-Encoding'] = 'chunked'
         inst.done()
         self.assertFalse(channel.closed)
@@ -405,7 +421,7 @@ class Test_deferring_http_request(unittest.TestCase):
         inst = self._makeOne(
             channel=channel,
             version='1.1',
-            )
+        )
         inst.use_chunked = True
         inst.done()
         self.assertTrue('Transfer-Encoding' in inst)
@@ -416,7 +432,7 @@ class Test_deferring_http_request(unittest.TestCase):
         inst = self._makeOne(
             channel=channel,
             version='1.1',
-            )
+        )
         inst.use_chunked = False
         inst.done()
         self.assertTrue(channel.closed)
@@ -426,9 +442,10 @@ class Test_deferring_http_request(unittest.TestCase):
         inst = self._makeOne(
             channel=channel,
             version=None,
-            )
+        )
         inst.done()
         self.assertTrue(channel.closed)
+
 
 class EncryptedDictionaryAuthorizedTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -443,26 +460,27 @@ class EncryptedDictionaryAuthorizedTests(unittest.TestCase):
         self.assertFalse(authorizer.authorize(('foo', 'bar')))
 
     def test_authorize_gooduser_badpassword(self):
-        authorizer = self._makeOne({'foo':'password'})
+        authorizer = self._makeOne({'foo': 'password'})
         self.assertFalse(authorizer.authorize(('foo', 'bar')))
 
     def test_authorize_gooduser_goodpassword(self):
-        authorizer = self._makeOne({'foo':'password'})
+        authorizer = self._makeOne({'foo': 'password'})
         self.assertTrue(authorizer.authorize(('foo', 'password')))
 
     def test_authorize_gooduser_goodpassword_with_colon(self):
-        authorizer = self._makeOne({'foo':'pass:word'})
+        authorizer = self._makeOne({'foo': 'pass:word'})
         self.assertTrue(authorizer.authorize(('foo', 'pass:word')))
 
     def test_authorize_gooduser_badpassword_sha(self):
         password = '{SHA}' + sha1(as_bytes('password')).hexdigest()
-        authorizer = self._makeOne({'foo':password})
+        authorizer = self._makeOne({'foo': password})
         self.assertFalse(authorizer.authorize(('foo', 'bar')))
 
     def test_authorize_gooduser_goodpassword_sha(self):
         password = '{SHA}' + sha1(as_bytes('password')).hexdigest()
-        authorizer = self._makeOne({'foo':password})
+        authorizer = self._makeOne({'foo': password})
         self.assertTrue(authorizer.authorize(('foo', 'password')))
+
 
 class SupervisorAuthHandlerTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -473,7 +491,7 @@ class SupervisorAuthHandlerTests(unittest.TestCase):
         return self._getTargetClass()(dict, handler)
 
     def test_ctor(self):
-        handler = self._makeOne({'a':1}, None)
+        handler = self._makeOne({'a': 1}, None)
         from supervisor.http import encrypted_dictionary_authorizer
         self.assertEqual(handler.authorizer.__class__,
                          encrypted_dictionary_authorizer)
@@ -483,7 +501,7 @@ class SupervisorAuthHandlerTests(unittest.TestCase):
         encoded = base64.b64encode(as_bytes("user:password"))
         request.header = ["Authorization: Basic %s" % as_string(encoded)]
         handler = DummyHandler()
-        auth_handler = self._makeOne({'user':'password'}, handler)
+        auth_handler = self._makeOne({'user': 'password'}, handler)
         auth_handler.handle_request(request)
         self.assertTrue(handler.handled_request)
 
@@ -493,7 +511,7 @@ class SupervisorAuthHandlerTests(unittest.TestCase):
         encoded = base64.b64encode(as_bytes("user:pass:word"))
         request.header = ["Authorization: Basic %s" % as_string(encoded)]
         handler = DummyHandler()
-        auth_handler = self._makeOne({'user':'pass:word'}, handler)
+        auth_handler = self._makeOne({'user': 'pass:word'}, handler)
         auth_handler.handle_request(request)
         self.assertTrue(handler.handled_request)
 
@@ -502,7 +520,7 @@ class SupervisorAuthHandlerTests(unittest.TestCase):
         encoded = base64.b64encode(as_bytes("wrong:wrong"))
         request.header = ["Authorization: Basic %s" % as_string(encoded)]
         handler = DummyHandler()
-        auth_handler = self._makeOne({'user':'password'}, handler)
+        auth_handler = self._makeOne({'user': 'password'}, handler)
         auth_handler.handle_request(request)
         self.assertFalse(handler.handled_request)
 
@@ -511,7 +529,7 @@ class TopLevelFunctionTests(unittest.TestCase):
     def _make_http_servers(self, sconfigs):
         options = DummyOptions()
         options.server_configs = sconfigs
-        options.rpcinterface_factories = [('dummy',DummyRPCInterfaceFactory,{})]
+        options.rpcinterface_factories = [('dummy', DummyRPCInterfaceFactory, {})]
         supervisord = DummySupervisor()
         from supervisor.http import make_http_servers
         servers = make_http_servers(options, supervisord)
@@ -527,9 +545,9 @@ class TopLevelFunctionTests(unittest.TestCase):
         return servers
 
     def test_make_http_servers_socket_type_error(self):
-        config = {'family':999, 'host':'localhost', 'port':17735,
-                  'username':None, 'password':None,
-                  'section':'inet_http_server'}
+        config = {'family': 999, 'host': 'localhost', 'port': 17735,
+                  'username': None, 'password': None,
+                  'section': 'inet_http_server'}
         try:
             self._make_http_servers([config])
             self.fail('nothing raised')
@@ -537,8 +555,8 @@ class TopLevelFunctionTests(unittest.TestCase):
             self.assertEqual(exc.args[0], 'Cannot determine socket type 999')
 
     def test_make_http_servers_noauth(self):
-        inet = {'family':socket.AF_INET, 'host':'localhost', 'port':17735,
-                'username':None, 'password':None, 'section':'inet_http_server'}
+        inet = {'family': socket.AF_INET, 'host': 'localhost', 'port': 17735,
+                'username': None, 'password': None, 'section': 'inet_http_server'}
         servers = self._make_http_servers([inet])
         self.assertEqual(len(servers), 1)
 
@@ -551,13 +569,13 @@ class TopLevelFunctionTests(unittest.TestCase):
             'Main Logtail HTTP Request Handler',
             'Supervisor Web UI HTTP Request Handler',
             'Default HTTP Request Handler'
-            ]
+        ]
         self.assertEqual([x.IDENT for x in server.handlers], idents)
 
     def test_make_http_servers_withauth(self):
-        inet = {'family':socket.AF_INET, 'host':'localhost', 'port':17736,
-                'username':'username', 'password':'password',
-                'section':'inet_http_server'}
+        inet = {'family': socket.AF_INET, 'host': 'localhost', 'port': 17736,
+                'username': 'username', 'password': 'password',
+                'section': 'inet_http_server'}
         servers = self._make_http_servers([inet])
         self.assertEqual(len(servers), 1)
         from supervisor.http import supervisor_auth_handler
@@ -566,12 +584,14 @@ class TopLevelFunctionTests(unittest.TestCase):
                 self.assertTrue(isinstance(handler, supervisor_auth_handler),
                                 handler)
 
+
 class DummyHandler:
     def __init__(self):
         self.handled_request = False
 
     def handle_request(self, request):
         self.handled_request = True
+
 
 class DummyProducer:
     def __init__(self, *data):
@@ -583,8 +603,10 @@ class DummyProducer:
         else:
             return ''
 
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')

@@ -42,6 +42,7 @@ def doit():
 import sys
 import gc
 
+
 class TrackRefs(object):
     """Object to track reference counts across test runs."""
 
@@ -81,24 +82,23 @@ class TrackRefs(object):
                 type2all[typ] = all
 
         ct = [(
-               type_or_class_title(t),
-               type2count[t] - self.type2count.get(t, 0),
-               type2all[t] - self.type2all.get(t, 0),
-               )
-              for t in type2count.keys()]
+            type_or_class_title(t),
+            type2count[t] - self.type2count.get(t, 0),
+            type2all[t] - self.type2all.get(t, 0),
+        )
+            for t in type2count.keys()]
         ct += [(
-                type_or_class_title(t),
-                - self.type2count[t],
-                - self.type2all[t],
-                )
-               for t in self.type2count.keys()
-               if t not in type2count]
+            type_or_class_title(t),
+            - self.type2count[t],
+            - self.type2all[t],
+        )
+            for t in self.type2count.keys()
+            if t not in type2count]
         ct.sort()
         self.delta = ct
         self.type2count = type2count
         self.type2all = type2all
         self.n = n
-
 
     def output(self):
         printed = False
@@ -130,9 +130,9 @@ class TrackRefs(object):
                % (self.n, rc, rc - prev))
         self.output()
 
+
 def type_or_class_title(t):
     module = getattr(t, '__module__', '__builtin__')
     if module == '__builtin__':
         return t.__name__
     return "%s.%s" % (module, t.__name__)
-

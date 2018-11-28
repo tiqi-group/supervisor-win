@@ -36,11 +36,14 @@ class OptionTests(unittest.TestCase):
 
         class MyOptions(Options):
             master = {
-                'other': 41 }
+                'other': 41}
+
             def __init__(self, read_error=read_error):
                 self.read_error = read_error
                 Options.__init__(self)
+
                 class Foo(object): pass
+
                 self.configroot = Foo()
 
             def read_config(self, fp):
@@ -72,7 +75,7 @@ class OptionTests(unittest.TestCase):
             flag=True,
             long=False,
             short=False,
-            )
+        )
 
     def test_add_flag_not_None_short_endswith_colon(self):
         cls = self._getTargetClass()
@@ -83,7 +86,7 @@ class OptionTests(unittest.TestCase):
             flag=True,
             long=False,
             short=":",
-            )
+        )
 
     def test_add_flag_not_None_long_endswith_equal(self):
         cls = self._getTargetClass()
@@ -94,7 +97,7 @@ class OptionTests(unittest.TestCase):
             flag=True,
             long='=',
             short=False,
-            )
+        )
 
     def test_add_inconsistent_short_long_options(self):
         cls = self._getTargetClass()
@@ -104,7 +107,7 @@ class OptionTests(unittest.TestCase):
             inst.add,
             long='=',
             short='abc',
-            )
+        )
 
     def test_add_short_option_startswith_dash(self):
         cls = self._getTargetClass()
@@ -114,7 +117,7 @@ class OptionTests(unittest.TestCase):
             inst.add,
             long=False,
             short='-abc',
-            )
+        )
 
     def test_add_short_option_too_long(self):
         cls = self._getTargetClass()
@@ -124,18 +127,18 @@ class OptionTests(unittest.TestCase):
             inst.add,
             long=False,
             short='abc',
-            )
+        )
 
     def test_add_duplicate_short_option_key(self):
         cls = self._getTargetClass()
         inst = cls()
-        inst.options_map = {'-a':True}
+        inst.options_map = {'-a': True}
         self.assertRaises(
             ValueError,
             inst.add,
             long=False,
             short='a',
-            )
+        )
 
     def test_add_long_option_startswith_dash(self):
         cls = self._getTargetClass()
@@ -145,18 +148,18 @@ class OptionTests(unittest.TestCase):
             inst.add,
             long='-abc',
             short=False,
-            )
+        )
 
     def test_add_duplicate_long_option_key(self):
         cls = self._getTargetClass()
         inst = cls()
-        inst.options_map = {'--abc':True}
+        inst.options_map = {'--abc': True}
         self.assertRaises(
             ValueError,
             inst.add,
             long='abc',
             short=False,
-            )
+        )
 
     def test_searchpaths(self):
         options = self._makeOptions()
@@ -252,6 +255,7 @@ class OptionTests(unittest.TestCase):
         msg = 'A sample docstring for test_help\n'
         self.assertEqual(options.stdout.getvalue(), msg)
 
+
 class ClientOptionsTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.options import ClientOptions
@@ -329,7 +333,7 @@ class ClientOptionsTests(unittest.TestCase):
                                        'ENV_CLIENT_PASS': 'passwordhere',
                                        'ENV_CLIENT_PROMPT': 'xsupervisor',
                                        'ENV_CLIENT_HIST_EXT': '.hist',
-                                      }
+                                       }
         instance.configfile = fp
         instance.realize(args=[])
         self.assertEqual(instance.interactive, True)
@@ -351,8 +355,10 @@ class ClientOptionsTests(unittest.TestCase):
 
     def test_read_config_unreadable(self):
         instance = self._makeOne()
+
         def dummy_open(fn, mode):
             raise IOError(errno.EACCES, 'Permission denied: %s' % fn)
+
         instance.open = dummy_open
 
         try:
@@ -368,7 +374,7 @@ class ClientOptionsTests(unittest.TestCase):
             self.fail("nothing raised")
         except ValueError as exc:
             self.assertEqual(exc.args[0],
-                ".ini file does not include supervisorctl section")
+                             ".ini file does not include supervisorctl section")
 
     def test_options_unixsocket_cli(self):
         fp = StringIO('[supervisorctl]')
@@ -386,6 +392,7 @@ class ClientOptionsTests(unittest.TestCase):
         instance.configfile = fp
         instance.realize(args=[])
         self.assertEqual(instance.serverurl, 'unix:///dev/null')
+
 
 class ServerOptionsTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -471,7 +478,7 @@ class ServerOptionsTests(unittest.TestCase):
         numprocs_start = 1
         command = /bin/cat
         directory = /some/path/foo_%%(process_num)02d
-        """ % {'tempdir':tempfile.gettempdir()})
+        """ % {'tempdir': tempfile.gettempdir()})
 
         from supervisor import datatypes
 
@@ -481,7 +488,7 @@ class ServerOptionsTests(unittest.TestCase):
         instance.realize(args=[])
         options = instance.configroot.supervisord
         self.assertEqual(options.directory, tempfile.gettempdir())
-        self.assertEqual(options.umask, 18) # 022 in Py2, 0o22 in Py3
+        self.assertEqual(options.umask, 18)  # 022 in Py2, 0o22 in Py3
         self.assertEqual(options.logfile, 'supervisord.log')
         self.assertEqual(options.logfile_maxbytes, 1000 * 1024 * 1024)
         self.assertEqual(options.logfile_backups, 5)
@@ -525,7 +532,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(proc1.stdout_logfile_maxbytes,
                          datatypes.byte_size('50MB'))
         self.assertEqual(proc1.stdout_logfile_backups, 10)
-        self.assertEqual(proc1.exitcodes, [0,2])
+        self.assertEqual(proc1.exitcodes, [0, 2])
         self.assertEqual(proc1.directory, '/tmp')
         self.assertEqual(proc1.umask, 2)
         self.assertEqual(proc1.environment, dict(FAKE_ENV_VAR='/some/path'))
@@ -548,7 +555,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(proc2.killasgroup, False)
         self.assertEqual(proc2.stdout_logfile_maxbytes, 1024)
         self.assertEqual(proc2.stdout_logfile_backups, 2)
-        self.assertEqual(proc2.exitcodes, [0,2])
+        self.assertEqual(proc2.exitcodes, [0, 2])
         self.assertEqual(proc2.directory, None)
 
         cat3 = options.process_group_configs[2]
@@ -567,7 +574,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(proc3.stdout_logfile_maxbytes,
                          datatypes.byte_size('50MB'))
         self.assertEqual(proc3.stdout_logfile_backups, 10)
-        self.assertEqual(proc3.exitcodes, [0,1,127])
+        self.assertEqual(proc3.exitcodes, [0, 1, 127])
         self.assertEqual(proc3.stopsignal, signal.SIGTERM)
         self.assertEqual(proc3.stopasgroup, True)
         self.assertEqual(proc3.killasgroup, True)
@@ -589,7 +596,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(proc4_a.stdout_logfile_maxbytes,
                          datatypes.byte_size('50MB'))
         self.assertEqual(proc4_a.stdout_logfile_backups, 10)
-        self.assertEqual(proc4_a.exitcodes, [0,2])
+        self.assertEqual(proc4_a.exitcodes, [0, 2])
         self.assertEqual(proc4_a.stopsignal, signal.SIGTERM)
         self.assertEqual(proc4_a.stopasgroup, False)
         self.assertEqual(proc4_a.killasgroup, False)
@@ -607,7 +614,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(proc4_b.stdout_logfile_maxbytes,
                          datatypes.byte_size('50MB'))
         self.assertEqual(proc4_b.stdout_logfile_backups, 10)
-        self.assertEqual(proc4_b.exitcodes, [0,2])
+        self.assertEqual(proc4_b.exitcodes, [0, 2])
         self.assertEqual(proc4_b.stopsignal, signal.SIGTERM)
         self.assertEqual(proc4_b.stopasgroup, False)
         self.assertEqual(proc4_b.killasgroup, False)
@@ -630,12 +637,12 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(instance.uid, 0)
         self.assertEqual(instance.gid, 0)
         self.assertEqual(instance.directory, tempfile.gettempdir())
-        self.assertEqual(instance.umask, 18) # 022 in Py2, 0o22 in Py3
-        self.assertEqual(instance.logfile, os.path.join(here,'supervisord.log'))
+        self.assertEqual(instance.umask, 18)  # 022 in Py2, 0o22 in Py3
+        self.assertEqual(instance.logfile, os.path.join(here, 'supervisord.log'))
         self.assertEqual(instance.logfile_maxbytes, 1000 * 1024 * 1024)
         self.assertEqual(instance.logfile_backups, 5)
         self.assertEqual(instance.loglevel, 40)
-        self.assertEqual(instance.pidfile, os.path.join(here,'supervisord.pid'))
+        self.assertEqual(instance.pidfile, os.path.join(here, 'supervisord.pid'))
         self.assertEqual(instance.nodaemon, True)
         self.assertEqual(instance.passwdfile, None)
         self.assertEqual(instance.identifier, 'fleeb')
@@ -758,8 +765,10 @@ class ServerOptionsTests(unittest.TestCase):
 
     def test_read_config_unreadable(self):
         instance = self._makeOne()
+
         def dummy_open(fn, mode):
             raise IOError(errno.EACCES, 'Permission denied: %s' % fn)
+
         instance.open = dummy_open
 
         try:
@@ -788,7 +797,7 @@ class ServerOptionsTests(unittest.TestCase):
             self.fail("nothing raised")
         except ValueError as exc:
             self.assertEqual(exc.args[0],
-                ".ini file does not include supervisord section")
+                             ".ini file does not include supervisord section")
 
     def test_read_config_include_with_no_files_raises_valueerror(self):
         instance = self._makeOne()
@@ -803,7 +812,7 @@ class ServerOptionsTests(unittest.TestCase):
             self.fail("nothing raised")
         except ValueError as exc:
             self.assertEqual(exc.args[0],
-                ".ini file has [include] section, but no files setting")
+                             ".ini file has [include] section, but no files setting")
 
     def test_read_config_include_with_no_matching_files_logs_warning(self):
         instance = self._makeOne()
@@ -963,30 +972,34 @@ class ServerOptionsTests(unittest.TestCase):
         instance = self._makeOne()
 
         recorder = []
+
         def record_usage(message):
             recorder.append(message)
+
         instance.usage = record_usage
 
-        instance.configfile=StringIO('[supervisord]')
+        instance.configfile = StringIO('[supervisord]')
         args = ['foo', 'bar']
         instance.realize(args=args)
         self.assertEqual(len(recorder), 1)
         self.assertEqual(recorder[0],
-            'positional arguments are not supported: %s' % args)
+                         'positional arguments are not supported: %s' % args)
 
     def test_realize_getopt_error(self):
         instance = self._makeOne()
 
         recorder = []
+
         def record_usage(message):
             recorder.append(message)
+
         instance.usage = record_usage
 
-        instance.configfile=StringIO('[supervisord]')
+        instance.configfile = StringIO('[supervisord]')
         instance.realize(args=["--bad=1"])
         self.assertEqual(len(recorder), 1)
         self.assertEqual(recorder[0],
-            "GetoptError('option --bad not recognized', 'bad')")
+                         "GetoptError('option --bad not recognized', 'bad')")
 
     def test_options_afunix(self):
         instance = self._makeOne()
@@ -1009,8 +1022,8 @@ class ServerOptionsTests(unittest.TestCase):
         options = instance.configroot.supervisord
         self.assertEqual(options.server_configs[0]['family'], socket.AF_UNIX)
         self.assertEqual(options.server_configs[0]['file'], '/tmp/supvtest.sock')
-        self.assertEqual(options.server_configs[0]['chmod'], 448) # defaults
-        self.assertEqual(options.server_configs[0]['chown'], (-1,-1)) # defaults
+        self.assertEqual(options.server_configs[0]['chmod'], 448)  # defaults
+        self.assertEqual(options.server_configs[0]['chown'], (-1, -1))  # defaults
 
     def test_options_afunix_chxxx_values_valid(self):
         instance = self._makeOne()
@@ -1051,7 +1064,7 @@ class ServerOptionsTests(unittest.TestCase):
             self.fail("nothing raised")
         except ValueError as exc:
             self.assertEqual(exc.args[0],
-                "Invalid chmod value NaN")
+                             "Invalid chmod value NaN")
 
     def test_options_afunix_chown_bad(self):
         instance = self._makeOne()
@@ -1068,7 +1081,7 @@ class ServerOptionsTests(unittest.TestCase):
             self.fail("nothing raised")
         except ValueError as exc:
             self.assertEqual(exc.args[0],
-                "Invalid sockchown value thisisnotavaliduser")
+                             "Invalid sockchown value thisisnotavaliduser")
 
     def test_options_afunix_no_file(self):
         instance = self._makeOne()
@@ -1084,7 +1097,7 @@ class ServerOptionsTests(unittest.TestCase):
             self.fail("nothing raised")
         except ValueError as exc:
             self.assertEqual(exc.args[0],
-                "section [unix_http_server] has no file value")
+                             "section [unix_http_server] has no file value")
 
     def test_options_afunix_password_without_username(self):
         instance = self._makeOne()
@@ -1102,8 +1115,8 @@ class ServerOptionsTests(unittest.TestCase):
             self.fail("nothing raised")
         except ValueError as exc:
             self.assertEqual(exc.args[0],
-                "Must specify username if password is specified "
-                "in [unix_http_server]")
+                             "Must specify username if password is specified "
+                             "in [unix_http_server]")
 
     def test_options_afinet_password_without_username(self):
         instance = self._makeOne()
@@ -1120,8 +1133,8 @@ class ServerOptionsTests(unittest.TestCase):
             self.fail("nothing raised")
         except ValueError as exc:
             self.assertEqual(exc.args[0],
-                "Must specify username if password is specified "
-                "in [inet_http_server]")
+                             "Must specify username if password is specified "
+                             "in [inet_http_server]")
 
     def test_options_afinet_no_port(self):
         instance = self._makeOne()
@@ -1137,16 +1150,18 @@ class ServerOptionsTests(unittest.TestCase):
             self.fail("nothing raised")
         except ValueError as exc:
             self.assertEqual(exc.args[0],
-                "section [inet_http_server] has no port value")
+                             "section [inet_http_server] has no port value")
 
     def test_cleanup_afunix_unlink(self):
         fn = tempfile.mktemp()
         with open(fn, 'w') as f:
             f.write('foo')
         instance = self._makeOne()
+
         class Server:
             pass
-        instance.httpservers = [({'family':socket.AF_UNIX, 'file':fn},
+
+        instance.httpservers = [({'family': socket.AF_UNIX, 'file': fn},
                                  Server())]
         instance.pidfile = ''
         instance.cleanup()
@@ -1158,9 +1173,11 @@ class ServerOptionsTests(unittest.TestCase):
             with open(fn, 'w') as f:
                 f.write('foo')
             instance = self._makeOne()
+
             class Server:
                 pass
-            instance.httpservers = [({'family':socket.AF_UNIX, 'file':fn},
+
+            instance.httpservers = [({'family': socket.AF_UNIX, 'file': fn},
                                      Server())]
             instance.pidfile = ''
             instance.unlink_socketfiles = False
@@ -1179,8 +1196,10 @@ class ServerOptionsTests(unittest.TestCase):
             with open(socketname, 'w') as f:
                 f.write('foo')
             instance = self._makeOne()
+
             class Server:
                 pass
+
             instance.httpservers = [
                 ({'family': socket.AF_UNIX, 'file': notfound}, Server()),
                 ({'family': socket.AF_UNIX, 'file': socketname}, Server()),
@@ -1213,13 +1232,14 @@ class ServerOptionsTests(unittest.TestCase):
         notfound = os.path.join(os.path.dirname(__file__), 'notfound')
         instance = self._makeOne()
         instance.pidfile = notfound
-        instance.cleanup() # shouldn't raise
+        instance.cleanup()  # shouldn't raise
 
     def test_cleanup_fds_closes_5_upto_minfds_ignores_oserror(self):
         instance = self._makeOne()
         instance.minfds = 10
 
         closed = []
+
         def close(fd):
             if fd == 7:
                 raise OSError
@@ -1228,15 +1248,19 @@ class ServerOptionsTests(unittest.TestCase):
         @patch('os.close', close)
         def f():
             instance.cleanup_fds()
+
         f()
-        self.assertEqual(closed, [5,6,8,9])
+        self.assertEqual(closed, [5, 6, 8, 9])
 
     def test_close_httpservers(self):
         instance = self._makeOne()
+
         class Server:
             closed = False
+
             def close(self):
                 self.closed = True
+
         server = Server()
         instance.httpservers = [({}, server)]
         instance.close_httpservers()
@@ -1252,8 +1276,10 @@ class ServerOptionsTests(unittest.TestCase):
     def test_close_parent_pipes(self):
         instance = self._makeOne()
         closed = []
+
         def close_fd(fd):
             closed.append(fd)
+
         instance.close_fd = close_fd
         pipes = {'stdin': 0, 'stdout': 1, 'stderr': 2,
                  'child_stdin': 3, 'child_stdout': 4, 'child_stderr': 5}
@@ -1263,8 +1289,10 @@ class ServerOptionsTests(unittest.TestCase):
     def test_close_parent_pipes_ignores_fd_of_none(self):
         instance = self._makeOne()
         closed = []
+
         def close_fd(fd):
             closed.append(fd)
+
         instance.close_fd = close_fd
         pipes = {'stdin': None}
         instance.close_parent_pipes(pipes)
@@ -1273,8 +1301,10 @@ class ServerOptionsTests(unittest.TestCase):
     def test_close_child_pipes(self):
         instance = self._makeOne()
         closed = []
+
         def close_fd(fd):
             closed.append(fd)
+
         instance.close_fd = close_fd
         pipes = {'stdin': 0, 'stdout': 1, 'stderr': 2,
                  'child_stdin': 3, 'child_stdout': 4, 'child_stderr': 5}
@@ -1284,8 +1314,10 @@ class ServerOptionsTests(unittest.TestCase):
     def test_close_child_pipes_ignores_fd_of_none(self):
         instance = self._makeOne()
         closed = []
+
         def close_fd(fd):
             closed.append(fd)
+
         instance.close_fd = close_fd
         pipes = {'child_stdin': None}
         instance.close_parent_pipes(pipes)
@@ -1331,8 +1363,8 @@ class ServerOptionsTests(unittest.TestCase):
     def test_close_fd(self):
         instance = self._makeOne()
         innie, outie = os.pipe()
-        os.read(innie, 0) # we can read it while its open
-        os.write(outie, as_bytes('foo')) # we can write to it while its open
+        os.read(innie, 0)  # we can read it while its open
+        os.write(outie, as_bytes('foo'))  # we can write to it while its open
         instance.close_fd(innie)
         self.assertRaises(OSError, os.read, innie, 0)
         instance.close_fd(outie)
@@ -1341,7 +1373,7 @@ class ServerOptionsTests(unittest.TestCase):
     @patch('os.close', Mock(side_effect=OSError))
     def test_close_fd_ignores_oserror(self):
         instance = self._makeOne()
-        instance.close_fd(0) # shouldn't raise
+        instance.close_fd(0)  # shouldn't raise
 
     def test_processes_from_section(self):
         instance = self._makeOne()
@@ -1388,10 +1420,10 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(pconfig.stopasgroup, False)
         self.assertEqual(pconfig.killasgroup, True)
         self.assertEqual(pconfig.stopwaitsecs, 100)
-        self.assertEqual(pconfig.exitcodes, [1,4])
+        self.assertEqual(pconfig.exitcodes, [1, 4])
         self.assertEqual(pconfig.redirect_stderr, False)
         self.assertEqual(pconfig.environment,
-                         {'KEY1':'val1', 'KEY2':'val2', 'KEY3':'0'})
+                         {'KEY1': 'val1', 'KEY2': 'val2', 'KEY3': '0'})
 
     def test_processes_from_section_host_node_name_expansion(self):
         instance = self._makeOne()
@@ -1429,9 +1461,9 @@ class ServerOptionsTests(unittest.TestCase):
             self.assertEqual(pconfigs[num].command, "/bin/foo --num=%d" % num)
             self.assertEqual(pconfigs[num].directory, '/tmp/foo_%d' % num)
             self.assertEqual(pconfigs[num].stderr_logfile,
-                '/tmp/foo_%d_stderr' % num)
+                             '/tmp/foo_%d_stderr' % num)
             self.assertEqual(pconfigs[num].stdout_logfile,
-                '/tmp/foo_%d_stdout' % num)
+                             '/tmp/foo_%d_stdout' % num)
             self.assertEqual(pconfigs[num].environment, {'NUM': '%d' % num})
 
     def test_processes_from_section_expands_directory(self):
@@ -1534,7 +1566,7 @@ class ServerOptionsTests(unittest.TestCase):
             'ENV_CAT1_COMMAND_LOGDIR': '/path/to/logs',
             'ENV_CAT1_PRIORITY': '3',
             'ENV_CAT1_AUTOSTART': 'true',
-            'ENV_CAT1_USER': 'root', # resolved to uid
+            'ENV_CAT1_USER': 'root',  # resolved to uid
             'ENV_CAT1_STDOUT_LOGFILE': '/tmp/cat.log',
             'ENV_CAT1_STDOUT_LOGFILE_MAXBYTES': '78KB',
             'ENV_CAT1_STDOUT_LOGFILE_BACKUPS': '2',
@@ -1544,7 +1576,7 @@ class ServerOptionsTests(unittest.TestCase):
             'ENV_CAT1_STARTRETRIES': '10',
             'ENV_CAT1_DIR': '/tmp',
             'ENV_CAT1_UMASK': '002',
-           }
+        }
         config = UnhosedConfigParser()
         config.expansions = instance.environ_expansions
         config.read_string(text)
@@ -1595,7 +1627,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(proc1.stdout_logfile_maxbytes,
                          datatypes.byte_size('78KB'))
         self.assertEqual(proc1.stdout_logfile_backups, 2)
-        self.assertEqual(proc1.exitcodes, [0,2])
+        self.assertEqual(proc1.exitcodes, [0, 2])
         self.assertEqual(proc1.directory, '/tmp')
         self.assertEqual(proc1.umask, 2)
         self.assertEqual(proc1.environment, dict(FAKE_ENV_VAR='/some/path'))
@@ -1758,8 +1790,8 @@ class ServerOptionsTests(unittest.TestCase):
                 instance.processes_from_section(config, 'program:foo', None)
             except ValueError as e:
                 self.assertEqual(e.args[0],
-                    "program section program:foo does not specify a command "
-                    "in section 'program:foo' (file: %s)" % f.name)
+                                 "program section program:foo does not specify a command "
+                                 "in section 'program:foo' (file: %s)" % f.name)
             else:
                 self.fail('nothing raised')
 
@@ -1779,13 +1811,13 @@ class ServerOptionsTests(unittest.TestCase):
         config.read_string(text)
         instance.processes_from_section(config, 'program:foo', None)
         self.assertEqual(instance.parse_warnings[0],
-             'For [program:foo], AUTO logging used for stdout_logfile '
-             'without rollover, set maxbytes > 0 to avoid filling up '
-              'filesystem unintentionally')
+                         'For [program:foo], AUTO logging used for stdout_logfile '
+                         'without rollover, set maxbytes > 0 to avoid filling up '
+                         'filesystem unintentionally')
         self.assertEqual(instance.parse_warnings[1],
-             'For [program:foo], AUTO logging used for stderr_logfile '
-             'without rollover, set maxbytes > 0 to avoid filling up '
-              'filesystem unintentionally')
+                         'For [program:foo], AUTO logging used for stderr_logfile '
+                         'without rollover, set maxbytes > 0 to avoid filling up '
+                         'filesystem unintentionally')
 
     def test_homogeneous_process_groups_from_parser(self):
         text = lstrip("""\
@@ -1877,7 +1909,7 @@ class ServerOptionsTests(unittest.TestCase):
                                        'ENV_EL1_COMMAND': '/bin/dog',
                                        'ENV_EL1_NUMPROCS': '2',
                                        'ENV_EL1_PRIORITY': '1',
-                                      }
+                                       }
         config = UnhosedConfigParser()
         config.expansions = instance.environ_expansions
         config.read_string(text)
@@ -1920,8 +1952,8 @@ class ServerOptionsTests(unittest.TestCase):
             self.fail('nothing raised')
         except ValueError as exc:
             self.assertEqual(exc.args[0], '[eventlistener:dog] section sets '
-                'redirect_stderr=true but this is not allowed because it '
-                'will interfere with the eventlistener protocol')
+                                          'redirect_stderr=true but this is not allowed because it '
+                                          'will interfere with the eventlistener protocol')
 
     def test_event_listener_pool_with_event_result_handler(self):
         text = lstrip("""\
@@ -1957,8 +1989,8 @@ class ServerOptionsTests(unittest.TestCase):
             self.fail('nothing raised')
         except ValueError as exc:
             self.assertEqual(exc.args[0],
-                'supervisor.tests.base:nonexistent cannot be '
-                'resolved within [eventlistener:cat]')
+                             'supervisor.tests.base:nonexistent cannot be '
+                             'resolved within [eventlistener:cat]')
 
     def test_event_listener_pool_noeventsline(self):
         text = lstrip("""\
@@ -1972,7 +2004,7 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance = self._makeOne()
-        self.assertRaises(ValueError,instance.process_groups_from_parser,config)
+        self.assertRaises(ValueError, instance.process_groups_from_parser, config)
 
     def test_event_listener_pool_unknown_eventtype(self):
         text = lstrip("""\
@@ -1987,7 +2019,7 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance = self._makeOne()
-        self.assertRaises(ValueError,instance.process_groups_from_parser,config)
+        self.assertRaises(ValueError, instance.process_groups_from_parser, config)
 
     def test_fcgi_programs_from_parser(self):
         from supervisor.options import FastCGIGroupConfig
@@ -2022,13 +2054,14 @@ class ServerOptionsTests(unittest.TestCase):
         config.read_string(text)
         instance = self._makeOne()
 
-        #Patch pwd and grp module functions to give us sentinel
-        #uid/gid values so that the test does not depend on
-        #any specific system users
+        # Patch pwd and grp module functions to give us sentinel
+        # uid/gid values so that the test does not depend on
+        # any specific system users
         pwd_mock = Mock()
         pwd_mock.return_value = (None, None, sentinel.uid, sentinel.gid)
         grp_mock = Mock()
         grp_mock.return_value = (None, None, sentinel.gid)
+
         @patch('pwd.getpwuid', pwd_mock)
         @patch('pwd.getpwnam', pwd_mock)
         @patch('grp.getgrnam', grp_mock)
@@ -2046,9 +2079,9 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(gconf_foo.name, 'foo')
         self.assertEqual(gconf_foo.priority, 1)
         self.assertEqual(gconf_foo.socket_config.url,
-                                'unix:///tmp/foo.sock')
+                         'unix:///tmp/foo.sock')
         self.assertEqual(exp_owner, gconf_foo.socket_config.get_owner())
-        self.assertEqual(438, gconf_foo.socket_config.get_mode()) # 0666 in Py2, 0o666 in Py3
+        self.assertEqual(438, gconf_foo.socket_config.get_mode())  # 0666 in Py2, 0o666 in Py3
         self.assertEqual(len(gconf_foo.process_configs), 2)
         pconfig_foo = gconf_foo.process_configs[0]
         self.assertEqual(pconfig_foo.__class__, FastCGIProcessConfig)
@@ -2059,7 +2092,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(gconf_bar.socket_config.url,
                          'unix:///tmp/bar.sock')
         self.assertEqual(exp_owner, gconf_bar.socket_config.get_owner())
-        self.assertEqual(448, gconf_bar.socket_config.get_mode()) # 0700 in Py2, 0o700 in Py3
+        self.assertEqual(448, gconf_bar.socket_config.get_mode())  # 0700 in Py2, 0o700 in Py3
         self.assertEqual(len(gconf_bar.process_configs), 3)
 
         gconf_cub = gconfigs[2]
@@ -2073,7 +2106,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(gconf_flub.socket_config.url,
                          'unix:///tmp/flub.sock')
         self.assertEqual(None, gconf_flub.socket_config.get_owner())
-        self.assertEqual(448, gconf_flub.socket_config.get_mode()) # 0700 in Py2, 0o700 in Py3
+        self.assertEqual(448, gconf_flub.socket_config.get_mode())  # 0700 in Py2, 0o700 in Py3
         self.assertEqual(len(gconf_flub.process_configs), 1)
 
     def test_fcgi_programs_from_parser_with_environment_expansions(self):
@@ -2100,7 +2133,7 @@ class ServerOptionsTests(unittest.TestCase):
                                        'ENV_FOO_COMMAND_ARG1': 'bar',
                                        'ENV_FOO_NUMPROCS': '2',
                                        'ENV_FOO_PRIORITY': '1',
-                                      }
+                                       }
         config = UnhosedConfigParser()
         config.expansions = instance.environ_expansions
         config.read_string(text)
@@ -2112,6 +2145,7 @@ class ServerOptionsTests(unittest.TestCase):
         pwd_mock.return_value = (None, None, sentinel.uid, sentinel.gid)
         grp_mock = Mock()
         grp_mock.return_value = (None, None, sentinel.gid)
+
         @patch('pwd.getpwuid', pwd_mock)
         @patch('pwd.getpwnam', pwd_mock)
         @patch('grp.getgrnam', grp_mock)
@@ -2129,9 +2163,9 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(gconf_foo.name, 'foo')
         self.assertEqual(gconf_foo.priority, 1)
         self.assertEqual(gconf_foo.socket_config.url,
-                                'unix:///tmp/foo.usock')
+                         'unix:///tmp/foo.usock')
         self.assertEqual(exp_owner, gconf_foo.socket_config.get_owner())
-        self.assertEqual(438, gconf_foo.socket_config.get_mode()) # 0666 in Py2, 0o666 in Py3
+        self.assertEqual(438, gconf_foo.socket_config.get_mode())  # 0666 in Py2, 0o666 in Py3
         self.assertEqual(len(gconf_foo.process_configs), 2)
         pconfig_foo = gconf_foo.process_configs[0]
         self.assertEqual(pconfig_foo.__class__, FastCGIProcessConfig)
@@ -2149,7 +2183,7 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance = self._makeOne()
-        self.assertRaises(ValueError,instance.process_groups_from_parser,config)
+        self.assertRaises(ValueError, instance.process_groups_from_parser, config)
 
     def test_fcgi_program_unknown_socket_protocol(self):
         text = lstrip("""\
@@ -2164,7 +2198,7 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance = self._makeOne()
-        self.assertRaises(ValueError,instance.process_groups_from_parser,config)
+        self.assertRaises(ValueError, instance.process_groups_from_parser, config)
 
     def test_fcgi_program_rel_unix_sock_path(self):
         text = lstrip("""\
@@ -2179,7 +2213,7 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance = self._makeOne()
-        self.assertRaises(ValueError,instance.process_groups_from_parser,config)
+        self.assertRaises(ValueError, instance.process_groups_from_parser, config)
 
     def test_fcgi_program_bad_tcp_sock_format(self):
         text = lstrip("""\
@@ -2194,7 +2228,7 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance = self._makeOne()
-        self.assertRaises(ValueError,instance.process_groups_from_parser,config)
+        self.assertRaises(ValueError, instance.process_groups_from_parser, config)
 
     def test_fcgi_program_bad_expansion_proc_num(self):
         text = lstrip("""\
@@ -2209,7 +2243,7 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance = self._makeOne()
-        self.assertRaises(ValueError,instance.process_groups_from_parser,config)
+        self.assertRaises(ValueError, instance.process_groups_from_parser, config)
 
     def test_fcgi_program_socket_owner_set_for_tcp(self):
         text = lstrip("""\
@@ -2222,7 +2256,7 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance = self._makeOne()
-        self.assertRaises(ValueError,instance.process_groups_from_parser,config)
+        self.assertRaises(ValueError, instance.process_groups_from_parser, config)
 
     def test_fcgi_program_socket_mode_set_for_tcp(self):
         text = lstrip("""\
@@ -2235,7 +2269,7 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance = self._makeOne()
-        self.assertRaises(ValueError,instance.process_groups_from_parser,config)
+        self.assertRaises(ValueError, instance.process_groups_from_parser, config)
 
     def test_fcgi_program_bad_socket_owner(self):
         text = lstrip("""\
@@ -2248,7 +2282,7 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance = self._makeOne()
-        self.assertRaises(ValueError,instance.process_groups_from_parser,config)
+        self.assertRaises(ValueError, instance.process_groups_from_parser, config)
 
     def test_fcgi_program_bad_socket_mode(self):
         text = lstrip("""\
@@ -2261,7 +2295,7 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance = self._makeOne()
-        self.assertRaises(ValueError,instance.process_groups_from_parser,config)
+        self.assertRaises(ValueError, instance.process_groups_from_parser, config)
 
     def test_heterogeneous_process_groups_from_parser(self):
         text = lstrip("""\
@@ -2384,7 +2418,7 @@ class ServerOptionsTests(unittest.TestCase):
         factory = factories[0]
         self.assertEqual(factory[0], 'dummy')
         self.assertEqual(factory[1], sys.modules[__name__])
-        self.assertEqual(factory[2], {'foo':'bar', 'baz':'qux'})
+        self.assertEqual(factory[2], {'foo': 'bar', 'baz': 'qux'})
 
     def test_rpcinterfaces_from_parser_factory_expansions(self):
         text = lstrip("""\
@@ -2422,7 +2456,7 @@ class ServerOptionsTests(unittest.TestCase):
             self.fail('nothing raised')
         except ValueError as exc:
             self.assertEqual(exc.args[0], 'section [rpcinterface:dummy] '
-                'does not specify a supervisor.rpcinterface_factory')
+                                          'does not specify a supervisor.rpcinterface_factory')
 
     def test_rpcinterfaces_from_parser_factory_not_importable(self):
         text = lstrip("""\
@@ -2440,7 +2474,7 @@ class ServerOptionsTests(unittest.TestCase):
             self.fail('nothing raised')
         except ValueError as exc:
             self.assertEqual(exc.args[0], 'nonexistent cannot be resolved '
-                'within [rpcinterface:dummy]')
+                                          'within [rpcinterface:dummy]')
 
     def test_clear_autochildlogdir(self):
         dn = tempfile.mkdtemp()
@@ -2449,7 +2483,7 @@ class ServerOptionsTests(unittest.TestCase):
             instance.childlogdir = dn
             sid = 'supervisor'
             instance.identifier = sid
-            logfn = instance.get_autochildlog_name('foo', sid,'stdout')
+            logfn = instance.get_autochildlog_name('foo', sid, 'stdout')
             first = logfn + '.1'
             second = logfn + '.2'
             f1 = open(first, 'w')
@@ -2478,13 +2512,15 @@ class ServerOptionsTests(unittest.TestCase):
         filename = os.path.join(dirname, 'cat-stdout---%s-ayWAp9.log' % ident)
         with open(filename, 'w') as f:
             f.write("log")
+
         def raise_oserror(*args):
             raise OSError(errno.ENOENT)
+
         instance.remove = raise_oserror
         instance.logger = DummyLogger()
         instance.clear_autochildlogdir()
         self.assertEqual(instance.logger.data,
-            ["Failed to clean up '%s'" % filename])
+                         ["Failed to clean up '%s'" % filename])
 
     def test_openhttpservers_reports_friendly_usage_when_eaddrinuse(self):
         supervisord = DummySupervisor()
@@ -2492,11 +2528,14 @@ class ServerOptionsTests(unittest.TestCase):
 
         def raise_eaddrinuse(supervisord):
             raise socket.error(errno.EADDRINUSE)
+
         instance.make_http_servers = raise_eaddrinuse
 
         recorder = []
+
         def record_usage(message):
             recorder.append(message)
+
         instance.usage = record_usage
 
         instance.openhttpservers(supervisord)
@@ -2510,11 +2549,14 @@ class ServerOptionsTests(unittest.TestCase):
 
         def make_http_servers(supervisord):
             raise socket.error(errno.EPERM)
+
         instance.make_http_servers = make_http_servers
 
         recorder = []
+
         def record_usage(message):
             recorder.append(message)
+
         instance.usage = record_usage
 
         instance.openhttpservers(supervisord)
@@ -2529,11 +2571,14 @@ class ServerOptionsTests(unittest.TestCase):
 
         def make_http_servers(supervisord):
             raise socket.error('uh oh')
+
         instance.make_http_servers = make_http_servers
 
         recorder = []
+
         def record_usage(message):
             recorder.append(message)
+
         instance.usage = record_usage
 
         instance.openhttpservers(supervisord)
@@ -2548,11 +2593,14 @@ class ServerOptionsTests(unittest.TestCase):
 
         def make_http_servers(supervisord):
             raise ValueError('not prefixed with help')
+
         instance.make_http_servers = make_http_servers
 
         recorder = []
+
         def record_usage(message):
             recorder.append(message)
+
         instance.usage = record_usage
 
         instance.openhttpservers(supervisord)
@@ -2566,6 +2614,7 @@ class ServerOptionsTests(unittest.TestCase):
 
         def make_http_servers(supervisord):
             raise OverflowError
+
         instance.make_http_servers = make_http_servers
 
         # this scenario probably means a bug in supervisor.  we dump
@@ -2583,7 +2632,7 @@ class ServerOptionsTests(unittest.TestCase):
     def test_dropPrivileges_nonroot_same_user(self):
         instance = self._makeOne()
         msg = instance.dropPrivileges(os.getuid())
-        self.assertEqual(msg, None) # no error if same user
+        self.assertEqual(msg, None)  # no error if same user
 
     @patch('pwd.getpwuid', Mock(return_value=["foo", None, 55, 34]))
     @patch('os.getuid', Mock(return_value=12))
@@ -2599,6 +2648,7 @@ class ServerOptionsTests(unittest.TestCase):
         instance.daemonize()
         instance.poller.before_daemonize.assert_called_once_with()
         instance.poller.after_daemonize.assert_called_once_with()
+
 
 class TestProcessConfig(unittest.TestCase):
     def _getTargetClass(self):
@@ -2681,6 +2731,7 @@ class TestProcessConfig(unittest.TestCase):
             self.assertEqual(dispatchers[5].channel, 'stdout')
             self.assertEqual(pipes['stdout'], 5)
             self.assertEqual(pipes['stderr'], None)
+
 
 class EventListenerConfigTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -2790,6 +2841,7 @@ class FastCGIProcessConfigTest(unittest.TestCase):
                                  ProcessCommunicationStderrEvent)
                 self.assertEqual(pipes['stderr'], 7)
 
+
 class ProcessGroupConfigTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.options import ProcessGroupConfig
@@ -2821,6 +2873,7 @@ class ProcessGroupConfigTests(unittest.TestCase):
         from supervisor.process import ProcessGroup
         self.assertEqual(group.__class__, ProcessGroup)
 
+
 class EventListenerPoolConfigTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.options import EventListenerPoolConfig
@@ -2846,6 +2899,7 @@ class EventListenerPoolConfigTests(unittest.TestCase):
         group = instance.make_group()
         from supervisor.process import EventListenerPool
         self.assertEqual(group.__class__, EventListenerPool)
+
 
 class FastCGIGroupConfigTests(unittest.TestCase):
     def _getTargetClass(self):
@@ -2895,6 +2949,7 @@ class FastCGIGroupConfigTests(unittest.TestCase):
         from supervisor.process import FastCGIProcessGroup
         self.assertEqual(group.__class__, FastCGIProcessGroup)
 
+
 class SignalReceiverTests(unittest.TestCase):
     def test_returns_None_initially(self):
         from supervisor.options import SignalReceiver
@@ -2928,6 +2983,7 @@ class SignalReceiverTests(unittest.TestCase):
         self.assertEqual(sr.get_signal(), signal.SIGCHLD)
         self.assertEqual(sr.get_signal(), None)
 
+
 class UnhosedConfigParserTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.options import UnhosedConfigParser
@@ -2941,7 +2997,7 @@ class UnhosedConfigParserTests(unittest.TestCase):
         parser.read_string("[supervisord]\n")
         from supervisor.compat import ConfigParser
         self.assertRaises(ConfigParser.NoOptionError,
-            parser.saneget, "supervisord", "missing")
+                          parser.saneget, "supervisord", "missing")
 
     def test_saneget_with_default(self):
         parser = self._makeOne()
@@ -2961,7 +3017,7 @@ class UnhosedConfigParserTests(unittest.TestCase):
         parser.expansions = {'pet': 'dog'}
         parser.read_string("[supervisord]\n")
         result = parser.saneget("supervisord", "foo",
-            default="%(pet)s", do_expand=False)
+                                default="%(pet)s", do_expand=False)
         self.assertEqual(result, "%(pet)s")
 
     def test_saneget_no_default_no_expand(self):
@@ -2982,7 +3038,7 @@ class UnhosedConfigParserTests(unittest.TestCase):
         parser.expansions = {'pet': 'dog'}
         parser.read_string("[supervisord]\nfoo=%(pet)s\n")
         result = parser.saneget("supervisord", "foo",
-            expansions={'pet': 'cat'})
+                                expansions={'pet': 'cat'})
         self.assertEqual(result, "cat")
 
     def test_getdefault_does_saneget_with_mysection(self):
@@ -3039,6 +3095,7 @@ class UnhosedConfigParserTests(unittest.TestCase):
         self.assertEqual(parser.section_to_file['foo'], f1.name)
         self.assertEqual(parser.section_to_file['bar'], f2.name)
 
+
 class UtilFunctionsTests(unittest.TestCase):
     def test_make_namespec(self):
         from supervisor.options import make_namespec
@@ -3053,9 +3110,10 @@ class UtilFunctionsTests(unittest.TestCase):
         self.assertEqual(s('group:'), ('group', None))
         self.assertEqual(s('group:*'), ('group', None))
 
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
 
+
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')
-
