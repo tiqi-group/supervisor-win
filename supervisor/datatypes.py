@@ -1,6 +1,4 @@
-# import grp
 import os
-# import pwd
 import signal
 import socket
 import shlex
@@ -260,20 +258,7 @@ def name_to_uid(name):
     """ Find a user ID from a string containing a user name or ID.
         Raises ValueError if the string can't be resolved to a valid
         user ID on the system. """
-    try:
-        uid = int(name)
-    except ValueError:
-        try:
-            pwdrec = pwd.getpwnam(name)
-        except KeyError:
-            raise ValueError("Invalid user name %s" % name)
-        uid = pwdrec[2]
-    else:
-        try:
-            pwd.getpwuid(uid)  # check if uid is valid
-        except KeyError:
-            raise ValueError("Invalid user id %s" % name)
-    return uid
+    raise NotImplementedError("unavailable on windows")
 
 
 def name_to_gid(name):

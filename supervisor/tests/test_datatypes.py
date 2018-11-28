@@ -278,27 +278,6 @@ class NameToGidTests(unittest.TestCase):
     def test_raises_for_bad_group_id(self):
         self.assertRaises(ValueError, self._callFUT, "42")
 
-class NameToUidTests(unittest.TestCase):
-    def _callFUT(self, arg):
-        return datatypes.name_to_uid(arg)
-
-    @patch("pwd.getpwnam", Mock(return_value=[0,0,42]))
-    def test_gets_uid_from_username(self):
-        uid = self._callFUT("foo")
-        self.assertEqual(uid, 42)
-
-    @patch("pwd.getpwuid", Mock(return_value=[0,0,42]))
-    def test_gets_uid_from_user_id(self):
-        uid = self._callFUT("42")
-        self.assertEqual(uid, 42)
-
-    @patch("pwd.getpwnam", Mock(side_effect=KeyError("bad username")))
-    def test_raises_for_bad_username(self):
-        self.assertRaises(ValueError, self._callFUT, "foo")
-
-    @patch("pwd.getpwuid", Mock(side_effect=KeyError("bad user id")))
-    def test_raises_for_bad_user_id(self):
-        self.assertRaises(ValueError, self._callFUT, "42")
 
 class OctalTypeTests(unittest.TestCase):
     def _callFUT(self, arg):
