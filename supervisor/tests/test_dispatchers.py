@@ -265,7 +265,7 @@ class POutputDispatcherTests(unittest.TestCase):
         from supervisor import loggers
         options.loglevel = loggers.LevelsByName.TRAC
         config = DummyPConfig(options, 'process1', '/bin/process1',
-                              stdout_logfile='/tmp/foo',
+                              stdout_logfile=os.path.join(tempfile.gettempdir(), 'foo.txt'),
                               stdout_capture_maxbytes=100)
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
