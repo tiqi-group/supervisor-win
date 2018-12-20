@@ -273,7 +273,7 @@ class Subprocess(object):
         if new_state == ProcessStates.BACKOFF:
             now = time.time()
             self.backoff += 1
-            self.delay = now + self.backoff
+            self.delay = now + (self.backoff * 10.0)
 
         self.state = new_state
 
