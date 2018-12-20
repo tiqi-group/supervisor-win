@@ -1354,7 +1354,10 @@ class ServerOptions(Options):
         communications.  Open fd in non-blocking mode so we can read them
         in the mainloop without blocking.  If stderr is False, don't
         create a pipe for stderr. """
-        process = self.processbypid[pid]
+        try:
+            process = self.processbypid[pid]
+        except KeyError:
+            raise IOError('pid (%s)' % pid)
         pipes = {
             'stdin': process.stdin,
             'stdout': helpers.StdQueueAsync(process.stdout)
