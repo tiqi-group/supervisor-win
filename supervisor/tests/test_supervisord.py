@@ -6,15 +6,17 @@ import tempfile
 import time
 import unittest
 
-from supervisor.compat import StringIO
+from supervisor.states import ProcessStates
+from supervisor.states import SupervisorStates
+
 from supervisor.tests.base import DummyDispatcher
 from supervisor.tests.base import DummyOptions
 from supervisor.tests.base import DummyPConfig
 from supervisor.tests.base import DummyPGroupConfig
 from supervisor.tests.base import DummyProcess
 from supervisor.tests.base import DummyProcessGroup
-from supervisor.states import SupervisorStates
 
+from supervisor.compat import StringIO
 
 try:
     import pstats
@@ -190,7 +192,8 @@ class SupervisordTests(unittest.TestCase):
         options._signal = signal.SIGTERM
         supervisord = self._makeOne(options)
         supervisord.handle_signal()
-        self.assertEqual(supervisord.options.mood, SupervisorStates.SHUTDOWN)
+        self.assertEqual(supervisord.options.mood,
+                         SupervisorStates.SHUTDOWN)
         self.assertEqual(options.logger.data[0],
                          'received SIGTERM indicating exit request')
 
@@ -199,7 +202,8 @@ class SupervisordTests(unittest.TestCase):
         options._signal = signal.SIGINT
         supervisord = self._makeOne(options)
         supervisord.handle_signal()
-        self.assertEqual(supervisord.options.mood, SupervisorStates.SHUTDOWN)
+        self.assertEqual(supervisord.options.mood,
+                         SupervisorStates.SHUTDOWN)
         self.assertEqual(options.logger.data[0],
                          'received SIGINT indicating exit request')
 
@@ -259,12 +263,12 @@ class SupervisordTests(unittest.TestCase):
         options._signal = signal.SIGSEGV
         supervisord = self._makeOne(options)
         supervisord.handle_signal()
-        self.assertEqual(supervisord.options.mood, 1)
+        self.assertEqual(supervisord.options.mood,
+                         SupervisorStates.RUNNING)
         self.assertEqual(options.logger.data[0],
                          'received SIGSEGV indicating nothing')
 
     def test_get_state(self):
-        from supervisor.states import SupervisorStates
         options = DummyOptions()
         supervisord = self._makeOne(options)
         self.assertEqual(supervisord.get_state(), SupervisorStates.RUNNING)
@@ -694,7 +698,7 @@ class SupervisordTests(unittest.TestCase):
         gconfig = DummyPGroupConfig(options)
         pgroup = DummyProcessGroup(gconfig)
         supervisord.process_groups = {'foo': pgroup}
-        supervisord.options.mood = -1
+        supervisord.options.mood = SupervisorStates.SHUTDOWN
         L = []
 
         def callback(event):
@@ -723,7 +727,7 @@ class SupervisordTests(unittest.TestCase):
             L.append(1)
 
         supervisord.process_groups = {'foo': pgroup}
-        supervisord.options.mood = 0
+        supervisord.options.mood = SupervisorStates.RESTARTING
         supervisord.options.test = True
         from supervisor.medusa import asyncore_25 as asyncore
         self.assertRaises(asyncore.ExitNow, supervisord.runforever)
@@ -743,14 +747,13 @@ class SupervisordTests(unittest.TestCase):
             L.append(1)
 
         supervisord.process_groups = {'foo': pgroup}
-        supervisord.options.mood = 0
+        supervisord.options.mood = SupervisorStates.RESTARTING
         supervisord.options.test = True
         supervisord.runforever()
         self.assertNotEqual(supervisord.lastshutdownreport, 0)
 
     def test_getSupervisorStateDescription(self):
         from supervisor.states import getSupervisorStateDescription
-        from supervisor.states import SupervisorStates
         result = getSupervisorStateDescription(SupervisorStates.RUNNING)
         self.assertEqual(result, 'RUNNING')
 
