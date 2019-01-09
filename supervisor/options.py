@@ -306,17 +306,14 @@ class Options(object):
                 if name and value is not None:
                     self._set(name, value, 1)
 
-        if self.configfile is None:
-            uid = 0  # os.getuid()
-            if uid == 0 and "supervisord" in self.progname:  # pragma: no cover
-                self.warnings.warn(
-                    'Supervisord is running as root and it is searching '
-                    'for its configuration file in default locations '
-                    '(including its current working directory); you '
-                    'probably want to specify a "-c" argument specifying an '
-                    'absolute path to a configuration file for improved '
-                    'security.'
-                )
+        if self.configfile is None and "supervisord" in self.progname:  # pragma: no cover
+            self.warnings.warn(
+                'Supervisord is searching for its configuration file in default locations '
+                '(including its current working directory); you '
+                'probably want to specify a "-c" argument specifying an '
+                'absolute path to a configuration file for improved '
+                'security.'
+            )
 
             self.configfile = self.default_configfile()
 
