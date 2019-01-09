@@ -368,20 +368,19 @@ class Subprocess(object):
             except Exception as e:
                 options.logger.error("subprocess cpu-affinity: %s" % e)
 
-    def _open(self, filename, argv, env):
+    def _open(self, filename, argv, **kwargs):
         """start process"""
-        params = dict(
-            env=env,
+        kwargs.update(dict(
             universal_newlines=True,
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE
-        )
+        ))
         # stderr goes to stdout
         if self.config.redirect_stderr:
-            params['stderr'] = subprocess.STDOUT
+            kwargs['stderr'] = subprocess.STDOUT
         else:
-            params['stderr'] = subprocess.PIPE
-        proc = helpers.Popen(argv, **params)
+            kwargs['stderr'] = subprocess.PIPE
+        proc = helpers.Popen(argv, **kwargs)
         if proc.pid <= 0:
             raise OSError('failure initializing new process ' + ' '.join(argv))
         self.__configure_handlers(proc)
@@ -422,17 +421,6 @@ class Subprocess(object):
         if self.config.environment is not None:
             env.update(self.config.environment)
 
-        # change directory
-        cwd = self.config.directory
-        try:
-            if cwd is not None:
-                options.chdir(cwd)
-        except OSError as why:
-            code = errno.errorcode.get(why.args[0], why.args[0])
-            msg = "couldn't chdir to %s: %s\n" % (cwd, code)
-            options.logger.error("supervisor/process: " + msg)
-            return  # finally clause will exit the child process
-
         # Fixes bug in unicode strings env
         for key in env:
             if isinstance(key, unicode) or isinstance(env[key], unicode):
@@ -440,11 +428,14 @@ class Subprocess(object):
                 key = key.encode('utf-8')
                 env[key] = value.encode('utf-8')
 
-        # set umask, then execve
         try:
             if self.config.umask is not None:
                 options.setumask(self.config.umask)
-            self.pid = options.execve(self._open(filename, argv, env))
+            kwargs = {
+                'env': env,
+                'cwd': self.config.directory
+            }
+            self.pid = options.execve(self._open(filename, argv, **kwargs))
         except OSError as why:
             code = errno.errorcode.get(why.args[0], why.args[0])
             msg = "couldn't exec %s: %s\n" % (argv[0], code)
