@@ -410,6 +410,7 @@ class ServerOptions(Options):
     passwdfile = None
     nodaemon = None
     environment = None
+    serverurl = None
     httpservers = ()
     unlink_socketfiles = True
     mood = states.SupervisorStates.RUNNING
@@ -495,24 +496,11 @@ class ServerOptions(Options):
         self.pidfile = normalize_path(pidfile)
 
         self.rpcinterface_factories = section.rpcinterface_factories
-
-        self.serverurl = None
-
-        self.server_configs = sconfigs = section.server_configs
-
-        # we need to set a fallback serverurl that process.spawn can use
-
-        # prefer a unix domain socket
-        if sys.platform.startswith('linux'):
-            for config in [config for config in sconfigs if config['family'] is
-                    (socket.AF_INET if sys.platform.startswith('win') else socket.AF_UNIX)]:
-                path = config['file']
-                self.serverurl = 'unix://%s' % path
-                break
+        self.server_configs = section.server_configs
 
         # fall back to an inet socket
         if self.serverurl is None:
-            for config in [config for config in sconfigs if config['family'] is socket.AF_INET]:
+            for config in [config for config in self.server_configs if config['family'] is socket.AF_INET]:
                 host = config['host']
                 port = config['port']
                 if not host:
@@ -792,9 +780,6 @@ class ServerOptions(Options):
         return groups
 
     def parse_fcgi_socket(self, sock, proc_uid, socket_owner, socket_mode):
-        if sock.startswith('unix://'):
-            raise ValueError("Unix socket is not supported on windows")
-
         if socket_owner is not None or socket_mode is not None:
             raise ValueError("socket_owner and socket_mode params should"
                              + " only be used with a Unix domain socket")
@@ -1016,40 +1001,9 @@ class ServerOptions(Options):
             config['section'] = section
             configs.append(config)
 
-        unix_serverdefs = self._parse_servernames(parser, 'unix_http_server')
-        for name, section in unix_serverdefs:
-            config = {}
-            get = parser.saneget
-            sfile = get(section, 'file', None)
-            if sfile is None:
-                raise ValueError('section [%s] has no file value' % section)
-            sfile = sfile.strip()
-            config['name'] = name
-            config['family'] = socket.AF_INET if sys.platform.startswith('win') else socket.AF_UNIX
-            sfile = expand(sfile, {'here': self.here}, 'socket file')
-            config['file'] = normalize_path(sfile)
-            config.update(self._parse_username_and_password(parser, section))
-            chown = get(section, 'chown', None)
-            if chown is not None:
-                try:
-                    chown = colon_separated_user_group(chown)
-                except ValueError:
-                    raise ValueError('Invalid sockchown value %s' % chown)
-            else:
-                chown = (-1, -1)
-            config['chown'] = chown
-            chmod = get(section, 'chmod', None)
-            if chmod is not None:
-                try:
-                    chmod = octal_type(chmod)
-                except (TypeError, ValueError):
-                    raise ValueError('Invalid chmod value %s' % chmod)
-            else:
-                chmod = 448  # 0700 on py2, 0o700 on py3
-            config['chmod'] = chmod
-            config['section'] = section
-            configs.append(config)
-
+        if self._parse_servernames(parser, 'unix_http_server'):
+            raise ValueError('unix_http_server not supported.\n'
+                             'remove the section [unix_http_server] from supervisord.conf')
         return configs
 
     def daemonize(self):
@@ -1069,11 +1023,6 @@ class ServerOptions(Options):
             self.logger.info('supervisord started with pid %s' % pid)
 
     def cleanup(self):
-        for config, server in self.httpservers:
-            if config['family'] == socket.AF_INET if sys.platform.startswith('win') else socket.AF_UNIX:
-                if self.unlink_socketfiles and sys.platform.startswith('linux'):
-                    socketname = config['file']
-                    self._try_unlink(socketname)
         self._try_unlink(self.pidfile)
 
     def _try_unlink(self, path):
