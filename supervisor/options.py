@@ -27,8 +27,6 @@ from supervisor.medusa import asyncore_25 as asyncore
 from datatypes import process_or_group_name
 from datatypes import boolean
 from datatypes import integer
-from datatypes import name_to_uid
-from datatypes import gid_for_uid
 from datatypes import existing_dirpath
 from datatypes import byte_size
 from datatypes import signal_number
@@ -475,14 +473,8 @@ class ServerOptions(Options):
         Options.realize(self, *arg, **kw)
         section = self.configroot.supervisord
 
-        # Additional checking of user option; set uid and gid
-        if self.user is not None:
-            try:
-                uid = name_to_uid(self.user)
-            except ValueError as msg:
-                self.usage(msg)  # invalid user
-            self.uid = uid
-            self.gid = gid_for_uid(uid)
+        self.uid = None
+        self.gid = 0
 
         if not self.loglevel:
             self.loglevel = section.loglevel
@@ -759,11 +751,8 @@ class ServerOptions(Options):
             fcgi_expansions = {'program_name': program_name}
 
             # find proc_uid from "user" option
-            proc_user = get(section, 'user', None)
-            if proc_user is None:
-                proc_uid = None
-            else:
-                proc_uid = name_to_uid(proc_user)
+            # proc_user = get(section, 'user', None)
+            # proc_uid = None
 
             socket_owner = get(section, 'socket_owner', None)
             if socket_owner is not None:
@@ -787,8 +776,7 @@ class ServerOptions(Options):
                                  section)
 
             try:
-                socket_config = self.parse_fcgi_socket(socket, proc_uid,
-                                                       socket_owner, socket_mode)
+                socket_config = self.parse_fcgi_socket(socket, None, socket_owner, socket_mode)
             except ValueError as e:
                 raise ValueError('%s in [%s] socket' % (str(e), section))
 
@@ -882,11 +870,7 @@ class ServerOptions(Options):
             serverurl = None
 
         # find uid from "user" option
-        user = get(section, 'user', None)
-        if user is None:
-            uid = None
-        else:
-            uid = name_to_uid(user)
+        # user = get(section, 'user', None)
 
         umask = get(section, 'umask', None)
         if umask is not None:
@@ -961,7 +945,7 @@ class ServerOptions(Options):
                 autorestart=autorestart,
                 startsecs=startsecs,
                 startretries=startretries,
-                uid=uid,
+                uid=None,
                 cpupriority=cpupriority,
                 cpuaffinity=cpuaffinity,
                 systemjob=systemjob,
