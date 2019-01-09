@@ -5,11 +5,10 @@ import unittest
 import tempfile
 import shutil
 import os
-import syslog
-
 from supervisor.compat import PY3
 from supervisor.compat import as_string
 from supervisor.compat import StringIO
+from supervisor.compat import syslog
 
 from supervisor.tests.base import mock
 from supervisor.tests.base import DummyStream
