@@ -14,42 +14,43 @@ import glob
 import platform
 import warnings
 import threading
-from compat import PY3
-from compat import ConfigParser
-from compat import as_bytes, as_string
-from compat import xmlrpclib
-from compat import StringIO
-from compat import basestring
-import helpers
-
-from supervisor.medusa import asyncore_25 as asyncore
-
-from datatypes import process_or_group_name
-from datatypes import boolean
-from datatypes import integer
-from datatypes import existing_dirpath
-from datatypes import byte_size
-from datatypes import signal_number
-from datatypes import list_of_exitcodes
-from datatypes import dict_of_key_value_pairs
-from datatypes import logfile_name
-from datatypes import list_of_strings
-from datatypes import octal_type
-from datatypes import existing_directory
-from datatypes import logging_level
-from datatypes import colon_separated_user_group
-from datatypes import inet_address
-from datatypes import InetStreamSocketConfig
-from datatypes import url
-from datatypes import Automatic
-from datatypes import auto_restart
-from datatypes import profile_options
-from datatypes import set_here
-
-import loggers
-import states
-import xmlrpc
-import poller
+from .compat import PY3
+from .compat import ConfigParser
+from .compat import as_bytes, as_string
+from .compat import xmlrpclib
+from .compat import StringIO
+from .compat import basestring
+from .medusa import asyncore_25 as asyncore
+from .datatypes import (
+    process_or_group_name,
+    boolean,
+    integer,
+    existing_dirpath,
+    byte_size,
+    signal_number,
+    list_of_exitcodes,
+    dict_of_key_value_pairs,
+    logfile_name,
+    list_of_strings,
+    octal_type,
+    existing_directory,
+    logging_level,
+    colon_separated_user_group,
+    inet_address,
+    InetStreamSocketConfig,
+    url,
+    Automatic,
+    auto_restart,
+    profile_options,
+    set_here
+)
+from . import (
+    helpers,
+    loggers,
+    states,
+    xmlrpc,
+    poller
+)
 
 
 def _read_version_txt():
