@@ -40,9 +40,6 @@ class StreamAsync(Queue.Queue, threading.Thread):
     def __getattr__(self, item):
         return getattr(self.stream, item)
 
-    def __str__(self):
-        return "{0.__name__} {0.name}".format(self)
-
     def run(self):
         for line in iter(self.stream.readline, ''):
             self.put(line)
