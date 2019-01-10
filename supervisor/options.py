@@ -454,7 +454,7 @@ class ServerOptions(Options):
                  "t", "strip_ansi", flag=1, default=0)
         self.add("profile_options", "supervisord.profile_options",
                  "", "profile_options=", profile_options, default=None)
-        self.processbypid = {}
+        # subprocess history by pid
         self.pidhistory = {}
         self.process_group_configs = []
         self.parse_warnings = []
@@ -1131,7 +1131,7 @@ class ServerOptions(Options):
                 pass
 
     def kill(self, pid, sig):
-        self.processbypid[pid].send_signal(sig)
+        self.pidhistory[pid].process.send_signal(sig)
 
     def set_uid(self):
         if self.uid is None:
@@ -1146,10 +1146,19 @@ class ServerOptions(Options):
     def dropPrivileges(self, user):
         return
 
+    def get_pid_history(self, pid):
+        """Returns the subprocess registered for id"""
+        return self.pidhistory[pid]
+
+    def remove_pid_history(self, pid):
+        """Removes the registered subprocess for id"""
+        del self.pidhistory[pid]
+
     def waitpid(self):
         stopped = []
-        for pid in self.processbypid:
-            process = self.processbypid[pid]
+        for pid in self.pidhistory:
+            subprocess = self.pidhistory[pid]
+            process = subprocess.process
             if process.killed or process.poll() is not None:
                 stopped.append((pid, (process.wait(), 'stopped')))
         if not stopped:
@@ -1203,10 +1212,10 @@ class ServerOptions(Options):
     def stat(self, filename):
         return os.stat(filename)
 
-    def execve(self, process, *args, **kwargs):
-        """dummy:fake"""
-        pid = process.pid
-        self.processbypid[pid] = process
+    def execve(self, subprocess, *args, **kwargs):
+        """register process id only"""
+        pid = subprocess.process.pid
+        self.pidhistory[pid] = subprocess
         return pid
 
     def mktempfile(self, suffix, prefix, dir):
@@ -1286,7 +1295,7 @@ class ServerOptions(Options):
         in the mainloop without blocking.  If stderr is False, don't
         create a pipe for stderr. """
         try:
-            process = self.processbypid[pid]
+            process = self.pidhistory[pid].process
         except KeyError:
             raise IOError('pid (%s)' % pid)
         pipes = {

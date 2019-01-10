@@ -155,6 +155,7 @@ class Subprocess(object):
     exitstatus = None  # status attached to dead process by finish()
     spawnerr = None  # error message attached by spawn() if any
     group = None  # ProcessGroup instance if process is in the group
+    process = None  # The actual process executed subprocess.Popen
 
     def __init__(self, config):
         """Constructor.
@@ -435,7 +436,8 @@ class Subprocess(object):
                 'env': env,
                 'cwd': self.config.directory
             }
-            self.pid = options.execve(self._open(filename, argv, **kwargs))
+            self.process = self._open(filename, argv, **kwargs)
+            self.pid = options.execve(self)
         except OSError as why:
             code = errno.errorcode.get(why.args[0], why.args[0])
             msg = "couldn't exec %s: %s\n" % (argv[0], code)
@@ -448,7 +450,6 @@ class Subprocess(object):
         else:
             options.logger.info('Spawned: %r with pid %s' % (self.config.name, self.pid))
             self.delay = time.time() + self.config.startsecs
-            options.pidhistory[self.pid] = self
             self.spawnerr = None  # no error
 
     def stop(self):

@@ -251,13 +251,13 @@ class Supervisor(object):
         for pid, sts in self.options.waitpid():
             if not pid:
                 break
-            process = self.options.pidhistory.get(pid, None)
-            if process is None:
+            try:
+                subprocess = self.options.get_pid_history(pid)
+            except KeyError:
                 self.options.logger.info('reaped unknown pid %s' % pid)
             else:
-                process.finish(pid, sts)
-                del self.options.pidhistory[pid]
-                del self.options.processbypid[pid]
+                subprocess.finish(pid, sts)
+                self.options.remove_pid_history(pid)
 
     def handle_signal(self):
         sig = self.options.get_signal()
