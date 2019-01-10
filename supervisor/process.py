@@ -292,9 +292,12 @@ class Subprocess(object):
 
     def stop_all_dispatchers(self):
         """Ends the execution of the data reading threads"""
-        for dispatcher in self.dispatchers:
-            if isinstance(dispatcher, StreamAsync):
-                dispatcher.stop()
+        for stream in self.dispatchers:
+            if isinstance(stream, StreamAsync):
+                # stops the related thread
+                stream.stop()
+            # closes log files
+            self.dispatchers[stream].close()
 
     def spawn(self):
         """Start the subprocess.  It must not be running already.

@@ -98,6 +98,8 @@ class POutputDispatcher(PDispatcher):
         self.event_type = event_type
         self.fd = fd
         self.channel = channel = self.event_type.channel
+        # list of logs that have been configured by this dispatcher
+        self._ref_logs = []
 
         self._setup_logging(process.config, channel)
 
@@ -109,6 +111,7 @@ class POutputDispatcher(PDispatcher):
                 fmt='%(message)s',
                 maxbytes=capture_maxbytes,
             )
+            self._ref_logs.append(self.capturelog)
 
         self.childlog = self.mainlog
 
@@ -152,18 +155,24 @@ class POutputDispatcher(PDispatcher):
             fmt = config.name + ' %(message)s'
             loggers.handle_syslog(self.mainlog, fmt)
 
+        self._ref_logs.append(self.mainlog)
+
     def removelogs(self):
-        for log in (self.mainlog, self.capturelog):
-            if log is not None:
-                for handler in log.handlers:
-                    handler.remove()
-                    handler.reopen()
+        for log in self._ref_logs:
+            for handler in log.handlers:
+                handler.remove()
+                handler.reopen()
 
     def reopenlogs(self):
-        for log in (self.mainlog, self.capturelog):
-            if log is not None:
-                for handler in log.handlers:
-                    handler.reopen()
+        for log in self._ref_logs:
+            for handler in log.handlers:
+                handler.reopen()
+
+    def close(self):
+        if not self.closed:
+            for log in self._ref_logs:
+                log.close()
+        super(POutputDispatcher, self).close()
 
     def _log(self, data):
         if data:
