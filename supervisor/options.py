@@ -1303,7 +1303,7 @@ class ServerOptions(Options):
             'stdout': helpers.StreamAsync(process.stdout, name='stdout-pid-{0:d}'.format(pid))
         }
         if stderr:
-            pipes['stderr'] = helpers.StreamAsync(process.stderr, name='stdout-pid-{0:d}'.format(pid))
+            pipes['stderr'] = helpers.StreamAsync(process.stderr, name='stderr-pid-{0:d}'.format(pid))
         else:
             pipes['stderr'] = None
         return pipes
