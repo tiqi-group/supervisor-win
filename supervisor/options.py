@@ -1268,17 +1268,13 @@ class ServerOptions(Options):
             if hasattr(handler, 'reopen'):
                 handler.reopen()
 
-    def readfd(self, std_queue):
+    def readfd(self, stream):
         """
         The work of this method is to read the data stream of a process, but without blocking
         the work of the supervisor. A buffer of data is being read in a thread and when the total
         data is reached is given in return for one of the Dispatcher objects responsible.
         """
-        try:
-            data = std_queue.get_nowait()
-        except Queue.Empty:
-            data = None
-        return data
+        return stream.readline()
 
     def write(self, fd, data):
         return os.write(fd if type(fd) is int else fd.fileno(), as_bytes(data))

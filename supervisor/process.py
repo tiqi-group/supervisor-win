@@ -9,6 +9,7 @@ from supervisor.compat import maxint
 from supervisor.compat import StringIO
 from supervisor.compat import total_ordering
 from supervisor.compat import as_bytes
+from supervisor.helpers import StreamAsync
 
 from supervisor.medusa import asyncore_25 as asyncore
 
@@ -288,6 +289,12 @@ class Subprocess(object):
     def record_spawnerr(self, msg):
         self.spawnerr = msg
         self.config.options.logger.info("spawnerr: %s" % msg)
+
+    def stop_all_dispatchers(self):
+        """Ends the execution of the data reading threads"""
+        for dispatcher in self.dispatchers:
+            if isinstance(dispatcher, StreamAsync):
+                dispatcher.stop()
 
     def spawn(self):
         """Start the subprocess.  It must not be running already.
@@ -644,6 +651,7 @@ class Subprocess(object):
 
         self.config.options.logger.info(msg)
 
+        self.stop_all_dispatchers()
         self.pid = 0
         self.pipes = {}
         self.dispatchers = {}

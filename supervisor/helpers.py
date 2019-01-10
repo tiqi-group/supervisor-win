@@ -34,6 +34,7 @@ class StreamAsync(Queue.Queue, threading.Thread):
         Queue.Queue.__init__(self)
         self.setDaemon(True)
         self.stream = stream
+        self._event = threading.Event()
         if auto_start:
             self.start()
 
@@ -41,5 +42,19 @@ class StreamAsync(Queue.Queue, threading.Thread):
         return getattr(self.stream, item)
 
     def run(self):
-        for line in iter(self.stream.readline, ''):
-            self.put(line)
+        while not self._event.is_set():
+            data = self.stream.readline()
+            if not data:
+                break
+            self.put(data)
+
+    def stop(self):
+        """Stops thread execution"""
+        self._event.set()
+
+    def readline(self):
+        """read one line from queue"""
+        try:
+            return self.get_nowait()
+        except Queue.Empty:
+            return None
