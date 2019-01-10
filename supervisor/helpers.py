@@ -30,18 +30,17 @@ class StdQueueAsync(Queue.Queue, threading.Thread):
     from the stream std [err, out]
     """
 
-    def __init__(self, std, nline=5, start=True, *args, **kwargs):
+    def __init__(self, stream, auto_start=True, *args, **kwargs):
         Queue.Queue.__init__(self, *args, **kwargs)
         threading.Thread.__init__(self)
         self.setDaemon(True)
-        self.std = std
-        self.nline = nline
-        if start:
+        self.stream = stream
+        if auto_start:
             self.start()
 
     def __getattr__(self, item):
-        return getattr(self.std, item)
+        return getattr(self.stream, item)
 
     def run(self):
-        for line in iter(self.std.readline, ''):
+        for line in iter(self.stream.readline, ''):
             self.put(line)
