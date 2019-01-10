@@ -30,8 +30,8 @@ class StreamAsync(Queue.Queue, threading.Thread):
     """
 
     def __init__(self, stream, auto_start=True, *args, **kwargs):
-        Queue.Queue.__init__(self, *args, **kwargs)
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, *args, **kwargs)
+        Queue.Queue.__init__(self)
         self.setDaemon(True)
         self.stream = stream
         if auto_start:
@@ -39,6 +39,9 @@ class StreamAsync(Queue.Queue, threading.Thread):
 
     def __getattr__(self, item):
         return getattr(self.stream, item)
+
+    def __str__(self):
+        return "{0.__name__} {0.name}".format(self)
 
     def run(self):
         for line in iter(self.stream.readline, ''):

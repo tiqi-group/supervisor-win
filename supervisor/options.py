@@ -1291,10 +1291,10 @@ class ServerOptions(Options):
             raise IOError('pid (%s)' % pid)
         pipes = {
             'stdin': process.stdin,
-            'stdout': helpers.StreamAsync(process.stdout)
+            'stdout': helpers.StreamAsync(process.stdout, name='stdout-pid-{0:d}'.format(pid))
         }
         if stderr:
-            pipes['stderr'] = helpers.StreamAsync(process.stderr)
+            pipes['stderr'] = helpers.StreamAsync(process.stderr, name='stdout-pid-{0:d}'.format(pid))
         else:
             pipes['stderr'] = None
         return pipes
