@@ -24,10 +24,9 @@ class Popen(subprocess.Popen):
         self.killed = True
 
 
-class StdQueueAsync(Queue.Queue, threading.Thread):
+class StreamAsync(Queue.Queue, threading.Thread):
     """
-    Together with a thread, ess class allows you to store data
-    from the stream std [err, out]
+    Class of asynchronous reading of stdout data, stderr of a process
     """
 
     def __init__(self, stream, auto_start=True, *args, **kwargs):
