@@ -24,17 +24,20 @@ class Popen(subprocess.Popen):
         self.killed = True
 
 
-class StreamAsync(Queue.Queue, threading.Thread):
+class StreamAsync(threading.Thread):
     """
     Class of asynchronous reading of stdout data, stderr of a process
     """
 
     def __init__(self, stream, auto_start=True, *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
-        Queue.Queue.__init__(self)
         self.setDaemon(True)
         self.stream = stream
+        self.queue = set()
         self._event = threading.Event()
+        self.mutex = threading.Lock()
+        self.res_put = threading.Condition(self.mutex)
+        self.res_get = threading.Condition(self.mutex)
         if auto_start:
             self.start()
 
@@ -46,15 +49,25 @@ class StreamAsync(Queue.Queue, threading.Thread):
             data = self.stream.readline()
             if not data:
                 break
-            self.put(data)
+            self.res_put.acquire()
+            try:
+                self.queue.add(data)
+                self.res_put.wait()
+            finally:
+                self.res_put.release()
 
     def stop(self):
         """Stops thread execution"""
         self._event.set()
+        self.readline()
 
     def readline(self):
         """read one line from queue"""
+        self.res_get.acquire()
         try:
-            return self.get_nowait()
-        except Queue.Empty:
+            return self.queue.pop()
+        except KeyError:
             return None
+        finally:
+            self.res_put.notify()
+            self.res_get.release()
