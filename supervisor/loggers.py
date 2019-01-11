@@ -85,7 +85,7 @@ class Handler(object):
             if hasattr(self.stream, 'fileno'):
                 try:
                     fd = self.stream.fileno()
-                except IOError:
+                except (IOError, ValueError):
                     # on python 3, io.IOBase objects always have fileno()
                     # but calling it may raise io.UnsupportedOperation
                     pass
@@ -277,16 +277,20 @@ class RotatingFileHandler(FileHandler):
         if not (self.stream.tell() >= self.maxBytes):
             return
 
-        self.stream.close()
         if self.backupCount > 0:
+            self.stream.close()
             for i in range(self.backupCount - 1, 0, -1):
                 sfn = "%s.%d" % (self.baseFilename, i)
                 dfn = "%s.%d" % (self.baseFilename, i + 1)
                 if os.path.exists(sfn):
                     self.removeAndRename(sfn, dfn)
             dfn = self.baseFilename + ".1"
-            self.removeAndRename(self.baseFilename, dfn)
-        self.stream = codecs.open(self.baseFilename, 'w', encoding=self.encoding)
+            try:
+                self.removeAndRename(self.baseFilename, dfn)
+            except:
+                pass
+            finally:
+                self.stream = self._openfile(self.baseFilename, 'w')
 
 
 class LogRecord(object):
