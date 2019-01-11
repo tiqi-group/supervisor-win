@@ -182,6 +182,7 @@ class Supervisor(object):
     def runforever(self):
         events.notify(events.SupervisorRunningEvent())
         socket_map = self.options.get_socket_map()
+        timeout = 1  # this cannot be fewer than the smallest TickEvent (5)
 
         while True:
             combined_map = {}
@@ -207,10 +208,43 @@ class Supervisor(object):
 
             for fd, dispatcher in combined_map.items():
                 if dispatcher.readable():
-                    dispatcher.handle_read_event()
-
+                    if hasattr(dispatcher, "socket"):
+                        self.options.poller.register_readable(dispatcher.socket)
+                    else:
+                        dispatcher.handle_read_event()
                 if dispatcher.writable():
-                    dispatcher.handle_write_event()
+                    if hasattr(dispatcher, "socket"):
+                        self.options.poller.register_writable(dispatcher.socket)
+                    else:
+                        dispatcher.handle_write_event()
+
+            readables, writables = self.options.poller.poll(timeout)
+
+            for fd in readables:
+                if fd in combined_map:
+                    try:
+                        dispatcher = combined_map[fd]
+                        self.options.logger.blather(
+                            'read event caused by %(dispatcher)s',
+                            dispatcher=dispatcher)
+                        dispatcher.handle_read_event()
+                    except asyncore.ExitNow:
+                        raise
+                    except:
+                        combined_map[fd].handle_error()
+
+            for fd in writables:
+                if fd in combined_map:
+                    try:
+                        dispatcher = combined_map[fd]
+                        self.options.logger.blather(
+                            'write event caused by %(dispatcher)s',
+                            dispatcher=dispatcher)
+                        dispatcher.handle_write_event()
+                    except asyncore.ExitNow:
+                        raise
+                    except:
+                        combined_map[fd].handle_error()
 
             for group in pgroups:
                 group.transition()
