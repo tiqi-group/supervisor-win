@@ -350,10 +350,8 @@ class StatusView(MeldView):
                     callback = rpcinterface.supervisor.stopProcess(namespec)
 
                     def stopprocess():
-                        if isinstance(callback, types.FunctionType):
-                            result = callback()
-                        else:
-                            result = callback
+                        result = callback()
+
                         if result is NOT_DONE_YET:
                             return NOT_DONE_YET
 
@@ -406,10 +404,7 @@ class StatusView(MeldView):
 
                     def startprocess():
                         try:
-                            if isinstance(callback, types.FunctionType):
-                                result = callback()
-                            else:
-                                result = callback
+                            result = callback()
                         except RPCError as e:
                             if e.code == Faults.SPAWN_ERROR:
                                 msg = 'spawn error'
