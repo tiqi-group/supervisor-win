@@ -25,10 +25,10 @@ VERSION_STRING = RCS_ID.split()[2]
 
 from counter import counter
 
-try:
-    from urllib import unquote, splitquery
-except ImportError:
-    from urllib.parse import unquote, splitquery
+from ..compat import (
+    splitquery,
+    unquote
+)
 
 # ===========================================================================
 #                                                       Request Object

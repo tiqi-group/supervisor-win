@@ -118,6 +118,11 @@ except ImportError:  # pragma: no cover
     from urlparse import parse_qs, parse_qsl
 
 try:  # pragma: no cover
+    from urllib.parse import unquote, splitquery
+except ImportError:
+    from urllib import unquote, splitquery
+
+try:  # pragma: no cover
     import http.client as httplib
 except ImportError:  # pragma: no cover
     import httplib
