@@ -115,7 +115,7 @@ except ImportError:  # pragma: no cover
 try:  # pragma: no cover
     from urllib.parse import parse_qs, parse_qsl
 except ImportError:  # pragma: no cover
-    from cgi import parse_qs, parse_qsl
+    from urlparse import parse_qs, parse_qsl
 
 try:  # pragma: no cover
     import http.client as httplib
