@@ -52,8 +52,7 @@ import sys
 import time
 
 import os
-from errno import EALREADY, EINPROGRESS, EWOULDBLOCK, ECONNRESET, \
-    ENOTCONN, ESHUTDOWN, EINTR, EISCONN, errorcode, EBADF
+import errno
 
 try:
     socket_map
@@ -110,8 +109,8 @@ def poll(timeout=0.0, map=None):
     if map is None:
         map = socket_map
     if map:
-        r = [];
-        w = [];
+        r = []
+        w = []
         e = []
         for fd, obj in map.items():
             is_r = obj.readable()
@@ -128,7 +127,7 @@ def poll(timeout=0.0, map=None):
             try:
                 r, w, e = select.select(r, w, e, timeout)
             except select.error as err:
-                if err.args[0] != EINTR:
+                if err.args[0] != errno.EINTR:
                     raise
                 else:
                     return
@@ -175,7 +174,7 @@ def poll2(timeout=0.0, map=None):
         try:
             r = pollster.poll(timeout)
         except select.error as err:
-            if err.args[0] != EINTR:
+            if err.args[0] != errno.EINTR:
                 raise
             r = []
         for fd, flags in r:
@@ -318,14 +317,16 @@ class dispatcher(object):
         self.connected = False
         err = self.socket.connect_ex(address)
         # XXX Should interpret Winsock return values
-        if err in (EINPROGRESS, EALREADY, EWOULDBLOCK):
+        if err in (errno.EINPROGRESS,
+                   errno.EALREADY,
+                   errno.EWOULDBLOCK):
             return
-        if err in (0, EISCONN):
+        if err in (0, errno.EISCONN):
             self.addr = address
             self.connected = True
             self.handle_connect()
         else:
-            raise socket.error(err, errorcode[err])
+            raise socket.error(err, errno.errorcode[err])
 
     def accept(self):
         # XXX can return either an address pair or None
@@ -333,7 +334,7 @@ class dispatcher(object):
             conn, addr = self.socket.accept()
             return conn, addr
         except socket.error as why:
-            if why.args[0] == EWOULDBLOCK:
+            if why.args[0] == errno.EWOULDBLOCK:
                 pass
             else:
                 raise
@@ -343,7 +344,7 @@ class dispatcher(object):
             result = self.socket.send(data)
             return result
         except socket.error as why:
-            if why.args[0] in (EWOULDBLOCK, EBADF):
+            if why.args[0] in (errno.EWOULDBLOCK, errno.EBADF):
                 return 0
             else:
                 raise
@@ -360,7 +361,9 @@ class dispatcher(object):
                 return data
         except socket.error as why:
             # winsock sometimes throws ENOTCONN
-            if why.args[0] in [ECONNRESET, ENOTCONN, ESHUTDOWN]:
+            if why.args[0] in (errno.ECONNRESET,
+                               errno.ENOTCONN,
+                               errno.ESHUTDOWN):
                 self.handle_close()
                 return ''
             else:
