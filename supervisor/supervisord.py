@@ -179,6 +179,16 @@ class Supervisor(object):
                 # stop group queue
                 self.stop_groups.append(group)
 
+    @staticmethod
+    def dispatcher_handle_event(dispatcher, handle_event):
+        """Calls the dispatcher event and handles errors"""
+        try:
+            return getattr(dispatcher, handle_event)()
+        except asyncore.ExitNow:
+            raise
+        except:
+            return dispatcher.handle_error()
+
     def runforever(self):
         events.notify(events.SupervisorRunningEvent())
         socket_map = self.options.get_socket_map()
@@ -211,12 +221,12 @@ class Supervisor(object):
                     if hasattr(dispatcher, "socket"):
                         self.options.poller.register_readable(dispatcher.socket)
                     else:
-                        dispatcher.handle_read_event()
+                        self.dispatcher_handle_event(dispatcher, "handle_read_event")
                 if dispatcher.writable():
                     if hasattr(dispatcher, "socket"):
                         self.options.poller.register_writable(dispatcher.socket)
                     else:
-                        dispatcher.handle_write_event()
+                        self.dispatcher_handle_event(dispatcher, "handle_write_event")
 
             readables, writables = self.options.poller.poll(timeout)
 
