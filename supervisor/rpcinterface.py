@@ -327,7 +327,10 @@ class SupervisorNamespaceRPCInterface(object):
             onwait.rpcinterface = self
             return onwait  # deferred
 
-        return lambda: HTTP_READY
+        def ready():
+            return HTTP_READY(['started'])
+        ready.delay = 0.0
+        return ready
 
     def startProcessGroup(self, name, wait=True):
         """ Start all processes in the group named 'name'
@@ -421,7 +424,10 @@ class SupervisorNamespaceRPCInterface(object):
             onwait.rpcinterface = self
             return onwait  # deferred
 
-        return lambda: HTTP_READY
+        def ready():
+            return HTTP_READY(['stopped'])
+        ready.delay = 0.0
+        return ready
 
     def stopProcessGroup(self, name, wait=True):
         """ Stop all processes in the process group named 'name'

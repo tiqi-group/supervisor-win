@@ -25,7 +25,7 @@ class NOT_DONE_YET(object):
     """Object returned when the response of a call to rpc is not yet ready"""
 
 
-class HTTP_READY(object):
+class HTTP_READY(tuple):
     """End response to a rpc call"""
 
 
