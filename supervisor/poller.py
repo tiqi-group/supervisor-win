@@ -1,5 +1,6 @@
 import select
 import errno
+import socket
 
 
 class BasePoller(object):
@@ -70,6 +71,31 @@ class SelectPoller(BasePoller):
     def _init_fdsets(self):
         self.readables = set()
         self.writables = set()
+
+
+class SocketSelectPoller(SelectPoller):
+    """Socket select poller"""
+    def poll(self, timeout):
+        try:
+            r, w = super(SocketSelectPoller, self).poll(timeout)
+        except socket.error as err:
+            if err.args[0] == errno.EBADF:
+                self.options.logger.blather('EINTR encountered in poll')
+                self.unregister_all()
+                return [], []
+            raise
+        readables, writables = [], []
+        for sock in r:
+            try:
+                readables.append(sock.fileno())
+            except socket.error:
+                continue
+        for sock in w:
+            try:
+                writables.append(sock.fileno())
+            except socket.error:
+                continue
+        return readables, writables
 
 
 class PollPoller(BasePoller):
@@ -208,9 +234,15 @@ def implements_kqueue():
     return hasattr(select, 'kqueue')
 
 
+def implements_select_poll():
+    return hasattr(select, 'select_poll')
+
+
 if implements_kqueue():
     Poller = KQueuePoller
 elif implements_poll():
     Poller = PollPoller
-else:
+elif implements_select_poll():
     Poller = SelectPoller
+else:
+    Poller = SocketSelectPoller
