@@ -53,7 +53,7 @@ import time
 
 import os
 from errno import EALREADY, EINPROGRESS, EWOULDBLOCK, ECONNRESET, \
-    ENOTCONN, ESHUTDOWN, EINTR, EISCONN, errorcode
+    ENOTCONN, ESHUTDOWN, EINTR, EISCONN, errorcode, EBADF
 
 try:
     socket_map
@@ -343,7 +343,7 @@ class dispatcher(object):
             result = self.socket.send(data)
             return result
         except socket.error as why:
-            if why.args[0] == EWOULDBLOCK:
+            if why.args[0] in (EWOULDBLOCK, EBADF):
                 return 0
             else:
                 raise
