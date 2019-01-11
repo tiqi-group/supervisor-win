@@ -257,14 +257,14 @@ class RotatingFileHandler(FileHandler):
                 self._remove(dfn)
             except OSError as why:
                 # catch race condition (destination already deleted)
-                if why.args[0] != errno.ENOENT:
+                if why.args[0] not in (errno.ENOENT, errno.EPIPE):
                     raise
         try:
             self._rename(sfn, dfn)
         except OSError as why:
             # catch exceptional condition (source deleted)
             # E.g. cleanup script removes active log.
-            if why.args[0] != errno.ENOENT:
+            if why.args[0] not in (errno.ENOENT, errno.EPIPE):
                 raise
 
     def doRollover(self):
