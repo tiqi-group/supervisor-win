@@ -262,7 +262,7 @@ class dispatcher(object):
         self._fileno = None
 
     def create_socket(self, family, type):
-        import text_socket
+        from supervisor.medusa import text_socket
         self.family_and_type = family, type
         self.socket = text_socket.text_socket(family, type)
         self.socket.setblocking(0)
