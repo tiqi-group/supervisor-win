@@ -287,6 +287,7 @@ class PStreamOutputDispatcher(POutputDispatcher):
     """
     def __init__(self, process, event_type, stream):
         super(PStreamOutputDispatcher, self).__init__(process, event_type, stream)
+        # starts the corresponding thread
         self.fd.start()
 
     def close(self):
