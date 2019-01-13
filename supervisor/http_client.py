@@ -1,5 +1,5 @@
 # this code based on Daniel Krech's RDFLib HTTP client code (see rdflib.net)
-
+import re
 import socket
 import sys
 
@@ -10,6 +10,7 @@ from supervisor.compat import (
     encodestring
 )
 from supervisor.medusa import asynchat_25 as asynchat
+from supervisor.compat import PY3
 
 CR = "\x0d"
 LF = "\x0a"
@@ -200,7 +201,12 @@ class HTTPHandler(asynchat.async_chat):
         line = self.buffer
         if not line:
             return
-        chunk_size = int(line.split()[0], 16)
+        try:
+            crlf = as_bytes(CRLF) if PY3 and isinstance(line, bytes) else CRLF
+            data = re.split(re.escape(crlf), line)
+            chunk_size = int(data[0], 16)
+        except ValueError:
+            return
         if chunk_size == 0:
             self.part = self.trailer
         else:
