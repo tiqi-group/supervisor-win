@@ -1584,11 +1584,11 @@ class ProcessConfig(Config):
         stdout_fd, stderr_fd, stdin_fd = pipes['stdout'], pipes['stderr'], pipes['stdin']
         dispatchers = {}
 
-        from .dispatchers import (
+        from supervisor.dispatchers import (
             POutputDispatcher,
             PInputDispatcher
         )
-        from . import events
+        from supervisor import events
 
         if stdout_fd is not None:
             etype = events.ProcessCommunicationStdoutEvent
