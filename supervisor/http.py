@@ -1,3 +1,4 @@
+import codecs
 import errno
 import os
 import socket
@@ -6,6 +7,8 @@ import sys
 import time
 import traceback
 import weakref
+
+from supervisor import loggers
 
 from supervisor.compat import (
     urllib,
@@ -696,7 +699,8 @@ class tail_f_producer(object):
         return NOT_DONE_YET
 
     def _open(self):
-        self.file = open(self.filename, 'rb')
+        self.file = codecs.open(self.filename, 'rb',
+                                loggers.Handler.encoding)
         self.ctime = os.fstat(self.file.fileno())[stat.ST_CTIME]
         self.sz = 0
 
