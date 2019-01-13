@@ -290,14 +290,10 @@ class Subprocess(object):
         self.spawnerr = msg
         self.config.options.logger.info("spawnerr: %s" % msg)
 
-    def stop_all_dispatchers(self):
+    def close_all_dispatchers(self):
         """Ends the execution of the data reading threads"""
-        for stream in self.dispatchers:
-            if isinstance(stream, StreamAsync):
-                # stops the related thread
-                stream.stop()
-            # closes log files
-            self.dispatchers[stream].close()
+        for fd in self.dispatchers:
+            self.dispatchers[fd].close()
 
     def spawn(self):
         """Start the subprocess.  It must not be running already.
@@ -654,7 +650,7 @@ class Subprocess(object):
 
         self.config.options.logger.info(msg)
 
-        self.stop_all_dispatchers()
+        self.close_all_dispatchers()
         self.pid = 0
         self.pipes = {}
         self.dispatchers = {}
