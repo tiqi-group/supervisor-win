@@ -281,6 +281,23 @@ class POutputDispatcher(PDispatcher):
                 self.close()
 
 
+class PStreamOutputDispatcher(POutputDispatcher):
+    """
+    Dispatcher that works with asynchronous streams
+    """
+    def __init__(self, process, event_type, stream):
+        super(PStreamOutputDispatcher, self).__init__(process, event_type, stream)
+        self.fd.start()
+
+    def close(self):
+        # fd in this case is a threading daemon
+        try:
+            return super(PStreamOutputDispatcher, self).close()
+        finally:
+            if self.fd.is_alive():
+                self.fd.stop()
+
+
 class PEventListenerDispatcher(PDispatcher):
     """ An output dispatcher that monitors and changes a process'
     listener_state """
