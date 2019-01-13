@@ -1299,10 +1299,16 @@ class ServerOptions(Options):
             raise IOError('pid (%s)' % pid)
         pipes = {
             'stdin': process.stdin,
-            'stdout': helpers.StreamAsync(process.stdout, name='stdout-pid-{0:d}'.format(pid))
+            'stdout': helpers.StreamAsync(
+                process.stdout,
+                name='stdout-pid-{0:d}'.format(pid)
+            )
         }
         if stderr:
-            pipes['stderr'] = helpers.StreamAsync(process.stderr, name='stderr-pid-{0:d}'.format(pid))
+            pipes['stderr'] = helpers.StreamAsync(
+                process.stderr,
+                name='stderr-pid-{0:d}'.format(pid)
+            )
         else:
             pipes['stderr'] = None
         return pipes
@@ -1584,18 +1590,17 @@ class ProcessConfig(Config):
         stdout_fd, stderr_fd, stdin_fd = pipes['stdout'], pipes['stderr'], pipes['stdin']
         dispatchers = {}
 
+        from supervisor import events
         from supervisor.dispatchers import (
-            POutputDispatcher,
+            PStreamOutputDispatcher,
             PInputDispatcher
         )
-        from supervisor import events
-
         if stdout_fd is not None:
             etype = events.ProcessCommunicationStdoutEvent
-            dispatchers[stdout_fd] = POutputDispatcher(proc, etype, stdout_fd)
+            dispatchers[stdout_fd] = PStreamOutputDispatcher(proc, etype, stdout_fd)
         if stderr_fd is not None:
             etype = events.ProcessCommunicationStderrEvent
-            dispatchers[stderr_fd] = POutputDispatcher(proc, etype, stderr_fd)
+            dispatchers[stderr_fd] = PStreamOutputDispatcher(proc, etype, stderr_fd)
         if stdin_fd is not None:
             dispatchers[stdin_fd] = PInputDispatcher(proc, 'stdin', stdin_fd)
         return dispatchers, pipes

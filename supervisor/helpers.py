@@ -28,7 +28,7 @@ class StreamAsync(threading.Thread):
     Class of asynchronous reading of stdout data, stderr of a process
     """
 
-    def __init__(self, stream, auto_start=True, *args, **kwargs):
+    def __init__(self, stream, *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
         self.setDaemon(True)
         self.stream = stream
@@ -37,8 +37,6 @@ class StreamAsync(threading.Thread):
         self.mutex = threading.Lock()
         self.res_put = threading.Condition(self.mutex)
         self.res_get = threading.Condition(self.mutex)
-        if auto_start:
-            self.start()
 
     def __getattr__(self, item):
         return getattr(self.stream, item)
