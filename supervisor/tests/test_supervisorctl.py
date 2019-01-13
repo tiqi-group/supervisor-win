@@ -1,5 +1,6 @@
 import sys
 import unittest
+
 from supervisor.compat import StringIO
 from supervisor.compat import xmlrpclib
 from supervisor.tests.base import DummyRPCServer

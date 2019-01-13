@@ -1,6 +1,7 @@
 import socket
 import sys
 import unittest
+
 from supervisor.compat import StringIO
 
 

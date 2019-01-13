@@ -1,23 +1,21 @@
 import base64
 import os
+import socket
 import stat
 import sys
-import socket
 import tempfile
 import unittest
 
 from supervisor.compat import as_bytes
 from supervisor.compat import as_string
 from supervisor.compat import sha1
-
+from supervisor.http import NOT_DONE_YET
+from supervisor.tests.base import DummyOptions
+from supervisor.tests.base import DummyPConfig
+from supervisor.tests.base import DummyRPCInterfaceFactory
+from supervisor.tests.base import DummyRequest
 from supervisor.tests.base import DummySupervisor
 from supervisor.tests.base import PopulatedDummySupervisor
-from supervisor.tests.base import DummyRPCInterfaceFactory
-from supervisor.tests.base import DummyPConfig
-from supervisor.tests.base import DummyOptions
-from supervisor.tests.base import DummyRequest
-
-from supervisor.http import NOT_DONE_YET
 
 
 class HandlerTests:

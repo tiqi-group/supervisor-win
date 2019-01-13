@@ -46,13 +46,12 @@ many of the difficult problems for you, making the task of building
 sophisticated high-performance network servers and clients a snap.
 """
 
+import errno
+import os
 import select
 import socket
 import sys
 import time
-
-import os
-import errno
 
 try:
     socket_map

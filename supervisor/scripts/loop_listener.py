@@ -5,7 +5,9 @@
 # generator's stdin.
 
 import os
+
 from supervisor import childutils
+
 
 def main():
     rpcinterface = childutils.getRPCInterface(os.environ)

@@ -1,13 +1,15 @@
-import warnings
 import errno
-from medusa.asyncore_25 import compact_traceback
+import warnings
 
-from supervisor.events import notify
-from supervisor.events import EventRejectedEvent
-from supervisor.events import ProcessLogStderrEvent
-from supervisor.events import ProcessLogStdoutEvent
-from supervisor.states import EventListenerStates
 from supervisor import loggers
+from supervisor.events import (
+    notify,
+    EventRejectedEvent,
+    ProcessLogStderrEvent,
+    ProcessLogStdoutEvent
+)
+from supervisor.medusa.asyncore_25 import compact_traceback
+from supervisor.states import EventListenerStates
 
 
 def find_prefix_at_end(haystack, needle):

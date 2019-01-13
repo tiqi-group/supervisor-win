@@ -1,8 +1,8 @@
 import sys
 import unittest
 
-from supervisor.tests.base import DummySupervisor
 from supervisor.tests.base import DummyRequest
+from supervisor.tests.base import DummySupervisor
 
 
 class DeferredWebProducerTests(unittest.TestCase):

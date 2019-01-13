@@ -47,8 +47,9 @@ you - by calling your self.found_terminator() method.
 """
 
 import socket
-import asyncore_25 as asyncore
+
 from supervisor.compat import long
+from supervisor.medusa import asyncore_25 as asyncore
 
 
 class async_chat(asyncore.dispatcher):

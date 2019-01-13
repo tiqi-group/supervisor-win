@@ -18,7 +18,7 @@ from supervisor.compat import long
 
 
 class abstract_filesystem(object):
-    def __init__ (self):
+    def __init__(self):
         pass
 
     def current_directory (self):

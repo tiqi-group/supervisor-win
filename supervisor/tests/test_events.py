@@ -1,10 +1,11 @@
 import sys
 import unittest
 
+from supervisor.tests.base import DummyEvent
 from supervisor.tests.base import DummyOptions
 from supervisor.tests.base import DummyPConfig
 from supervisor.tests.base import DummyProcess
-from supervisor.tests.base import DummyEvent
+
 
 class EventSubscriptionNotificationTests(unittest.TestCase):
     def setUp(self):

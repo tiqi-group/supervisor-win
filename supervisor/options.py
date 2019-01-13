@@ -1,27 +1,36 @@
-import Queue
 import codecs
-import socket
+import errno
 import getopt
+import glob
 import os
+import platform
+import re
+import signal
+import socket
+import stat
 import sys
 import tempfile
-import errno
-import signal
-import re
-import stat
-import pkg_resources
-import glob
-import platform
-import warnings
 import threading
-from .compat import PY3
-from .compat import ConfigParser
-from .compat import as_bytes, as_string
-from .compat import xmlrpclib
-from .compat import StringIO
-from .compat import basestring
-from .medusa import asyncore_25 as asyncore
-from .datatypes import (
+import warnings
+
+import pkg_resources
+
+from supervisor import (
+    helpers,
+    loggers,
+    states,
+    xmlrpc,
+    poller
+)
+from supervisor.compat import (
+    PY3,
+    ConfigParser,
+    as_bytes, as_string,
+    xmlrpclib,
+    StringIO,
+    basestring
+)
+from supervisor.datatypes import (
     process_or_group_name,
     boolean,
     integer,
@@ -44,13 +53,7 @@ from .datatypes import (
     profile_options,
     set_here
 )
-from . import (
-    helpers,
-    loggers,
-    states,
-    xmlrpc,
-    poller
-)
+from supervisor.medusa import asyncore_25 as asyncore
 
 
 def _read_version_txt():

@@ -1,11 +1,10 @@
 import unittest
 
-from supervisor.tests.base import DummySupervisor
-from supervisor.tests.base import DummyRequest
-from supervisor.tests.base import DummySupervisorRPCNamespace
-
-from supervisor.compat import xmlrpclib
 from supervisor.compat import httplib
+from supervisor.compat import xmlrpclib
+from supervisor.tests.base import DummyRequest
+from supervisor.tests.base import DummySupervisor
+from supervisor.tests.base import DummySupervisorRPCNamespace
 
 
 class GetFaultDescriptionTests(unittest.TestCase):

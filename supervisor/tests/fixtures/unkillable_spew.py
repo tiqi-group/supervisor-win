@@ -1,6 +1,6 @@
 #!<<PYTHON>>
-import time
 import signal
+import time
 
 signal.signal(signal.SIGTERM, signal.SIG_IGN)
 

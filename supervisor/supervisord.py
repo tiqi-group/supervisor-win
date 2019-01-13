@@ -31,18 +31,19 @@ Options:
 """
 
 import os
-import time
 import signal
+import time
 
-from medusa import asyncore_25 as asyncore
-
-from options import ServerOptions
-from options import signame
-
-from states import SupervisorStates
-from states import getProcessStateDescription
-
-import events
+from supervisor import events
+from supervisor.medusa import asyncore_25 as asyncore
+from supervisor.options import (
+    ServerOptions,
+    signame
+)
+from supervisor.states import (
+    SupervisorStates,
+    getProcessStateDescription
+)
 
 
 class Supervisor(object):
@@ -359,7 +360,7 @@ def make_job_handler():
     to be closed if the supervisor stops working unexpectedly)
     """
     try:
-        from .process import ProcessJobHandler
+        from supervisor.process import ProcessJobHandler
         job_handler = ProcessJobHandler()
     except (ImportError, Exception):  # Supervisor can not stop due to execution failure
         job_handler = None

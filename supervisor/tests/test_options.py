@@ -1,26 +1,24 @@
 """Test suite for supervisor.options"""
 
+import errno
 import os
+import shutil
+import signal
+import socket
 import sys
 import tempfile
-import socket
 import unittest
-import signal
-import shutil
-import errno
 
 from supervisor.compat import StringIO
 from supervisor.compat import as_bytes
-
-from supervisor.tests.base import Mock, sentinel, patch
 from supervisor.loggers import LevelsByName
-
-from supervisor.tests.base import DummySupervisor
 from supervisor.tests.base import DummyLogger
 from supervisor.tests.base import DummyOptions
 from supervisor.tests.base import DummyPConfig
 from supervisor.tests.base import DummyProcess
 from supervisor.tests.base import DummySocketConfig
+from supervisor.tests.base import DummySupervisor
+from supervisor.tests.base import Mock, sentinel, patch
 from supervisor.tests.base import lstrip
 
 

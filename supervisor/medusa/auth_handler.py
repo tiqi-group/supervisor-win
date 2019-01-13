@@ -13,12 +13,18 @@ import re
 import sys
 import time
 
-from supervisor.compat import encodestring, decodestring
-from supervisor.compat import as_string, as_bytes, md5
-
-import counter as counter
-import default_handler
-import producers
+from supervisor.compat import (
+    encodestring,
+    decodestring,
+    as_string,
+    as_bytes,
+    md5
+)
+from supervisor.medusa import (
+    counter as counter,
+    default_handler,
+    producers
+)
 
 get_header = default_handler.get_header
 

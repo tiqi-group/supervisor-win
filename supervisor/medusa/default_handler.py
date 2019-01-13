@@ -16,7 +16,6 @@ import stat
 import supervisor.medusa.http_date as http_date
 import supervisor.medusa.http_server as http_server
 import supervisor.medusa.producers as producers
-
 from supervisor.medusa.util import html_repr
 
 unquote = http_server.unquote

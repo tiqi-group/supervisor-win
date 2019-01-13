@@ -1,28 +1,30 @@
-import types
+import datetime
 import re
-import traceback
 import socket
 import sys
-import datetime
 import time
+import traceback
+import types
 from xml.etree.ElementTree import iterparse
 
-from compat import xmlrpclib
-from compat import func_attribute
-from compat import StringIO
-from compat import urllib
-from compat import as_bytes
-from compat import as_string
-from compat import encodestring
-from compat import decodestring
-from compat import httplib
-
-from medusa.http_server import get_header
-from medusa.xmlrpc_handler import xmlrpc_handler
-from medusa import producers
-from medusa import text_socket
-
-from http import NOT_DONE_YET
+from supervisor.compat import (
+    xmlrpclib,
+    func_attribute,
+    StringIO,
+    urllib,
+    as_bytes,
+    as_string,
+    encodestring,
+    decodestring,
+    httplib
+)
+from supervisor.http import NOT_DONE_YET
+from supervisor.medusa import (
+    producers,
+    text_socket
+)
+from supervisor.medusa.http_server import get_header
+from supervisor.medusa.xmlrpc_handler import xmlrpc_handler
 
 
 class Faults(object):

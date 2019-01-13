@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
-import unittest
-import sys
+import errno
 import operator
 import os
+import sys
 import time
-import errno
+import unittest
 
+from supervisor.compat import as_string
 from supervisor.tests.base import DummyOptions
-from supervisor.tests.base import DummySupervisor
-from supervisor.tests.base import DummyProcess
 from supervisor.tests.base import DummyPConfig
 from supervisor.tests.base import DummyPGroupConfig
+from supervisor.tests.base import DummyProcess
 from supervisor.tests.base import DummyProcessGroup
+from supervisor.tests.base import DummySupervisor
 from supervisor.tests.base import PopulatedDummySupervisor
 from supervisor.tests.base import _NOW
 from supervisor.tests.base import _TIMEFORMAT
-
-from supervisor.compat import as_string
 
 
 class TestBase(unittest.TestCase):

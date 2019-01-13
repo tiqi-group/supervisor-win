@@ -1,12 +1,14 @@
 # this code based on Daniel Krech's RDFLib HTTP client code (see rdflib.net)
 
-import sys
 import socket
+import sys
 
-from supervisor.compat import urlparse
-from supervisor.compat import as_bytes
-from supervisor.compat import as_string
-from supervisor.compat import encodestring
+from supervisor.compat import (
+    urlparse,
+    as_bytes,
+    as_string,
+    encodestring
+)
 from supervisor.medusa import asynchat_25 as asynchat
 
 CR="\x0d"

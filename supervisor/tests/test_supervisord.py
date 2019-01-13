@@ -1,19 +1,18 @@
-import unittest
-import time
+import os
+import shutil
 import signal
 import sys
-import os
 import tempfile
-import shutil
+import time
+import unittest
 
+from supervisor.compat import StringIO
+from supervisor.tests.base import DummyDispatcher
 from supervisor.tests.base import DummyOptions
 from supervisor.tests.base import DummyPConfig
 from supervisor.tests.base import DummyPGroupConfig
 from supervisor.tests.base import DummyProcess
 from supervisor.tests.base import DummyProcessGroup
-from supervisor.tests.base import DummyDispatcher
-
-from supervisor.compat import StringIO
 
 try:
     import pstats

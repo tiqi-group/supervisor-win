@@ -1,36 +1,41 @@
-import os
-import time
 import datetime
 import errno
+import os
+import time
 import types
 
-from compat import as_string, as_bytes, unicode
-
-from datatypes import signal_number
-
-from options import readFile
-from options import tailFile
-from options import NotExecutable
-from options import NotFound
-from options import NoPermission
-from options import make_namespec
-from options import split_namespec
-from options import VERSION
-
-from events import notify
-from events import RemoteCommunicationEvent
-
-from http import NOT_DONE_YET, HTTP_READY
-from xmlrpc import Faults
-from xmlrpc import RPCError
-
-from states import SupervisorStates
-from states import getSupervisorStateDescription
-from states import ProcessStates
-from states import getProcessStateDescription
-from states import (
+from supervisor.compat import (
+    as_string,
+    as_bytes,
+    unicode
+)
+from supervisor.datatypes import signal_number
+from supervisor.events import (
+    RemoteCommunicationEvent,
+    notify
+)
+from supervisor.http import NOT_DONE_YET, HTTP_READY
+from supervisor.options import (
+    readFile,
+    tailFile,
+    NotExecutable,
+    NotFound,
+    NoPermission,
+    make_namespec,
+    split_namespec,
+    VERSION
+)
+from supervisor.states import (
     RUNNING_STATES,
     STOPPED_STATES,
+    ProcessStates,
+    SupervisorStates,
+    getProcessStateDescription,
+    getSupervisorStateDescription
+)
+from supervisor.xmlrpc import (
+    Faults,
+    RPCError
 )
 
 API_VERSION = '3.0'

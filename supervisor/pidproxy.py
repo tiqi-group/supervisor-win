@@ -4,8 +4,8 @@
 signal to the process identified by a pidfile. """
 
 import os
-import sys
 import signal
+import sys
 import time
 
 

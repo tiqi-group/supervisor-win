@@ -1,11 +1,9 @@
 """Test suite for supervisor.socket_manager"""
 
 import gc
-import sys
-import os
-import unittest
 import socket
-import tempfile
+import sys
+import unittest
 
 try:
     import __pypy__

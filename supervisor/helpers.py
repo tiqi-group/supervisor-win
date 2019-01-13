@@ -1,4 +1,3 @@
-import Queue
 import subprocess
 import threading
 

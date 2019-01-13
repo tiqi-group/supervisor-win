@@ -6,6 +6,7 @@
 # Based on "xmlrpcserver.py" by Fredrik Lundh (fredrik@pythonware.com)
 
 import sys
+
 import supervisor.medusa.http_server as http_server
 
 try:

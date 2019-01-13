@@ -39,8 +39,8 @@ def doit():
         rc = newrc
 """
 
-import sys
 import gc
+import sys
 
 
 class TrackRefs(object):

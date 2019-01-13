@@ -1,41 +1,40 @@
-import os
-import time
 import errno
+import os
 import shlex
-import traceback
 import signal
-
-from supervisor.compat import maxint
-from supervisor.compat import StringIO
-from supervisor.compat import total_ordering
-from supervisor.compat import as_bytes
-from supervisor.helpers import StreamAsync
-
-from supervisor.medusa import asyncore_25 as asyncore
-
-from supervisor.states import ProcessStates
-from supervisor.states import SupervisorStates
-from supervisor.states import getProcessStateDescription
-from supervisor.states import STOPPED_STATES
-
-from supervisor.options import decode_wait_status
-from supervisor.options import signame
-from supervisor.options import ProcessException, BadCommand
-
-from supervisor.dispatchers import EventListenerStates
-
-from supervisor import events, helpers
-
-from supervisor.datatypes import RestartUnconditionally
-
-from supervisor.socket_manager import SocketManager
 import subprocess
-
-# pywin32 required!
+import time
+import traceback
+import win32api
 import win32job
 import win32process
+
 import win32con
-import win32api
+
+from supervisor import events, helpers
+from supervisor.compat import (
+    StringIO,
+    as_bytes,
+    maxint,
+    total_ordering,
+    unicode
+)
+from supervisor.datatypes import RestartUnconditionally
+from supervisor.dispatchers import EventListenerStates
+from supervisor.helpers import StreamAsync
+from supervisor.medusa import asyncore_25 as asyncore
+from supervisor.options import (
+    ProcessException,
+    BadCommand,
+    signame
+)
+from supervisor.socket_manager import SocketManager
+from supervisor.states import (
+    ProcessStates,
+    STOPPED_STATES,
+    SupervisorStates,
+    getProcessStateDescription
+)
 
 
 class ProcessJobHandler(object):
@@ -43,6 +42,7 @@ class ProcessJobHandler(object):
     Creates a container in which subprocesses will reside
     https://stackoverflow.com/questions/23434842/python-how-to-kill-child-processes-when-parent-dies/23587108#23587108
     """
+
     def __init__(self):
         self.hJob = win32job.CreateJobObject(None, "SupervisorJob{}".format(os.getpid()))
         extended_info = win32job.QueryInformationJobObject(self.hJob, win32job.JobObjectExtendedLimitInformation)

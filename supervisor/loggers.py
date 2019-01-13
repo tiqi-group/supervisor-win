@@ -7,12 +7,13 @@ idiosyncratic and a bit slow for our purposes (we don't use threads).
 # This module must not depend on any non-stdlib modules to
 # avoid circular import problems
 
-import os
+import codecs
 import errno
+import os
 import sys
 import time
 import traceback
-import codecs
+
 from supervisor.compat import (
     syslog,
     as_string,

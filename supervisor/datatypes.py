@@ -1,10 +1,12 @@
 import os
+import shlex
 import signal
 import socket
-import shlex
 
-from supervisor.compat import urlparse
-from supervisor.compat import long
+from supervisor.compat import (
+    urlparse,
+    long
+)
 from supervisor.loggers import getLevelNumByDescription
 from supervisor.medusa import text_socket
 

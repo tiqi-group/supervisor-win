@@ -1,7 +1,8 @@
-import sys
-import unittest
 import errno
 import select
+import sys
+import unittest
+
 from mock import Mock
 
 from supervisor.poller import SelectPoller, PollPoller, KQueuePoller

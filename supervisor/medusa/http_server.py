@@ -12,23 +12,24 @@ import socket
 import sys
 import time
 
-# async modules
-import asyncore_25 as asyncore
-import asynchat_25 as asynchat
-
-# medusa modules
-import http_date
-import producers
-import logger
-
-VERSION_STRING = RCS_ID.split()[2]
-
-from counter import counter
-
-from ..compat import (
+from supervisor.compat import (
     splitquery,
     unquote
 )
+# async modules
+from supervisor.medusa import (
+    asyncore_25 as asyncore,
+    asynchat_25 as asynchat
+)
+# medusa modules
+from supervisor.medusa import (
+    http_date,
+    producers,
+    logger
+)
+from supervisor.medusa.counter import counter
+
+VERSION_STRING = RCS_ID.split()[2]
 
 # ===========================================================================
 #                                                       Request Object

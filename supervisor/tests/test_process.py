@@ -6,21 +6,19 @@ import unittest
 
 from supervisor.compat import as_bytes
 from supervisor.compat import maxint
-
-from supervisor.tests.base import Mock, patch, sentinel
-from supervisor.tests.base import DummyOptions
-from supervisor.tests.base import DummyPConfig
-from supervisor.tests.base import DummyProcess
-from supervisor.tests.base import DummyPGroupConfig
+from supervisor.options import BadCommand
+from supervisor.process import Subprocess
 from supervisor.tests.base import DummyDispatcher
 from supervisor.tests.base import DummyEvent
 from supervisor.tests.base import DummyFCGIGroupConfig
-from supervisor.tests.base import DummySocketConfig
-from supervisor.tests.base import DummyProcessGroup
 from supervisor.tests.base import DummyFCGIProcessGroup
-
-from supervisor.process import Subprocess
-from supervisor.options import BadCommand
+from supervisor.tests.base import DummyOptions
+from supervisor.tests.base import DummyPConfig
+from supervisor.tests.base import DummyPGroupConfig
+from supervisor.tests.base import DummyProcess
+from supervisor.tests.base import DummyProcessGroup
+from supervisor.tests.base import DummySocketConfig
+from supervisor.tests.base import Mock, patch, sentinel
 
 
 class SubprocessTests(unittest.TestCase):

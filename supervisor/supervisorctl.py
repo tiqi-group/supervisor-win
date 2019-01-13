@@ -23,26 +23,29 @@ actions.
 """
 
 import cmd
-import sys
-import getpass
-
-import socket
 import errno
+import getpass
+import socket
+import sys
 import threading
 
-from supervisor.compat import xmlrpclib
-from supervisor.compat import urlparse
-from supervisor.compat import unicode
-from supervisor.compat import raw_input
-
+from supervisor import (
+    xmlrpc,
+    states,
+    http_client
+)
+from supervisor.compat import (
+    xmlrpclib,
+    urlparse,
+    unicode,
+    raw_input
+)
 from supervisor.medusa import asyncore_25 as asyncore
-
-from supervisor.options import ClientOptions
-from supervisor.options import make_namespec
-from supervisor.options import split_namespec
-from supervisor import xmlrpc
-from supervisor import states
-from supervisor import http_client
+from supervisor.options import (
+    ClientOptions,
+    make_namespec,
+    split_namespec
+)
 
 
 class fgthread(threading.Thread):

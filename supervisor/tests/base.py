@@ -1,10 +1,12 @@
 _NOW = 1151365354
 _TIMEFORMAT = '%b %d %I:%M %p'
 
-from supervisor.compat import total_ordering
-from supervisor.compat import Fault
-from supervisor.compat import as_string
-from supervisor.compat import as_bytes
+from supervisor.compat import (
+    Fault,
+    as_bytes,
+    as_string,
+    total_ordering
+)
 
 # mock is imported here for py2/3 compat.  we only declare mock as a dependency
 # via tests_require so it is not available on all supervisor installs.  the

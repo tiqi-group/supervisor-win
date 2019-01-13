@@ -3,13 +3,10 @@
 import os
 import signal
 import socket
-import tempfile
 import unittest
 
-from supervisor.tests.base import Mock, patch, sentinel
-from supervisor.compat import maxint
-
 from supervisor import datatypes
+from supervisor.compat import maxint
 
 
 class ProcessOrGroupName(unittest.TestCase):

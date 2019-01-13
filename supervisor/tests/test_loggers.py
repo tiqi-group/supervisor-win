@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 import errno
-import sys
-import unittest
-import tempfile
-import shutil
 import os
-from supervisor.compat import PY3
-from supervisor.compat import as_string
-from supervisor.compat import StringIO
-from supervisor.compat import syslog
+import shutil
+import sys
+import tempfile
+import unittest
 
-from supervisor.tests.base import mock
+from supervisor.compat import PY3
+from supervisor.compat import StringIO
+from supervisor.compat import as_string
+from supervisor.compat import syslog
 from supervisor.tests.base import DummyStream
+from supervisor.tests.base import mock
 
 
 class LevelTests(unittest.TestCase):

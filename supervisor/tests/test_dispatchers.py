@@ -1,13 +1,13 @@
-import tempfile
-import unittest
 import os
 import sys
+import tempfile
+import unittest
 
-from supervisor.tests.base import DummyOptions
-from supervisor.tests.base import DummyProcess
-from supervisor.tests.base import DummyPConfig
-from supervisor.tests.base import DummyLogger
 from supervisor.tests.base import DummyEvent
+from supervisor.tests.base import DummyLogger
+from supervisor.tests.base import DummyOptions
+from supervisor.tests.base import DummyPConfig
+from supervisor.tests.base import DummyProcess
 
 
 class PDispatcherTests(unittest.TestCase):

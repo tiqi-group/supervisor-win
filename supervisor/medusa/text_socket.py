@@ -1,5 +1,10 @@
 import socket
-from supervisor.compat import PY3, as_string, as_bytes
+
+from supervisor.compat import (
+    PY3,
+    as_string,
+    as_bytes
+)
 
 bin_socket = socket.socket
 

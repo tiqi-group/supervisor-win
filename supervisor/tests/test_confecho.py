@@ -2,8 +2,9 @@
 
 import sys
 import unittest
-from supervisor.compat import StringIO
+
 from supervisor import confecho
+from supervisor.compat import StringIO
 
 
 class TopLevelFunctionTests(unittest.TestCase):

@@ -1,5 +1,5 @@
-import select
 import errno
+import select
 import socket
 
 
@@ -80,7 +80,7 @@ class SocketSelectPoller(SelectPoller):
             r, w = super(SocketSelectPoller, self).poll(timeout)
         except socket.error as err:
             if err.args[0] == errno.EBADF:
-                self.options.logger.blather('EINTR encountered in poll')
+                self.options.logger.blather('EBADF encountered in poll')
                 self.unregister_all()
                 return [], []
             raise
