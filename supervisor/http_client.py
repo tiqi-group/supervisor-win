@@ -11,9 +11,10 @@ from supervisor.compat import (
 )
 from supervisor.medusa import asynchat_25 as asynchat
 
-CR="\x0d"
-LF="\x0a"
-CRLF=CR+LF
+CR = "\x0d"
+LF = "\x0a"
+CRLF = CR + LF
+
 
 class Listener(object):
 
@@ -36,15 +37,14 @@ class Listener(object):
     def close(self, url):
         pass
 
+
 class HTTPHandler(asynchat.async_chat):
-    def __init__(
-        self,
-        listener,
-        username='',
-        password=None,
-        conn=None,
-        map=None
-        ):
+    def __init__(self,
+                 listener,
+                 username='',
+                 password=None,
+                 conn=None,
+                 map=None):
         asynchat.async_chat.__init__(self, conn, map)
         self.listener = listener
         self.user_agent = 'Supervisor HTTP Client'
@@ -105,7 +105,7 @@ class HTTPHandler(asynchat.async_chat):
         if self.error_handled:
             return
         if 1 or self.connected:
-            t,v,tb = sys.exc_info()
+            t, v, tb = sys.exc_info()
             msg = 'Cannot connect, error: %s (%s)' % (t, v)
             self.listener.error(self.url, msg)
             self.part = self.ignore
@@ -122,7 +122,6 @@ class HTTPHandler(asynchat.async_chat):
         self.push("%s %s %s" % (method, self.path, version))
         self.push(CRLF)
         self.header("Host", self.host)
-
         self.header('Accept-Encoding', 'chunked')
         self.header('Accept', '*/*')
         self.header('User-agent', self.user_agent)
@@ -133,13 +132,12 @@ class HTTPHandler(asynchat.async_chat):
         self.push(CRLF)
         self.push(CRLF)
 
-
     def feed(self, data):
         self.listener.feed(self.url, data)
 
     def collect_incoming_data(self, bytes):
         self.buffer = self.buffer + bytes
-        if self.part==self.body:
+        if self.part == self.body:
             self.feed(self.buffer)
             self.buffer = ''
 
@@ -172,7 +170,7 @@ class HTTPHandler(asynchat.async_chat):
     def headers(self):
         line = self.buffer
         if not line:
-            if self.encoding=="chunked":
+            if self.encoding == "chunked":
                 self.part = self.chunked_size
             else:
                 self.part = self.body
@@ -182,9 +180,9 @@ class HTTPHandler(asynchat.async_chat):
             if name and value:
                 name = name.lower()
                 value = value.strip()
-                if name=="transfer-encoding":
+                if name == "transfer-encoding":
                     self.encoding = value
-                elif name=="content-length":
+                elif name == "content-length":
                     self.length = int(value)
                 self.response_header(name, value)
 
@@ -203,7 +201,7 @@ class HTTPHandler(asynchat.async_chat):
         if not line:
             return
         chunk_size = int(line.split()[0], 16)
-        if chunk_size==0:
+        if chunk_size == 0:
             self.part = self.trailer
         else:
             self.set_terminator(chunk_size)
@@ -220,6 +218,6 @@ class HTTPHandler(asynchat.async_chat):
         # http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.6.1
         # trailer        = *(entity-header CRLF)
         line = self.buffer
-        if line==CRLF:
+        if line == CRLF:
             self.done()
             self.close()
