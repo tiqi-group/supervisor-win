@@ -1,6 +1,7 @@
 import errno
 import select
 import socket
+from supervisor.compat import basestring
 
 
 class BasePoller(object):
@@ -78,6 +79,12 @@ class SocketSelectPoller(SelectPoller):
     def poll(self, timeout):
         try:
             r, w = super(SocketSelectPoller, self).poll(timeout)
+        except ValueError as err:
+            if isinstance(err.args[0], basestring) and err.args[0].endswith("(-1)"):
+                self.options.logger.blather('ValueError(-1) encountered in poll')
+                self.unregister_all()
+                return [], []
+            raise
         except socket.error as err:
             if err.args[0] == errno.EBADF:
                 self.options.logger.blather('EBADF encountered in poll')
