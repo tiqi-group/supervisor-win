@@ -162,8 +162,15 @@ class POutputDispatcher(PDispatcher):
     def removelogs(self):
         for log in self._ref_logs:
             for handler in log.handlers:
-                handler.remove()
-                handler.reopen()
+                try:
+                    handler.remove()
+                except OSError as err:
+                    # the file is already being used by another process.
+                    # tail -f can cause this.
+                    if not err[0] == errno.EPIPE:
+                        raise
+                finally:
+                    handler.reopen()
 
     def reopenlogs(self):
         for log in self._ref_logs:
