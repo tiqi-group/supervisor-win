@@ -1,7 +1,5 @@
-Supervisor
-==========
-
-[Fork] This is a fork of the original. It is a specific version for the Windows operating system.
+Supervisor for Windows
+=========================
 
 Supervisor is a client/server system that allows its users to
 control a number of processes on Windows operating system.
@@ -14,6 +12,10 @@ Supervisor has been tested (Python 2.7/3.7 [32 bit]) and is known to run on Wind
 * New processes are created by the subprocess standard lib.
 * Some specific features of OS Linux have been disabled and others were adapted to the Windows OS.
 * The process control (supervisorctl) works and management processes correctly, as well as control via web!
+
+Supervisor for Unix-Like System
+-------------------------------
+`Original project for unix-like system <https://github.com/Supervisor/supervisor>`_
 
 Documentation
 -------------
@@ -29,16 +31,15 @@ You may subscribe to the `Supervisor-users mailing list
 <http://lists.supervisord.org/mailman/listinfo/supervisor-users>`_.
 
 Please report bugs in the `Github issue tracker
-<https://github.com/Supervisor/supervisor/issues>`_.  .
+<https://github.com/alexsilva/supervisor/issues>`_.  .
 
 You can view the source repository for supervisor via
-`https://github.com/Supervisor/supervisor
-<https://github.com/Supervisor/supervisor>`_.
+`https://github.com/alexsilva/supervisor
+<https://github.com/alexsilva/supervisor>`_.
 
 Contributing
 ------------
+If you want to help with the development send a  `Pull Requests
+<https://github.com/alexsilva/supervisor/pulls>`_
 
-If you'd like to contribute to supervisor directly, please contact the
-`Supervisor-users mailing list
-<http://lists.supervisord.org/mailman/listinfo/supervisor-users>`_.
 
