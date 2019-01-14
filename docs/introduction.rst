@@ -5,7 +5,7 @@ Overview
 --------
 
 Supervisor is a client/server system that allows its users to control
-a number of processes on UNIX-like operating systems.  It was inspired
+a number of processes on WINDOWS operating systems.  It was inspired
 by the following:
 
 Convenience
