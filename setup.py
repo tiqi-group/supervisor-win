@@ -61,7 +61,7 @@ version_txt = os.path.join(here, 'supervisor/version.txt')
 supervisor_version = open(version_txt).read().strip()
 
 dist = setup(
-    name='supervisor',
+    name='supervisor-win',
     version=supervisor_version,
     license='BSD-derived (http://www.repoze.org/LICENSE.txt)',
     url='http://supervisord.org/',
