@@ -17,9 +17,7 @@ import sys
 
 py_version = sys.version_info[:2]
 
-if py_version < (2, 6):
-    raise RuntimeError('On Python 2, Supervisor requires Python 2.6 or later')
-elif (3, 0) < py_version < (3, 2):
+if (3, 0) < py_version < (3, 2):
     raise RuntimeError('On Python 3, Supervisor requires Python 3.2 or later')
 
 requires = ['meld3 >= 1.0.0', 'pywin32']
@@ -40,7 +38,7 @@ try:
 except:
     README = """\
 Supervisor is a client/server system that allows its users to
-control a number of processes on UNIX-like operating systems. """
+control a number of processes on WINDOWS operating systems. """
     CHANGES = ''
 
 CLASSIFIERS = [
@@ -48,18 +46,15 @@ CLASSIFIERS = [
     'Environment :: No Input/Output (Daemon)',
     'Intended Audience :: System Administrators',
     'Natural Language :: English',
-    'Operating System :: POSIX',
+    'Operating System :: WINDOWS',
     'Topic :: System :: Boot',
     'Topic :: System :: Monitoring',
     'Topic :: System :: Systems Administration',
     "Programming Language :: Python",
-    "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 2.6",
     "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.2",
-    "Programming Language :: Python :: 3.3",
-    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.7",
 ]
 
 version_txt = os.path.join(here, 'supervisor/version.txt')
@@ -70,13 +65,19 @@ dist = setup(
     version=supervisor_version,
     license='BSD-derived (http://www.repoze.org/LICENSE.txt)',
     url='http://supervisord.org/',
-    description="A system for controlling process state under UNIX",
+    description="A system for controlling process state under WINDOWS",
     long_description=README + '\n\n' + CHANGES,
     classifiers=CLASSIFIERS,
-    author="Chris McDonough",
-    author_email="chrism@plope.com",
-    maintainer="Chris McDonough",
-    maintainer_email="chrism@plope.com",
+    # WINDOWS
+    author="Alex",
+    author_email="alex@fabricadigital.com.br",
+    maintainer="Alex",
+    maintainer_email="alex@fabricadigital.com.br",
+    # UNIX
+    # author="Chris McDonough",
+    # author_email="chrism@plope.com",
+    # maintainer="Chris McDonough",
+    # maintainer_email="chrism@plope.com",
     packages=find_packages(),
     install_requires=requires,
     extras_require={
