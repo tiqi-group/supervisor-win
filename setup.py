@@ -46,7 +46,7 @@ CLASSIFIERS = [
     'Environment :: No Input/Output (Daemon)',
     'Intended Audience :: System Administrators',
     'Natural Language :: English',
-    'Operating System :: WINDOWS',
+    'Operating System :: Microsoft :: Windows',
     'Topic :: System :: Boot',
     'Topic :: System :: Monitoring',
     'Topic :: System :: Systems Administration',

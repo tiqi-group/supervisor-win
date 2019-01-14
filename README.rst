@@ -9,9 +9,9 @@ control a number of processes on Windows operating system.
 Supported Platforms
 -------------------
 
-Supervisor has been tested (Python 2.7/3.7 [32 bit]) and is known to run on Windows `10` / `Server 2012` (It is working properly).
+Supervisor has been tested (Python 2.7/3.7 [32 bit]) and is known to run on Windows `10` / `Server 2012`.
 
-* New processes are created by the standard lib module subprocess.
+* New processes are created by the subprocess standard lib.
 * Some specific features of OS Linux have been disabled and others were adapted to the Windows OS.
 * The process control (supervisorctl) works and management processes correctly, as well as control via web!
 
