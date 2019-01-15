@@ -103,8 +103,13 @@ def parse_args_config(options, argv):
         except IndexError:
             break
         for opts in options:
-            if item in opts['args']:
-                args.append(argv.pop(index))
+            if any(filter(item.startswith, opts['args'])):
+                name = argv.pop(index)
+                if name.find('=') > -1:
+                    args.extend(item.split('='))
+                    index -= 1
+                    continue
+                args.append(name)
                 kwargs = opts.setdefault('kwargs', {})
                 if kwargs.get('required', False):
                     try:
@@ -151,7 +156,7 @@ def main():
     else:
         # file configuration supervisord.conf
         options, args, srv_argv = get_config_args(sys.argv[1:])
-        # print(args_conf, argv_svr, sep='\n')
+        # print(args, srv_argv, sep='\n')
         parser = argparse.ArgumentParser(add_help=False)
         for opt in options:
             parser.add_argument(*opt['args'], **opt.get('kwargs', {}))
