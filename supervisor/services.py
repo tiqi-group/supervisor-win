@@ -158,8 +158,8 @@ def main():
         options, args, srv_argv = get_config_args(sys.argv[1:])
         # print(args, srv_argv, sep='\n')
         parser = argparse.ArgumentParser(add_help=False)
-        for opt in options:
-            parser.add_argument(*opt['args'], **opt.get('kwargs', {}))
+        for opts in options:
+            parser.add_argument(*opts['args'], **opts.get('kwargs', {}))
         options = parser.parse_args(args=args)
         try:
             options.config.close()
