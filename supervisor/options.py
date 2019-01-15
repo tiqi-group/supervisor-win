@@ -1611,7 +1611,7 @@ class EventListenerConfig(ProcessConfig):
         # always use_stderr=True for eventlisteners because mixing stderr
         # messages into stdout would break the eventlistener protocol
         use_stderr = True
-        p = self.options.make_pipes(use_stderr)
+        p = self.options.make_pipes(proc.pid, use_stderr)
         stdout_fd, stderr_fd, stdin_fd = p['stdout'], p['stderr'], p['stdin']
         dispatchers = {}
         from supervisor.dispatchers import PEventListenerDispatcher
