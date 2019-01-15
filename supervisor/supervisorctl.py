@@ -1287,12 +1287,18 @@ class DefaultControllerPlugin(ControllerPluginBase):
         self.ctl.output('Press Ctrl+C to exit foreground')
 
 
-def main(args=None, options=None):
+def main(args=None,
+         options=None,
+         stdin=None,
+         stdout=None):
+
     if options is None:
         options = ClientOptions()
 
     options.realize(args, doc=__doc__)
-    c = Controller(options)
+    c = Controller(options,
+                   stdin=stdin,
+                   stdout=stdout)
 
     if options.args:
         c.onecmd(" ".join(options.args))
