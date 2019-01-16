@@ -72,7 +72,38 @@ class PDispatcher(object):
         pass
 
 
-class POutputDispatcher(PDispatcher):
+class PLogDispatcher(PDispatcher):
+    """Common interface for logs"""
+
+    def __init__(self, process, channel, fd):
+        super(PLogDispatcher, self).__init__(process, channel, fd)
+        self.logs = []
+
+    def _reopen_logs(self, *logs):
+        for log in logs:
+            for handler in log.handlers:
+                handler.reopen()
+
+    def _remove_logs(self, *logs):
+        for log in logs:
+            for handler in log.handlers:
+                try:
+                    handler.remove()
+                except OSError as err:
+                    # the file is already being used by another process.
+                    # tail -f can cause this.
+                    if not err[0] == errno.EPIPE:
+                        raise
+                finally:
+                    handler.reopen()
+
+    def _close_logs(self, *logs):
+        if not self.closed:
+            for log in logs:
+                log.close()
+
+
+class POutputDispatcher(PLogDispatcher):
     """
     A Process Output (stdout/stderr) dispatcher. Serves several purposes:
 
@@ -96,12 +127,9 @@ class POutputDispatcher(PDispatcher):
         `event_type` should be one of ProcessLogStdoutEvent or
         ProcessLogStderrEvent
         """
-        self.process = process
         self.event_type = event_type
-        self.fd = fd
-        self.channel = channel = self.event_type.channel
-        # list of logs that have been configured by this dispatcher
-        self._ref_logs = []
+        channel = self.event_type.channel
+        super(POutputDispatcher, self).__init__(process, channel, fd)
 
         self._setup_logging(process.config, channel)
 
@@ -113,7 +141,7 @@ class POutputDispatcher(PDispatcher):
                 fmt='%(message)s',
                 maxbytes=capture_maxbytes,
             )
-            self._ref_logs.append(self.capturelog)
+            self.logs.append(self.capturelog)
 
         self.childlog = self.mainlog
 
@@ -157,31 +185,17 @@ class POutputDispatcher(PDispatcher):
             fmt = config.name + ' %(message)s'
             loggers.handle_syslog(self.mainlog, fmt)
 
-        self._ref_logs.append(self.mainlog)
+        self.logs.append(self.mainlog)
 
     def removelogs(self):
-        for log in self._ref_logs:
-            for handler in log.handlers:
-                try:
-                    handler.remove()
-                except OSError as err:
-                    # the file is already being used by another process.
-                    # tail -f can cause this.
-                    if not err[0] == errno.EPIPE:
-                        raise
-                finally:
-                    handler.reopen()
+        self._remove_logs(*self.logs)
 
     def reopenlogs(self):
-        for log in self._ref_logs:
-            for handler in log.handlers:
-                handler.reopen()
+        self._reopen_logs(*self.logs)
 
     def close(self):
-        if not self.closed:
-            for log in self._ref_logs:
-                log.close()
-        super(POutputDispatcher, self).close()
+        self._close_logs(*self.logs)
+        return super(POutputDispatcher, self).close()
 
     def _log(self, data):
         if data:
@@ -263,9 +277,7 @@ class POutputDispatcher(PDispatcher):
                 self.process.config.options.logger.debug(msg,
                                                          procname=procname,
                                                          channel=channel)
-                for handler in self.capturelog.handlers:
-                    handler.remove()
-                    handler.reopen()
+                self._remove_logs(self.capturelog)
                 self.childlog = self.mainlog
 
     def writable(self):
@@ -292,6 +304,7 @@ class PStreamOutputDispatcher(POutputDispatcher):
     """
     Dispatcher that works with asynchronous streams
     """
+
     def __init__(self, process, event_type, stream):
         super(PStreamOutputDispatcher, self).__init__(process, event_type, stream)
         # starts the corresponding thread
@@ -306,7 +319,7 @@ class PStreamOutputDispatcher(POutputDispatcher):
                 self.fd.stop()
 
 
-class PEventListenerDispatcher(PDispatcher):
+class PEventListenerDispatcher(PLogDispatcher):
     """ An output dispatcher that monitors and changes a process'
     listener_state """
     childlog = None  # the logger
@@ -318,13 +331,12 @@ class PEventListenerDispatcher(PDispatcher):
     RESULT_TOKEN_START_LEN = len(RESULT_TOKEN_START)
 
     def __init__(self, process, channel, fd):
-        PDispatcher.__init__(self, process, channel, fd)
+        super(PEventListenerDispatcher, self).__init__(process, channel, fd)
         # the initial state of our listener is ACKNOWLEDGED; this is a
         # "busy" state that implies we're awaiting a READY_FOR_EVENTS_TOKEN
         self.process.listener_state = EventListenerStates.ACKNOWLEDGED
-        self.process.event = None
+        self.process.event = self.resultlen = None
         self.result = ''
-        self.resultlen = None
 
         logfile = getattr(process.config, '%s_logfile' % channel)
 
@@ -339,17 +351,13 @@ class PEventListenerDispatcher(PDispatcher):
                 maxbytes=maxbytes,
                 backups=backups,
             )
+            self.logs.append(self.childlog)
 
     def removelogs(self):
-        if self.childlog is not None:
-            for handler in self.childlog.handlers:
-                handler.remove()
-                handler.reopen()
+        self._remove_logs(*self.logs)
 
     def reopenlogs(self):
-        if self.childlog is not None:
-            for handler in self.childlog.handlers:
-                handler.reopen()
+        self._reopen_logs(*self.logs)
 
     def writable(self):
         return False
@@ -366,7 +374,7 @@ class PEventListenerDispatcher(PDispatcher):
             procname = self.process.config.name
             msg = '%r %s output:\n%s' % (procname, self.channel, data)
             self.process.config.options.logger.debug(msg)
-
+            # logs register
             if self.childlog:
                 if self.process.config.options.strip_ansi:
                     data = stripEscapes(data)
@@ -490,8 +498,8 @@ class PEventListenerDispatcher(PDispatcher):
 
 class PStreamEventListenerDispatcher(PEventListenerDispatcher):
 
-    def __init__(self, process, channel, stream):
-        super(PStreamEventListenerDispatcher, self).__init__(process, channel, stream)
+    def __init__(self, process, channel, fd):
+        super(PStreamEventListenerDispatcher, self).__init__(process, channel, fd)
         self.fd.start()
 
     def close(self):
