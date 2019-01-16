@@ -95,7 +95,11 @@ except ImportError:  # pragma: no cover
 try:  # pragma: no cover
     import syslog
 except ImportError:  # pragma: no cover
-    syslog = None
+    class syslog(object):
+        """dummy log"""
+        @staticmethod
+        def syslog(*args):
+            pass
 
 try:  # pragma: no cover
     import configparser as ConfigParser
