@@ -319,7 +319,7 @@ class ClientOptionsTests(unittest.TestCase):
         username=%(ENV_CLIENT_USER)s
         password=%(ENV_CLIENT_PASS)s
         prompt=%(ENV_CLIENT_PROMPT)s
-        history_file=/path/to/histdir/.supervisorctl%(ENV_CLIENT_HIST_EXT)s
+        history_file=E:\\path\\to\histdir\\.supervisorctl%(ENV_CLIENT_HIST_EXT)s
         """)
 
         fp = StringIO(s)
@@ -340,7 +340,7 @@ class ClientOptionsTests(unittest.TestCase):
         self.assertEqual(options.serverurl, 'http://localhost:9210')
         self.assertEqual(options.username, 'someuser')
         self.assertEqual(options.password, 'passwordhere')
-        self.assertEqual(options.history_file, '/path/to/histdir/.supervisorctl.hist')
+        self.assertEqual(options.history_file, 'E:\\path\\to\\histdir\\.supervisorctl.hist')
 
     def test_read_config_not_found(self):
         nonexistent = os.path.join(os.path.dirname(__file__), 'nonexistent')
