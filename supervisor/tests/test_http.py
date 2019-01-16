@@ -58,20 +58,22 @@ class LogtailHandlerTests(HandlerTests, unittest.TestCase):
 
     def test_handle_request(self):
         fd, tfilename = tempfile.mkstemp()
-        options = DummyOptions()
-        pconfig = DummyPConfig(options, 'foo', 'foo', stdout_logfile=tfilename)
-        supervisord = PopulatedDummySupervisor(options, 'foo', pconfig)
-        handler = self._makeOne(supervisord)
-        request = DummyRequest('/logtail/foo', None, None, None)
-        handler.handle_request(request)
-        self.assertEqual(request._error, None)
-        from supervisor.medusa import http_date
-        self.assertEqual(request.headers['Last-Modified'],
-                         http_date.build_http_date(os.stat(tfilename)[stat.ST_MTIME]))
-        self.assertEqual(request.headers['Content-Type'], 'text/plain')
-        self.assertEqual(len(request.producers), 1)
-        self.assertEqual(request._done, True)
-        os.close(fd)
+        try:
+            options = DummyOptions()
+            pconfig = DummyPConfig(options, 'foo', 'foo', stdout_logfile=tfilename)
+            supervisord = PopulatedDummySupervisor(options, 'foo', pconfig)
+            handler = self._makeOne(supervisord)
+            request = DummyRequest('/logtail/foo', None, None, None)
+            handler.handle_request(request)
+            self.assertEqual(request._error, None)
+            from supervisor.medusa import http_date
+            self.assertEqual(request.headers['Last-Modified'],
+                             http_date.build_http_date(os.stat(tfilename)[stat.ST_MTIME]))
+            self.assertEqual(request.headers['Content-Type'], 'text/plain')
+            self.assertEqual(len(request.producers), 1)
+            self.assertEqual(request._done, True)
+        finally:
+            os.close(fd)
 
 
 class MainLogTailHandlerTests(HandlerTests, unittest.TestCase):
@@ -96,20 +98,21 @@ class MainLogTailHandlerTests(HandlerTests, unittest.TestCase):
 
     def test_handle_request(self):
         supervisor = DummySupervisor()
-        with tempfile.NamedTemporaryFile() as f:
-            t = f.name
-            supervisor.options.logfile = t
+        fd, tfilename = tempfile.mkstemp()
+        try:
+            supervisor.options.logfile = tfilename
             handler = self._makeOne(supervisor)
             request = DummyRequest('/mainlogtail', None, None, None)
             handler.handle_request(request)
             self.assertEqual(request._error, None)
             from supervisor.medusa import http_date
             self.assertEqual(request.headers['Last-Modified'],
-                             http_date.build_http_date(os.stat(t)[stat.ST_MTIME]))
+                             http_date.build_http_date(os.stat(tfilename)[stat.ST_MTIME]))
             self.assertEqual(request.headers['Content-Type'], 'text/plain')
             self.assertEqual(len(request.producers), 1)
             self.assertEqual(request._done, True)
-
+        finally:
+            os.close(fd)
 
 class TailFProducerTests(unittest.TestCase):
     def _getTargetClass(self):
