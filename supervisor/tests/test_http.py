@@ -18,6 +18,34 @@ from supervisor.tests.base import DummySupervisor
 from supervisor.tests.base import PopulatedDummySupervisor
 
 
+class TempFileOpen(object):
+    """File that can be opened more one time"""
+
+    def __init__(self, mode='w'):
+        fd, self.name = tempfile.mkstemp()
+        self.tmpfile = os.fdopen(fd, mode, 0)
+
+    def __getattr__(self, item):
+        return getattr(self.tmpfile, item)
+
+    def __repr__(self):
+        return "{0.tmpfile}".format(self)
+
+    def close(self):
+        self.tmpfile.close()
+        self.remove()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            self.close()
+
+    def remove(self):
+        os.remove(self.name)
+
+
 class HandlerTests:
     def _makeOne(self, supervisord):
         return self._getTargetClass()(supervisord)
@@ -125,72 +153,88 @@ class TailFProducerTests(unittest.TestCase):
     def test_handle_more(self):
         request = DummyRequest('/logtail/foo', None, None, None)
         from supervisor import http
-        f = tempfile.mkstemp()
-        f.write(as_bytes('a' * 80))
-        f.flush()
-        producer = self._makeOne(request, f.name, 80)
-        result = producer.more()
-        self.assertEqual(result, as_bytes('a' * 80))
-        f.write(as_bytes('w' * 100))
-        f.flush()
-        result = producer.more()
-        self.assertEqual(result, as_bytes('w' * 100))
-        result = producer.more()
-        self.assertEqual(result, http.NOT_DONE_YET)
-        f.truncate(0)
-        f.flush()
-        result = producer.more()
-        self.assertEqual(result, '==> File truncated <==\n')
+        with TempFileOpen() as tmpfile:
+            # test 1
+            tmpfile.write(as_bytes('a' * 80))
+            tmpfile.flush()
+            producer = self._makeOne(request, tmpfile.name, 80)
+            result = producer.more()
+            self.assertEqual(result, as_bytes('a' * 80))
+
+            # test 2
+            tmpfile.write(as_bytes('b' * 100))
+            tmpfile.flush()
+            result = producer.more()
+            self.assertEqual(result, as_bytes('b' * 100))
+
+            result = producer.more()
+            self.assertEqual(result, http.NOT_DONE_YET)
+            tmpfile.truncate(0)
+            tmpfile.flush()
+
+            result = producer.more()
+            self.assertEqual(result, '==> File truncated <==\n')
 
     def test_handle_more_fd_closed(self):
         request = DummyRequest('/logtail/foo', None, None, None)
-        with tempfile.NamedTemporaryFile() as f:
-            f.write(as_bytes('a' * 80))
-            f.flush()
-            producer = self._makeOne(request, f.name, 80)
-            producer.file.close()
+        with TempFileOpen() as tmpfile:
+
+            tmpfile.write(as_bytes('a' * 80))
+            tmpfile.flush()
+
+            producer = self._makeOne(request, tmpfile.name, 80)
+            producer.close()
+            producer.more()
+
             result = producer.more()
-        self.assertEqual(result, producer.more())
+            self.assertEqual(result, NOT_DONE_YET)
 
     def test_handle_more_follow_file_recreated(self):
         request = DummyRequest('/logtail/foo', None, None, None)
-        tmpfile = tempfile.NamedTemporaryFile(delete=False)
-        tmpfile.write(as_bytes('a' * 80))
-        tmpfile.flush()
-        producer = self._makeOne(request, tmpfile.name, 80)
-        result = producer.more()
-        self.assertEqual(result, as_bytes('a' * 80))
-        producer._close()
-        tmpfile.close()
-        os.remove(tmpfile.name)
-        f2 = open(tmpfile.name, 'wb')
+        tmpfile = TempFileOpen()
         try:
-            f2.write(as_bytes('b' * 80))
-            f2.close()
+            tmpfile.write(as_bytes('a' * 80))
+            tmpfile.flush()
+
+            producer = self._makeOne(request, tmpfile.name, 80)
             result = producer.more()
+
+            self.assertEqual(result, as_bytes('a' * 80))
+
+            # in windows open files need to be closed
+            tmpfile.close()
+
+            tmpfile = open(tmpfile.name, 'wb')
+            try:
+                tmpfile.write(as_bytes('b' * 80))
+                tmpfile.flush()
+                result = producer.more()
+            finally:
+                tmpfile.close()
+                os.remove(tmpfile.name)
         finally:
-            producer._close()
-            os.remove(f2.name)
+            tmpfile.close()
         self.assertEqual(result, as_bytes('b' * 80))
 
     def test_handle_more_follow_file_gone(self):
         request = DummyRequest('/logtail/foo', None, None, None)
-        filename = tempfile.mktemp()
-        with open(filename, 'wb') as f:
-            f.write(as_bytes('a' * 80))
+        tmpfile = TempFileOpen()
+        tmpfile.write(as_bytes('a' * 80))
         try:
-            producer = self._makeOne(request, f.name, 80)
+            producer = self._makeOne(request, tmpfile.name, 80)
+            producer.close()
         finally:
-            os.unlink(f.name)
+            tmpfile.close()
         result = producer.more()
-        self.assertEqual(result, as_bytes('a' * 80))
-        with open(filename, 'wb') as f:
-            f.write(as_bytes('b' * 80))
+        self.assertEqual(result, '')
+
+        with open(tmpfile.name, 'wb') as tmpfile:
+            tmpfile.write(as_bytes('b' * 80))
         try:
             result = producer.more()  # should open in new file
             self.assertEqual(result, as_bytes('b' * 80))
         finally:
-            os.unlink(f.name)
+            os.remove(tmpfile.name)
 
 
 class DeferringChunkedProducerTests(unittest.TestCase):

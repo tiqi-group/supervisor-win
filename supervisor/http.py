@@ -671,52 +671,73 @@ class tail_f_producer(object):
         self.request = weakref.ref(request)
         self.filename = filename
         self.delay = 0.1
-
-        self._open()
-        sz = self._fsize()
-        if sz >= head:
-            self.sz = sz - head
+        self.sz = 0
+        self.head = head
+        self.closed = False
+        self.handler = None
+        self.reopen()
+        sz = self.file.tell()
+        if sz >= self.head:
+            self.sz = sz - self.head
 
     def __del__(self):
-        self._close()
+        self.close()
+
+    def reopen(self):
+        self._open()
 
     def more(self):
         self._follow()
         try:
             newsz = self._fsize()
-        except (OSError, ValueError):
+        except (OSError, ValueError) as err:
+            self.close()
             # file descriptor was closed
             return ''
+
         bytes_added = newsz - self.sz
-        if bytes_added < 0:
-            self.sz = 0
-            return "==> File truncated <==\n"
-        if bytes_added > 0:
-            self.file.seek(-bytes_added, 2)
-            bytes = self.file.read(bytes_added)
-            self.sz = newsz
-            return bytes
+        try:
+            if bytes_added < 0:
+                self.sz = 0
+                return "==> File truncated <==\n"
+            if bytes_added > 0:
+                self.file.seek(-bytes_added, os.SEEK_END)
+                bytes = self.file.read(bytes_added)
+                self.sz = newsz
+                return bytes
+        finally:
+            self.close()
         return NOT_DONE_YET
 
     def _open(self):
-        self.file = codecs.open(self.filename, 'rb',
-                                loggers.Handler.encoding)
-        self.ctime = os.fstat(self.file.fileno())[stat.ST_CTIME]
-        self.sz = 0
+        try:
+            self.file = codecs.open(self.filename, 'rb',
+                                    loggers.Handler.encoding)
+            self.ctime = os.stat(self.filename)[stat.ST_MTIME]
+            self.file.seek(0, os.SEEK_END)
+            self.closed = False
+        except:
+            self.closed = True
+            raise
 
-    def _close(self):
-        self.file.close()
+    def close(self):
+        """in windows open files need to be closed"""
+        if not self.closed:
+            self.file.close()
+        self.closed = True
 
     def _follow(self):
         try:
-            ctime = os.stat(self.filename)[stat.ST_CTIME]
+            ctime = os.stat(self.filename)[stat.ST_MTIME]
         except (OSError, ValueError):
             # file was unlinked
             return
 
+        if self.closed and os.path.isfile(self.filename):
+            self.reopen()
+
         if self.ctime != ctime:  # log rotation occurred
-            self._close()
-            self._open()
+            self.sz = 0
 
     def _fsize(self):
         return os.fstat(self.file.fileno())[stat.ST_SIZE]
