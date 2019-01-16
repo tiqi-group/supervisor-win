@@ -40,10 +40,12 @@ try:
 except ImportError:
     sys.path.append(os.path.abspath(os.path.join(LOCAL_DIR, '..')))
 
+SUPERVISOR_PREFIX = "Supervisor Pyv{0.winver}".format(sys)
+
 
 class ConfigReg(object):
     """Saves the path to the supervisor.conf in the system registry"""
-    prefix = "Supervisor"
+    prefix = SUPERVISOR_PREFIX
 
     def __init__(self, prefix=None):
         self.software_key = winreg.OpenKey(winreg.HKEY_CURRENT_CONFIG, "Software")
@@ -73,9 +75,9 @@ class ConfigReg(object):
 
 
 class SupervisorService(win32serviceutil.ServiceFramework):
-    _svc_name_ = "Supervisor"
-    _svc_display_name_ = "Supervisor process monitor"
-    _svc_description_ = "Supervisor: A Process Control System"
+    _svc_name_ = SUPERVISOR_PREFIX
+    _svc_display_name_ = "{0} process monitor".format(SUPERVISOR_PREFIX)
+    _svc_description_ = "A process control system"
     _svc_deps_ = []
 
     _exe_name_ = sys.executable
@@ -103,7 +105,7 @@ class SupervisorService(win32serviceutil.ServiceFramework):
             config_dir = os.getcwd()
 
         self.logger = logging.getLogger(__name__)
-        log_path = os.path.join(config_dir, "supervisor-service.log")
+        log_path = os.path.join(config_dir, SUPERVISOR_PREFIX.lower() + "-service.log")
         hdl = logging.handlers.RotatingFileHandler(log_path,
                                                    maxBytes=1024 ** 2,
                                                    backupCount=3)
@@ -123,7 +125,7 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         # Supervisor process stop event
         try:
-            self.logger.info("supervisorctl shutdown...")
+            self.logger.info("supervisorctl shutdown")
             from supervisor import supervisorctl
             stdout = StringIO()
             supervisorctl.main(("-c", self.config_filepath, "shutdown"),
