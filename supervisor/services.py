@@ -120,6 +120,7 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         except:
             self.logger.exception("supervisorctl shutdown execution failed")
         finally:
+            logging.shutdown()
             win32event.SetEvent(self.hWaitStop)
 
     def SvcDoRun(self):
