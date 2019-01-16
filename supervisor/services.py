@@ -2,7 +2,6 @@
 from __future__ import print_function
 
 import argparse
-import logging
 import logging.handlers
 import os
 import re
@@ -12,6 +11,15 @@ import sys
 import traceback
 import win32event
 import win32service
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+try:
+    import _winreg as winreg
+except ImportError:
+    import winreg
 
 import win32serviceutil
 
@@ -33,6 +41,37 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(LOCAL_DIR, '..')))
 
 
+class ConfigReg(object):
+    """Saves the path to the supervisor.conf in the system registry"""
+    prefix = "Supervisor"
+
+    def __init__(self, prefix=None):
+        self.software_key = winreg.OpenKey(winreg.HKEY_CURRENT_CONFIG, "Software")
+        if prefix is not None:
+            self.prefix = prefix
+        self.service_name_key = self.prefix + " Service"
+        self.config_name_key = "Config"
+
+    def set(self, filepath):
+        with winreg.CreateKey(self.software_key, self.service_name_key) as srv_key:
+            winreg.SetValue(srv_key, self.config_name_key, winreg.REG_SZ, filepath)
+
+    def get(self):
+        with winreg.OpenKey(self.software_key, self.service_name_key) as srv_key:
+            value = winreg.QueryValue(srv_key, self.config_name_key)
+        return value
+
+    def close(self):
+        """cleanup"""
+        winreg.CloseKey(self.software_key)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.close()
+
+
 class SupervisorService(win32serviceutil.ServiceFramework):
     _svc_name_ = "Supervisor"
     _svc_display_name_ = "Supervisor process monitor"
@@ -42,25 +81,30 @@ class SupervisorService(win32serviceutil.ServiceFramework):
     _exe_name_ = sys.executable
     _exe_args_ = '"' + os.path.abspath(sys.argv[0]) + '"'
 
-    # Additional settings passed to the supervisor config
-    options = {
-        # The supervisor is running in the background
-        'daemonize': True
-    }
-
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
         self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
         socket.setdefaulttimeout(60)
-        #
-        self.logger = logging.getLogger("supervisor.services")
-        hdl = logging.handlers.RotatingFileHandler(os.path.join(os.getcwd(), "supervisor-service.log"),
+
+        self.config_filepath = None
+        # Gets the path of the registry configuration file
+        with ConfigReg() as reg:
+            self.config_filepath = reg.get()
+
+        if self.config_filepath is not None:
+            config_dir = os.path.dirname(self.config_filepath)
+        else:
+            config_dir = os.getcwd()
+
+        self.logger = logging.getLogger(__name__)
+        log_path = os.path.join(config_dir, "supervisor-service.log")
+        hdl = logging.handlers.RotatingFileHandler(log_path,
                                                    maxBytes=1024 ** 2,
                                                    backupCount=3)
-        self.logger.setLevel(logging.DEBUG)
+        hdl.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+        self.logger.setLevel(logging.INFO)
         self.logger.addHandler(hdl)
-
-        self.stream_config = ''
+        self.logger.info("supervisor config path: {0!s}".format(self.config_filepath))
 
     # noinspection PyBroadException
     def SvcStop(self):
@@ -69,9 +113,12 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         try:
             self.logger.info("supervisorctl shutdown...")
             from supervisor import supervisorctl
-            supervisorctl.main(("-c", self.stream_config, "shutdown"))
+            stdout = StringIO()
+            supervisorctl.main(("-c", self.config_filepath, "shutdown"),
+                               stdout=stdout)
+            self.logger.info(stdout.getvalue().strip("\n "))
         except:
-            self.logger.exception("shutdown execution failed")
+            self.logger.exception("supervisorctl shutdown execution failed")
         finally:
             win32event.SetEvent(self.hWaitStop)
 
@@ -89,9 +136,9 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         try:
             from supervisor import supervisord
             self.logger.info("supervisor starting...")
-            supervisord.main(("-c", self.stream_config))
+            supervisord.main(("-c", self.config_filepath))
         except:
-            self.logger.exception("starting failed")
+            self.logger.exception("supervisor starting failed")
 
 
 def parse_args_config(options, argv):
@@ -132,7 +179,7 @@ def get_config_args(argv=None):
         {'args': ('-c', '--config'),
          'kwargs': {'type': argparse.FileType('r'),
                     'help': 'full filepath to supervisor.conf',
-                    'required': True}}
+                    'required': 'install' in argv}}
     ]
     args = parse_args_config(options, argv)
     return options, args, argv
@@ -161,14 +208,18 @@ def main():
         for opts in options:
             parser.add_argument(*opts['args'], **opts.get('kwargs', {}))
         options = parser.parse_args(args=args)
-        try:
-            options.config.close()
-        except OSError:
-            pass
+        if options.config:
+            try:
+                options.config.close()
+            except OSError:
+                pass
         if options.help:
             parser.print_help(file=sys.stdout)
             print()
             srv_argv.append('-h')
+        elif options.config:
+            with ConfigReg() as reg:
+                reg.set(options.config.name)
         srv_argv.insert(0, sys.argv[0])
         win32serviceutil.HandleCommandLine(SupervisorService, argv=srv_argv)
 
