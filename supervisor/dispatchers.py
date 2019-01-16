@@ -10,6 +10,7 @@ from supervisor.events import (
 )
 from supervisor.medusa.asyncore_25 import compact_traceback
 from supervisor.states import EventListenerStates
+from supervisor.compat import as_bytes
 
 
 def find_prefix_at_end(haystack, needle):
@@ -513,8 +514,9 @@ class PInputDispatcher(PDispatcher):
     """ Input (stdin) dispatcher """
 
     def __init__(self, process, channel, fd):
-        PDispatcher.__init__(self, process, channel, fd)
-        self.input_buffer = ''
+        super(PInputDispatcher, self).__init__(process, channel, fd)
+        # the data type will always be bytes
+        self.input_buffer = as_bytes('')
 
     def writable(self):
         if self.input_buffer and not self.closed:
