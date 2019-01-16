@@ -57,21 +57,21 @@ class LogtailHandlerTests(HandlerTests, unittest.TestCase):
         self.assertEqual(request._error, 410)
 
     def test_handle_request(self):
-        with tempfile.NamedTemporaryFile() as f:
-            t = f.name
-            options = DummyOptions()
-            pconfig = DummyPConfig(options, 'foo', 'foo', stdout_logfile=t)
-            supervisord = PopulatedDummySupervisor(options, 'foo', pconfig)
-            handler = self._makeOne(supervisord)
-            request = DummyRequest('/logtail/foo', None, None, None)
-            handler.handle_request(request)
-            self.assertEqual(request._error, None)
-            from supervisor.medusa import http_date
-            self.assertEqual(request.headers['Last-Modified'],
-                             http_date.build_http_date(os.stat(t)[stat.ST_MTIME]))
-            self.assertEqual(request.headers['Content-Type'], 'text/plain')
-            self.assertEqual(len(request.producers), 1)
-            self.assertEqual(request._done, True)
+        fd, tfilename = tempfile.mkstemp()
+        options = DummyOptions()
+        pconfig = DummyPConfig(options, 'foo', 'foo', stdout_logfile=tfilename)
+        supervisord = PopulatedDummySupervisor(options, 'foo', pconfig)
+        handler = self._makeOne(supervisord)
+        request = DummyRequest('/logtail/foo', None, None, None)
+        handler.handle_request(request)
+        self.assertEqual(request._error, None)
+        from supervisor.medusa import http_date
+        self.assertEqual(request.headers['Last-Modified'],
+                         http_date.build_http_date(os.stat(tfilename)[stat.ST_MTIME]))
+        self.assertEqual(request.headers['Content-Type'], 'text/plain')
+        self.assertEqual(len(request.producers), 1)
+        self.assertEqual(request._done, True)
+        os.close(fd)
 
 
 class MainLogTailHandlerTests(HandlerTests, unittest.TestCase):
@@ -122,7 +122,7 @@ class TailFProducerTests(unittest.TestCase):
     def test_handle_more(self):
         request = DummyRequest('/logtail/foo', None, None, None)
         from supervisor import http
-        f = tempfile.NamedTemporaryFile()
+        f = tempfile.mkstemp()
         f.write(as_bytes('a' * 80))
         f.flush()
         producer = self._makeOne(request, f.name, 80)
