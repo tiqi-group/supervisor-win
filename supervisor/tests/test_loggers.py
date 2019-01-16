@@ -6,7 +6,7 @@ import sys
 import tempfile
 import unittest
 
-from supervisor.compat import PY3
+from supervisor.compat import PY3, as_bytes
 from supervisor.compat import StringIO
 from supervisor.compat import as_string
 from supervisor.compat import syslog
@@ -500,7 +500,8 @@ class MockSysLog(mock.Mock):
             # Python 2.x raises a UnicodeEncodeError when attempting to
             #  transmit unicode characters that don't encode in the
             #  default encoding.
-            message.encode()
+            args = list(args)
+            args[-1] = as_bytes(message)
         super(MockSysLog, self).__call__(*args, **kwargs)
 
 
