@@ -1,4 +1,9 @@
 # coding=utf-8
+"""
+Installation script for the supervisor as a service
+To install the service on a terminal, as an administrator, run the command line:
+python -m supervisor.services install -c "{path}\supervisord.conf"
+"""
 from __future__ import print_function
 
 import argparse
