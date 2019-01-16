@@ -16,34 +16,7 @@ from supervisor.tests.base import DummyRPCInterfaceFactory
 from supervisor.tests.base import DummyRequest
 from supervisor.tests.base import DummySupervisor
 from supervisor.tests.base import PopulatedDummySupervisor
-
-
-class TempFileOpen(object):
-    """File that can be opened more one time"""
-
-    def __init__(self, mode='w'):
-        fd, self.name = tempfile.mkstemp()
-        self.tmpfile = os.fdopen(fd, mode, 0)
-
-    def __getattr__(self, item):
-        return getattr(self.tmpfile, item)
-
-    def __repr__(self):
-        return "{0.tmpfile}".format(self)
-
-    def close(self):
-        self.tmpfile.close()
-        self.remove()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None:
-            self.close()
-
-    def remove(self):
-        os.remove(self.name)
+from supervisor.tests.base import TempFileOpen
 
 
 class HandlerTests:

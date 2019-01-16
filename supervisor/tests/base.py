@@ -1,3 +1,7 @@
+import os
+import sys
+import tempfile
+
 _NOW = 1151365354
 _TIMEFORMAT = '%b %d %I:%M %p'
 
@@ -21,6 +25,34 @@ try:  # pragma: no cover
     import unittest.mock as mock
 except ImportError:  # pragma: no cover
     import mock
+
+
+class TempFileOpen(object):
+    """File that can be opened more one time"""
+
+    def __init__(self, mode='w'):
+        fd, self.name = tempfile.mkstemp()
+        self.tmpfile = os.fdopen(fd, mode, 0)
+
+    def __getattr__(self, item):
+        return getattr(self.tmpfile, item)
+
+    def __repr__(self):
+        return "{0.tmpfile}".format(self)
+
+    def close(self):
+        self.tmpfile.close()
+        self.remove()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            self.close()
+
+    def remove(self):
+        os.remove(self.name)
 
 
 class DummyOptions:
