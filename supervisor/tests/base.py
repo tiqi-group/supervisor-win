@@ -200,14 +200,14 @@ class DummyOptions:
             from supervisor.options import NotFound
             raise NotFound('bad filename')
 
-    def make_pipes(self, stderr=True):
+    def make_pipes(self, pid, stderr=True):
         if self.make_pipes_error:
             raise OSError(self.make_pipes_error)
-        pipes = {'child_stdin': 3, 'stdin': 4, 'stdout': 5, 'child_stdout': 6}
+        pipes = {'stdin': sys.stdin, 'stdout': sys.stdout}
         if stderr:
-            pipes['stderr'], pipes['child_stderr'] = (7, 8)
+            pipes['stderr'] = sys.stderr
         else:
-            pipes['stderr'], pipes['child_stderr'] = None, None
+            pipes['stderr'] = None
         return pipes
 
     def write(self, fd, chars):

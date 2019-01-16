@@ -1611,23 +1611,36 @@ class EventListenerConfig(ProcessConfig):
         # always use_stderr=True for eventlisteners because mixing stderr
         # messages into stdout would break the eventlistener protocol
         use_stderr = True
-        p = self.options.make_pipes(proc.pid, use_stderr)
-        stdout_fd, stderr_fd, stdin_fd = p['stdout'], p['stderr'], p['stdin']
+        pipes = self.options.make_pipes(proc.pid, use_stderr)
+        stdout_fd = pipes['stdout']
+        stderr_fd = pipes['stderr']
+        stdin_fd = pipes['stdin']
         dispatchers = {}
         from supervisor import events
         from supervisor.dispatchers import (
             PStreamEventListenerDispatcher,
             PStreamOutputDispatcher,
+            PEventListenerDispatcher,
+            POutputDispatcher,
             PInputDispatcher
         )
+        from supervisor import helpers
         if stdout_fd is not None:
-            dispatchers[stdout_fd] = PStreamEventListenerDispatcher(proc, 'stdout', stdout_fd)
+            if isinstance(stdout_fd, helpers.StreamAsync):
+                dispatcher = PStreamEventListenerDispatcher
+            else:
+                dispatcher = PEventListenerDispatcher
+            dispatchers[stdout_fd] = dispatcher(proc, 'stdout', stdout_fd)
         if stderr_fd is not None:
             etype = events.ProcessCommunicationStderrEvent
-            dispatchers[stderr_fd] = PStreamOutputDispatcher(proc, etype, stderr_fd)
+            if isinstance(stdout_fd, helpers.StreamAsync):
+                dispatcher = PStreamOutputDispatcher
+            else:
+                dispatcher = POutputDispatcher
+            dispatchers[stderr_fd] = dispatcher(proc, etype, stderr_fd)
         if stdin_fd is not None:
             dispatchers[stdin_fd] = PInputDispatcher(proc, 'stdin', stdin_fd)
-        return dispatchers, p
+        return dispatchers, pipes
 
 
 class FastCGIProcessConfig(ProcessConfig):
