@@ -381,16 +381,6 @@ class ClientOptionsTests(unittest.TestCase):
         instance.realize(args=['--serverurl', 'unix:///dev/null'])
         self.assertEqual(instance.serverurl, 'unix:///dev/null')
 
-    def test_options_unixsocket_configfile(self):
-        s = lstrip("""[supervisorctl]
-        serverurl=unix:///dev/null
-        """)
-        fp = StringIO(s)
-        instance = self._makeOne()
-        instance.configfile = fp
-        instance.realize(args=[])
-        self.assertEqual(instance.serverurl, 'unix:///dev/null')
-
 
 class ServerOptionsTests(unittest.TestCase):
     def _getTargetClass(self):
