@@ -1614,16 +1614,17 @@ class EventListenerConfig(ProcessConfig):
         p = self.options.make_pipes(proc.pid, use_stderr)
         stdout_fd, stderr_fd, stdin_fd = p['stdout'], p['stderr'], p['stdin']
         dispatchers = {}
-        from supervisor.dispatchers import PEventListenerDispatcher
-        from supervisor.dispatchers import PInputDispatcher
-        from supervisor.dispatchers import POutputDispatcher
         from supervisor import events
-
+        from supervisor.dispatchers import (
+            PStreamEventListenerDispatcher,
+            PStreamOutputDispatcher,
+            PInputDispatcher
+        )
         if stdout_fd is not None:
-            dispatchers[stdout_fd] = PEventListenerDispatcher(proc, 'stdout', stdout_fd)
+            dispatchers[stdout_fd] = PStreamEventListenerDispatcher(proc, 'stdout', stdout_fd)
         if stderr_fd is not None:
             etype = events.ProcessCommunicationStderrEvent
-            dispatchers[stderr_fd] = POutputDispatcher(proc, etype, stderr_fd)
+            dispatchers[stderr_fd] = PStreamOutputDispatcher(proc, etype, stderr_fd)
         if stdin_fd is not None:
             dispatchers[stdin_fd] = PInputDispatcher(proc, 'stdin', stdin_fd)
         return dispatchers, p

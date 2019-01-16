@@ -488,6 +488,19 @@ class PEventListenerDispatcher(PDispatcher):
         process.config.options.logger.debug(msg)
 
 
+class PStreamEventListenerDispatcher(PEventListenerDispatcher):
+
+    def __init__(self, process, channel, stream):
+        super(PStreamEventListenerDispatcher, self).__init__(process, channel, stream)
+        self.fd.start()
+
+    def close(self):
+        try:
+            super(PStreamEventListenerDispatcher, self).close()
+        finally:
+            self.fd.close()
+
+
 class PInputDispatcher(PDispatcher):
     """ Input (stdin) dispatcher """
 
