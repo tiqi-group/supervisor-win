@@ -86,14 +86,20 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
         socket.setdefaulttimeout(60)
 
-        self.config_filepath = None
         # Gets the path of the registry configuration file
-        with ConfigReg() as reg:
-            self.config_filepath = reg.get()
+        try:
+            with ConfigReg() as reg:
+                self.config_filepath = reg.get()
+        except WindowsError:
+            config_reg_exc = traceback.format_exc()
+            self.config_filepath = None
+        else:
+            config_reg_exc = None
 
+        # The log goes to the location of the configuration file
         if self.config_filepath is not None:
             config_dir = os.path.dirname(self.config_filepath)
-        else:
+        else:  # or to python home
             config_dir = os.getcwd()
 
         self.logger = logging.getLogger(__name__)
@@ -105,6 +111,12 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         self.logger.setLevel(logging.INFO)
         self.logger.addHandler(hdl)
         self.logger.info("supervisor config path: {0!s}".format(self.config_filepath))
+
+        if config_reg_exc is not None:
+            self.logger.error("* The service needs to be reinstalled")
+            self.logger.error(config_reg_exc)
+            logging.shutdown()
+            exit(-1)
 
     # noinspection PyBroadException
     def SvcStop(self):
