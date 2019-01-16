@@ -319,7 +319,8 @@ class dispatcher(object):
         if err in (errno.EINPROGRESS,
                    errno.EALREADY,
                    errno.EWOULDBLOCK):
-            return
+            return self.handle_error()
+
         if err in (0, errno.EISCONN):
             self.addr = address
             self.connected = True
