@@ -2810,25 +2810,25 @@ class FastCGIProcessConfigTest(unittest.TestCase):
     def test_make_dispatchers(self):
         options = DummyOptions()
         instance = self._makeOne(options)
-        with tempfile.NamedTemporaryFile() as stdout_logfile:
-            with tempfile.NamedTemporaryFile() as stderr_logfile:
+        with TempFileOpen() as stdout_logfile:
+            with TempFileOpen() as stderr_logfile:
                 instance.stdout_logfile = stdout_logfile.name
                 instance.stderr_logfile = stderr_logfile.name
                 instance.redirect_stderr = False
                 process1 = DummyProcess(instance)
                 dispatchers, pipes = instance.make_dispatchers(process1)
-                self.assertEqual(dispatchers[4].channel, 'stdin')
-                self.assertEqual(dispatchers[4].closed, True)
-                self.assertEqual(dispatchers[5].channel, 'stdout')
+                self.assertEqual(dispatchers[sys.stdin].channel, 'stdin')
+                self.assertEqual(dispatchers[sys.stdin].closed, True)
+                self.assertEqual(dispatchers[sys.stdout].channel, 'stdout')
                 from supervisor.events import ProcessCommunicationStdoutEvent
-                self.assertEqual(dispatchers[5].event_type,
+                self.assertEqual(dispatchers[sys.stdout].event_type,
                                  ProcessCommunicationStdoutEvent)
-                self.assertEqual(pipes['stdout'], 5)
-                self.assertEqual(dispatchers[7].channel, 'stderr')
+                self.assertEqual(pipes['stdout'], sys.stdout)
+                self.assertEqual(dispatchers[sys.stderr].channel, 'stderr')
                 from supervisor.events import ProcessCommunicationStderrEvent
-                self.assertEqual(dispatchers[7].event_type,
+                self.assertEqual(dispatchers[sys.stderr].event_type,
                                  ProcessCommunicationStderrEvent)
-                self.assertEqual(pipes['stderr'], 7)
+                self.assertEqual(pipes['stderr'], sys.stderr)
 
 
 class ProcessGroupConfigTests(unittest.TestCase):

@@ -1587,20 +1587,30 @@ class ProcessConfig(Config):
     def make_dispatchers(self, proc):
         use_stderr = not self.redirect_stderr
         pipes = self.options.make_pipes(proc.pid, use_stderr)
-        stdout_fd, stderr_fd, stdin_fd = pipes['stdout'], pipes['stderr'], pipes['stdin']
+        stdout_fd = pipes['stdout']
+        stderr_fd = pipes['stderr']
+        stdin_fd = pipes['stdin']
         dispatchers = {}
-
         from supervisor import events
         from supervisor.dispatchers import (
             PStreamOutputDispatcher,
+            POutputDispatcher,
             PInputDispatcher
         )
         if stdout_fd is not None:
+            if isinstance(stdout_fd, helpers.StreamAsync):
+                dispatcher = PStreamOutputDispatcher
+            else:
+                dispatcher = POutputDispatcher
             etype = events.ProcessCommunicationStdoutEvent
-            dispatchers[stdout_fd] = PStreamOutputDispatcher(proc, etype, stdout_fd)
+            dispatchers[stdout_fd] = dispatcher(proc, etype, stdout_fd)
         if stderr_fd is not None:
             etype = events.ProcessCommunicationStderrEvent
-            dispatchers[stderr_fd] = PStreamOutputDispatcher(proc, etype, stderr_fd)
+            if isinstance(stdout_fd, helpers.StreamAsync):
+                dispatcher = PStreamOutputDispatcher
+            else:
+                dispatcher = POutputDispatcher
+            dispatchers[stderr_fd] = dispatcher(proc, etype, stderr_fd)
         if stdin_fd is not None:
             dispatchers[stdin_fd] = PInputDispatcher(proc, 'stdin', stdin_fd)
         return dispatchers, pipes
