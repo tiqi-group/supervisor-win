@@ -1377,6 +1377,7 @@ class ServerOptionsTests(unittest.TestCase):
         """)
         from supervisor import datatypes
         from supervisor.options import UnhosedConfigParser
+        tempdir = tempfile.gettempdir()
         instance = self._makeOne()
         instance.environ_expansions = {
             'ENV_HOME': tempfile.gettempdir(),
@@ -1394,18 +1395,18 @@ class ServerOptionsTests(unittest.TestCase):
             'ENV_SUPD_NOCLEANUP': 'true',
             'ENV_SUPD_STRIP_ANSI': 'false',
             'ENV_CAT1_COMMAND': '/bin/customcat',
-            'ENV_CAT1_COMMAND_LOGDIR': '/path/to/logs',
+            'ENV_CAT1_COMMAND_LOGDIR': os.path.join(tempdir, 'path\\to\\logs'),
             'ENV_CAT1_PRIORITY': '3',
             'ENV_CAT1_AUTOSTART': 'true',
             'ENV_CAT1_USER': 'root',  # resolved to uid
-            'ENV_CAT1_STDOUT_LOGFILE': '/tmp/cat.log',
+            'ENV_CAT1_STDOUT_LOGFILE': os.path.join(tempdir, 'cat.log'),
             'ENV_CAT1_STDOUT_LOGFILE_MAXBYTES': '78KB',
             'ENV_CAT1_STDOUT_LOGFILE_BACKUPS': '2',
-            'ENV_CAT1_STOPSIGNAL': 'KILL',
+            'ENV_CAT1_STOPSIGNAL': 'TERM',
             'ENV_CAT1_STOPWAIT': '5',
             'ENV_CAT1_STARTWAIT': '5',
             'ENV_CAT1_STARTRETRIES': '10',
-            'ENV_CAT1_DIR': '/tmp',
+            'ENV_CAT1_DIR': tempdir,
             'ENV_CAT1_UMASK': '002',
         }
         config = UnhosedConfigParser()
@@ -1416,7 +1417,7 @@ class ServerOptionsTests(unittest.TestCase):
         instance.realize(args=[])
         # supervisord
         self.assertEqual(instance.logfile,
-                         '%(ENV_HOME)s/supervisord.log' % config.expansions)
+                         os.path.normpath('%(ENV_HOME)s/supervisord.log' % config.expansions))
         self.assertEqual(instance.identifier,
                          'supervisor_%(ENV_USER)s' % config.expansions)
         self.assertEqual(instance.logfile_maxbytes, 53477376)
@@ -1443,15 +1444,16 @@ class ServerOptionsTests(unittest.TestCase):
         proc1 = cat1.process_configs[0]
         self.assertEqual(proc1.name, 'cat1')
         self.assertEqual(proc1.command,
-                         '/bin/customcat --logdir=/path/to/logs')
+                         '/bin/customcat --logdir=%s' %
+                         os.path.join(tempdir, 'path\\to\\logs'))
         self.assertEqual(proc1.priority, 3)
         self.assertEqual(proc1.autostart, True)
         self.assertEqual(proc1.autorestart, datatypes.RestartWhenExitUnexpected)
         self.assertEqual(proc1.startsecs, 5)
         self.assertEqual(proc1.startretries, 10)
-        self.assertEqual(proc1.uid, 0)
-        self.assertEqual(proc1.stdout_logfile, '/tmp/cat.log')
-        self.assertEqual(proc1.stopsignal, signal.SIGKILL)
+        self.assertEqual(proc1.uid, None)
+        self.assertEqual(proc1.stdout_logfile, os.path.join(tempdir, 'cat.log'))
+        self.assertEqual(proc1.stopsignal, signal.SIGTERM)
         self.assertEqual(proc1.stopwaitsecs, 5)
         self.assertEqual(proc1.stopasgroup, False)
         self.assertEqual(proc1.killasgroup, False)
@@ -1459,7 +1461,7 @@ class ServerOptionsTests(unittest.TestCase):
                          datatypes.byte_size('78KB'))
         self.assertEqual(proc1.stdout_logfile_backups, 2)
         self.assertEqual(proc1.exitcodes, [0, 2])
-        self.assertEqual(proc1.directory, '/tmp')
+        self.assertEqual(proc1.directory, tempdir)
         self.assertEqual(proc1.umask, 2)
         self.assertEqual(proc1.environment, dict(FAKE_ENV_VAR='/some/path'))
 
