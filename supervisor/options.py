@@ -1144,7 +1144,9 @@ class ServerOptions(Options):
         return msg
 
     def dropPrivileges(self, user):
-        return
+        """dummy"""
+        warnings.warn("method 'dropPrivileges' unsupported!")
+        return 'ok'
 
     def get_pid_history(self, pid):
         """Returns the subprocess registered for id"""
@@ -1166,6 +1168,8 @@ class ServerOptions(Options):
         return stopped
 
     def set_rlimits(self):
+        """dummy"""
+        warnings.warn("method 'set_rlimits' unsupported!")
         return []
 
     def make_logger(self, critical_messages, warn_messages, info_messages):
