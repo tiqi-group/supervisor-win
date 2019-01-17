@@ -9,6 +9,7 @@ from supervisor.compat import (
 )
 from supervisor.loggers import getLevelNumByDescription
 from supervisor.medusa import text_socket
+from supervisor.utils import raise_not_implemented
 
 here = None
 
@@ -238,30 +239,35 @@ class InetStreamSocketConfig(SocketConfig):
         return sock
 
 
+@raise_not_implemented
 def colon_separated_user_group(arg):
     """ Find a user ID and group ID from a string like 'user:group'.  Returns
         a tuple (uid, gid).  If the string only contains a user like 'user'
         then (uid, -1) will be returned.  Raises ValueError if either
         the user or group can't be resolved to valid IDs on the system. """
-    raise NotImplementedError("unavailable on windows")
+    pass
 
 
+@raise_not_implemented
 def name_to_uid(name):
     """ Find a user ID from a string containing a user name or ID.
         Raises ValueError if the string can't be resolved to a valid
         user ID on the system. """
-    raise NotImplementedError("unavailable on windows")
+    pass
 
 
+@raise_not_implemented
 def name_to_gid(name):
     """ Find a group ID from a string containing a group name or ID.
         Raises ValueError if the string can't be resolved to a valid
         group ID on the system. """
-    raise NotImplementedError("unavailable on windows")
+    pass
 
 
+@raise_not_implemented
 def gid_for_uid(uid):
-    raise NotImplementedError("unavailable on windows")
+    """function gid_for_uid"""
+    pass
 
 
 def octal_type(arg):

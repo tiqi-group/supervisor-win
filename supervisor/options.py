@@ -54,6 +54,7 @@ from supervisor.datatypes import (
     set_here
 )
 from supervisor.medusa import asyncore_25 as asyncore
+from supervisor.utils import raise_not_implemented
 
 
 def _read_version_txt():
@@ -1009,8 +1010,10 @@ class ServerOptions(Options):
                              'remove the section [unix_http_server] from supervisord.conf')
         return configs
 
+    @raise_not_implemented
     def daemonize(self):
-        warnings.warn("method daemonize unsupported!")
+        """dummy"""
+        pass
 
     def write_pidfile(self):
         pid = os.getpid()
@@ -1143,10 +1146,10 @@ class ServerOptions(Options):
             return 'Set uid to user %s' % self.uid
         return msg
 
+    @raise_not_implemented
     def dropPrivileges(self, user):
         """dummy"""
-        warnings.warn("method 'dropPrivileges' unsupported!")
-        return 'ok'
+        pass
 
     def get_pid_history(self, pid):
         """Returns the subprocess registered for id"""
@@ -1167,10 +1170,10 @@ class ServerOptions(Options):
             stopped.append((None, None))
         return stopped
 
+    @raise_not_implemented
     def set_rlimits(self):
         """dummy"""
-        warnings.warn("method 'set_rlimits' unsupported!")
-        return []
+        pass
 
     def make_logger(self, critical_messages, warn_messages, info_messages):
         # must be called after realize() and after supervisor does setuid()
