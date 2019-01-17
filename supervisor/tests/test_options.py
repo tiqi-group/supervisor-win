@@ -811,11 +811,11 @@ class ServerOptionsTests(unittest.TestCase):
         [supervisord]
 
         [include]
-        files=nonexistent/*
+        files=nonexistent\\*
         """)
         instance.read_config(StringIO(text))
         self.assertEqual(instance.parse_warnings,
-                         ['No file matches via include "./nonexistent/*"'])
+                         ['No file matches via include ".\\nonexistent\\*"'])
 
     def test_read_config_include_reads_extra_files(self):
         dirname = tempfile.mkdtemp()
