@@ -743,33 +743,13 @@ class ServerOptions(Options):
             priority = integer(get(section, 'priority', 999))
             fcgi_expansions = {'program_name': program_name}
 
-            # find proc_uid from "user" option
-            # proc_user = get(section, 'user', None)
-            # proc_uid = None
-
-            socket_owner = get(section, 'socket_owner', None)
-            if socket_owner is not None:
-                try:
-                    socket_owner = colon_separated_user_group(socket_owner)
-                except ValueError:
-                    raise ValueError('Invalid socket_owner value %s'
-                                     % socket_owner)
-
-            socket_mode = get(section, 'socket_mode', None)
-            if socket_mode is not None:
-                try:
-                    socket_mode = octal_type(socket_mode)
-                except (TypeError, ValueError):
-                    raise ValueError('Invalid socket_mode value %s'
-                                     % socket_mode)
-
             socket = get(section, 'socket', None, expansions=fcgi_expansions)
             if not socket:
                 raise ValueError('[%s] section requires a "socket" line' %
                                  section)
 
             try:
-                socket_config = self.parse_fcgi_socket(socket, None, socket_owner, socket_mode)
+                socket_config = self.parse_fcgi_socket(socket)
             except ValueError as e:
                 raise ValueError('%s in [%s] socket' % (str(e), section))
 
@@ -783,7 +763,10 @@ class ServerOptions(Options):
         groups.sort()
         return groups
 
-    def parse_fcgi_socket(self, sock, proc_uid, socket_owner, socket_mode):
+    def parse_fcgi_socket(self, sock,
+                          proc_uid=None,
+                          socket_owner=None,
+                          socket_mode=None):
         if socket_owner is not None or socket_mode is not None:
             raise ValueError("socket_owner and socket_mode params should"
                              + " only be used with a Unix domain socket")
