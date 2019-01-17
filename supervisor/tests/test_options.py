@@ -946,9 +946,10 @@ class ServerOptionsTests(unittest.TestCase):
     def test_check_execv_args_notexecutable(self):
         instance = self._makeOne()
         from supervisor.options import NotExecutable
+        windir = os.environ.get('windir')
         self.assertRaises(NotExecutable,
-                          instance.check_execv_args, '/etc/passwd',
-                          ['etc/passwd'], os.stat('/etc/passwd'))
+                          instance.check_execv_args, windir,
+                          [windir], os.stat(windir))
 
     def test_check_execv_args_isdir(self):
         instance = self._makeOne()
