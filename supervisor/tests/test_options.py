@@ -933,9 +933,7 @@ class ServerOptionsTests(unittest.TestCase):
     def test_get_signal_delegates_to_signal_receiver(self):
         instance = self._makeOne()
         instance.signal_receiver.receive(signal.SIGTERM, None)
-        instance.signal_receiver.receive(signal.SIGCHLD, None)
         self.assertEqual(instance.get_signal(), signal.SIGTERM)
-        self.assertEqual(instance.get_signal(), signal.SIGCHLD)
         self.assertEqual(instance.get_signal(), None)
 
     def test_check_execv_args_cant_find_command(self):
