@@ -861,7 +861,7 @@ class ServerOptionsTests(unittest.TestCase):
         [supervisord]
 
         [include]
-        files=%s/conf.d/*.conf
+        files=%s\\conf.d\\*.conf
         """ % dirname)
         with open(supervisord_conf, 'w') as f:
             f.write(text)
