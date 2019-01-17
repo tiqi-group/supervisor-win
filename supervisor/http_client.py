@@ -28,6 +28,9 @@ class Listener(object):
     def response_header(self, url, name, value):
         pass
 
+    def expt(self, url, msg):
+        raise socket.error('%s %s' % url, msg)
+
     def done(self, url):
         pass
 
@@ -196,6 +199,11 @@ class HTTPHandler(asynchat.async_chat):
 
     def done(self):
         self.listener.done(self.url)
+
+    def handle_expt(self):
+        if not self.connected:
+            self.listener.expt(self.url, 'connection is dead!')
+        return super(HTTPHandler, self).handle_expt()
 
     def chunked_size(self):
         line = self.buffer

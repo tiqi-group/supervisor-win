@@ -1,3 +1,4 @@
+import socket
 import sys
 import unittest
 
@@ -1875,6 +1876,9 @@ class TestDefaultControllerPlugin(unittest.TestCase):
 class DummyListener:
     def __init__(self):
         self.errors = []
+
+    def expt(self, url, msg):
+        raise socket.error(' %s %s' % url, msg)
 
     def error(self, url, msg):
         self.errors.append((url, msg))
