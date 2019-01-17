@@ -69,8 +69,11 @@ class Supervisor(object):
         if setuid_msg:
             critical_messages.append(setuid_msg)
         if self.options.first:
-            rlimit_messages = self.options.set_rlimits()
-            info_messages.extend(rlimit_messages)
+            try:
+                rlimit_messages = self.options.set_rlimits()
+                info_messages.extend(rlimit_messages)
+            except NotImplementedError:
+                pass
         warn_messages.extend(self.options.parse_warnings)
 
         # this sets the options.logger object
@@ -379,13 +382,15 @@ def main(args=None, test=False):
         options.first = first
         options.test = test
         options.job_handler = job_handler
-        if options.profile_options:
-            sort_order, callers = options.profile_options
-            profile('go(options)', globals(), locals(), sort_order, callers)
-        else:
-            go(options)
-        options.close_httpservers()
-        options.close_logger()
+        try:
+            if options.profile_options:
+                sort_order, callers = options.profile_options
+                profile('go(options)', globals(), locals(), sort_order, callers)
+            else:
+                go(options)
+        finally:
+            options.close_httpservers()
+            options.close_logger()
         first = False
         if test or (options.mood < SupervisorStates.RESTARTING):
             break
