@@ -168,7 +168,7 @@ class SupervisordTests(unittest.TestCase):
 
     def test_reap_unknown_pid(self):
         options = DummyOptions()
-        options.waitpid_return = 2, 0  # pid, status
+        options.waitpid_return = [(2, 0)]  # pid, status
         pconfig = DummyPConfig(options, 'process', 'process', '/bin/process1')
         process = DummyProcess(pconfig)
         process.drained = False
