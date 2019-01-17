@@ -827,7 +827,7 @@ class ServerOptionsTests(unittest.TestCase):
         [supervisord]
 
         [include]
-        files=%s/conf.d/*.conf %s/conf.d/*.ini
+        files=%s\\conf.d\\*.conf %s\\conf.d\\*.ini
         """ % (dirname, dirname))
         with open(supervisord_conf, 'w') as f:
             f.write(text)
@@ -838,13 +838,14 @@ class ServerOptionsTests(unittest.TestCase):
 
         ini_file = os.path.join(conf_d, "a.ini")
         with open(ini_file, 'w') as f:
-            f.write("[unix_http_server]\nfile=/tmp/file\n")
+            f.write("[fcgi-program:x]\nsocket=tcp://localhost:9002\ncommand=cmd.exe\n")
 
         instance = self._makeOne()
         try:
             instance.read_config(supervisord_conf)
             options = instance.configroot.supervisord
-            self.assertEqual(len(options.server_configs), 2)
+            self.assertEqual(len(options.server_configs), 1)
+            self.assertEqual(len(options.process_group_configs), 1)
             msg = 'Included extra file "%s" during parsing' % conf_file
             self.assertTrue(msg in instance.parse_warnings)
             msg = 'Included extra file "%s" during parsing' % ini_file
