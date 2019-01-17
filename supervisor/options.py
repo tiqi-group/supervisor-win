@@ -479,9 +479,6 @@ class ServerOptions(Options):
         Options.realize(self, *arg, **kw)
         section = self.configroot.supervisord
 
-        self.uid = None
-        self.gid = 0
-
         if not self.loglevel:
             self.loglevel = section.loglevel
 
@@ -918,7 +915,7 @@ class ServerOptions(Options):
                 autorestart=autorestart,
                 startsecs=startsecs,
                 startretries=startretries,
-                uid=None,
+                uid=self.uid,
                 cpupriority=cpupriority,
                 cpuaffinity=cpuaffinity,
                 systemjob=systemjob,

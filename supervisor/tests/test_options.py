@@ -400,6 +400,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(options.stdout.getvalue(), VERSION + '\n')
 
     def test_options(self):
+        tempdir = tempfile.gettempdir()
         s = lstrip("""[inet_http_server]
         port=127.0.0.1:8999
         username=chrism
@@ -428,12 +429,12 @@ class ServerOptionsTests(unittest.TestCase):
         priority=1
         autostart=true
         user=root
-        stdout_logfile=/tmp/cat.log
-        stopsignal=KILL
+        stdout_logfile=%(tempdir)s\\cat.log
+        stopsignal=TERM
         stopwaitsecs=5
         startsecs=5
         startretries=10
-        directory=/tmp
+        directory=%(tempdir)s
         umask=002
 
         [program:cat2]
@@ -443,7 +444,7 @@ class ServerOptionsTests(unittest.TestCase):
         autorestart=false
         stdout_logfile_maxbytes = 1024
         stdout_logfile_backups = 2
-        stdout_logfile = /tmp/cat2.log
+        stdout_logfile = %(tempdir)s\\cat2.log
 
         [program:cat3]
         priority=3
@@ -467,8 +468,8 @@ class ServerOptionsTests(unittest.TestCase):
         numprocs = 2
         numprocs_start = 1
         command = /bin/cat
-        directory = /some/path/foo_%%(process_num)02d
-        """ % {'tempdir': tempfile.gettempdir()})
+        directory = %(tempdir)s\\some\\path\\foo_%%(process_num)02d
+        """ % {'tempdir': tempdir})
 
         from supervisor import datatypes
 
@@ -513,9 +514,9 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(proc1.autorestart, datatypes.RestartWhenExitUnexpected)
         self.assertEqual(proc1.startsecs, 5)
         self.assertEqual(proc1.startretries, 10)
-        self.assertEqual(proc1.uid, 0)
-        self.assertEqual(proc1.stdout_logfile, '/tmp/cat.log')
-        self.assertEqual(proc1.stopsignal, signal.SIGKILL)
+        self.assertEqual(proc1.uid, None)
+        self.assertEqual(proc1.stdout_logfile, os.path.join(tempdir, 'cat.log'))
+        self.assertEqual(proc1.stopsignal, signal.SIGTERM)
         self.assertEqual(proc1.stopwaitsecs, 5)
         self.assertEqual(proc1.stopasgroup, False)
         self.assertEqual(proc1.killasgroup, False)
@@ -523,7 +524,7 @@ class ServerOptionsTests(unittest.TestCase):
                          datatypes.byte_size('50MB'))
         self.assertEqual(proc1.stdout_logfile_backups, 10)
         self.assertEqual(proc1.exitcodes, [0, 2])
-        self.assertEqual(proc1.directory, '/tmp')
+        self.assertEqual(proc1.directory, tempdir)
         self.assertEqual(proc1.umask, 2)
         self.assertEqual(proc1.environment, dict(FAKE_ENV_VAR='/some/path'))
 
@@ -539,7 +540,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(proc2.autostart, True)
         self.assertEqual(proc2.autorestart, False)
         self.assertEqual(proc2.uid, None)
-        self.assertEqual(proc2.stdout_logfile, '/tmp/cat2.log')
+        self.assertEqual(proc2.stdout_logfile, os.path.join(tempdir, 'cat2.log'))
         self.assertEqual(proc2.stopsignal, signal.SIGTERM)
         self.assertEqual(proc2.stopasgroup, False)
         self.assertEqual(proc2.killasgroup, False)
@@ -617,15 +618,15 @@ class ServerOptionsTests(unittest.TestCase):
 
         proc5_a = cat5.process_configs[0]
         self.assertEqual(proc5_a.name, 'foo_01')
-        self.assertEqual(proc5_a.directory, '/some/path/foo_01')
+        self.assertEqual(proc5_a.directory, os.path.join(tempdir, 'some\\path\\foo_01'))
 
         proc5_b = cat5.process_configs[1]
         self.assertEqual(proc5_b.name, 'foo_02')
-        self.assertEqual(proc5_b.directory, '/some/path/foo_02')
+        self.assertEqual(proc5_b.directory, os.path.join(tempdir, 'some\\path\\foo_02'))
 
         here = os.path.abspath(os.getcwd())
-        self.assertEqual(instance.uid, 0)
-        self.assertEqual(instance.gid, 0)
+        self.assertEqual(instance.uid, None)
+        self.assertEqual(instance.gid, None)
         self.assertEqual(instance.directory, tempfile.gettempdir())
         self.assertEqual(instance.umask, 18)  # 022 in Py2, 0o22 in Py3
         self.assertEqual(instance.logfile, os.path.join(here, 'supervisord.log'))
