@@ -2470,8 +2470,8 @@ class TestProcessConfig(unittest.TestCase):
     def test_make_dispatchers_stderr_not_redirected(self):
         options = DummyOptions()
         instance = self._makeOne(options)
-        with tempfile.NamedTemporaryFile() as stdout_logfile:
-            with tempfile.NamedTemporaryFile() as stderr_logfile:
+        with TempFileOpen() as stdout_logfile:
+            with TempFileOpen() as stderr_logfile:
                 instance.stdout_logfile = stdout_logfile.name
                 instance.stderr_logfile = stderr_logfile.name
                 instance.redirect_stderr = False
