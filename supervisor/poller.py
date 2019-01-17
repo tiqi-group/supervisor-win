@@ -53,11 +53,14 @@ class SelectPoller(BasePoller):
 
     def poll(self, timeout):
         try:
-            r, w, x = self._select.select(
-                self.readables,
-                self.writables,
-                [], timeout
-            )
+            if len(self.readables) or len(self.writables):
+                r, w, x = self._select.select(
+                    self.readables,
+                    self.writables,
+                    [], timeout
+                )
+            else:
+                return [], []
         except select.error as err:
             if err.args[0] == errno.EINTR:
                 self.options.logger.blather('EINTR encountered in poll')
