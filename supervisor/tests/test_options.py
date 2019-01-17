@@ -12,6 +12,7 @@ import unittest
 from supervisor.compat import StringIO
 from supervisor.compat import as_bytes
 from supervisor.loggers import LevelsByName
+from supervisor.options import FastCGIGroupConfig
 from supervisor.tests.base import DummyLogger
 from supervisor.tests.base import DummyOptions
 from supervisor.tests.base import DummyPConfig
@@ -1991,9 +1992,6 @@ class ServerOptionsTests(unittest.TestCase):
         grp_mock = Mock()
         grp_mock.return_value = (None, None, sentinel.gid)
 
-        @patch('pwd.getpwuid', pwd_mock)
-        @patch('pwd.getpwnam', pwd_mock)
-        @patch('grp.getgrnam', grp_mock)
         def get_process_groups(instance, config):
             return instance.process_groups_from_parser(config)
 
@@ -2007,8 +2005,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(gconf_foo.__class__, FastCGIGroupConfig)
         self.assertEqual(gconf_foo.name, 'foo')
         self.assertEqual(gconf_foo.priority, 1)
-        self.assertEqual(gconf_foo.socket_config.url,
-                         'unix:///tmp/foo.sock')
+
         self.assertEqual(exp_owner, gconf_foo.socket_config.get_owner())
         self.assertEqual(438, gconf_foo.socket_config.get_mode())  # 0666 in Py2, 0o666 in Py3
         self.assertEqual(len(gconf_foo.process_configs), 2)
@@ -2018,8 +2015,7 @@ class ServerOptionsTests(unittest.TestCase):
         gconf_bar = gconfigs[1]
         self.assertEqual(gconf_bar.name, 'bar')
         self.assertEqual(gconf_bar.priority, 999)
-        self.assertEqual(gconf_bar.socket_config.url,
-                         'unix:///tmp/bar.sock')
+
         self.assertEqual(exp_owner, gconf_bar.socket_config.get_owner())
         self.assertEqual(448, gconf_bar.socket_config.get_mode())  # 0700 in Py2, 0o700 in Py3
         self.assertEqual(len(gconf_bar.process_configs), 3)
@@ -2178,6 +2174,7 @@ class ServerOptionsTests(unittest.TestCase):
         text = lstrip("""\
         [fcgi-program:foo]
         socket=tcp://localhost:8000
+        ; intentionally left here
         socket_owner=nobody:nobody
         command = /bin/foo
         """)
@@ -2185,12 +2182,16 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance = self._makeOne()
-        self.assertRaises(ValueError, instance.process_groups_from_parser, config)
+        result = instance.process_groups_from_parser(config)
+        self.assertIsInstance(result, list)
+        self.assertTrue(result, 'bad result list')
+        self.assertIsInstance(result[0], FastCGIGroupConfig)
 
     def test_fcgi_program_socket_mode_set_for_tcp(self):
         text = lstrip("""\
         [fcgi-program:foo]
         socket = tcp://localhost:8000
+        ; intentionally left here
         socket_mode = 0777
         command = /bin/foo
         """)
@@ -2198,7 +2199,10 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance = self._makeOne()
-        self.assertRaises(ValueError, instance.process_groups_from_parser, config)
+        result = instance.process_groups_from_parser(config)
+        self.assertIsInstance(result, list)
+        self.assertTrue(result, 'bad result list')
+        self.assertIsInstance(result[0], FastCGIGroupConfig)
 
     def test_fcgi_program_bad_socket_mode(self):
         text = lstrip("""\
@@ -2540,14 +2544,15 @@ class ServerOptionsTests(unittest.TestCase):
 
     def test_dropPrivileges_user_none(self):
         instance = self._makeOne()
-        msg = instance.dropPrivileges(None)
-        # self.assertEqual(msg, "No user specified to setuid to!")
+        self.assertRaises(NotImplementedError,
+                          instance.dropPrivileges,
+                          None)
 
     def test_daemonize_notifies_poller_before_and_after_fork(self):
         instance = self._makeOne()
         instance._daemonize = lambda: None
         instance.poller = Mock()
-        instance.daemonize()
+        self.assertRaises(NotImplementedError, instance.daemonize)
         #instance.poller.before_daemonize.assert_called_once_with()
         #instance.poller.after_daemonize.assert_called_once_with()
 
