@@ -2815,7 +2815,7 @@ class UnhosedConfigParserTests(unittest.TestCase):
 
     def test_read_filenames_as_string(self):
         parser = self._makeOne()
-        with tempfile.NamedTemporaryFile(mode="w+") as f:
+        with TempFileOpen(mode="w+") as f:
             f.write("[foo]\n")
             f.flush()
             ok_filenames = parser.read(f.name)
@@ -2823,7 +2823,7 @@ class UnhosedConfigParserTests(unittest.TestCase):
 
     def test_read_filenames_as_list(self):
         parser = self._makeOne()
-        with tempfile.NamedTemporaryFile(mode="w+") as f:
+        with TempFileOpen(mode="w+") as f:
             f.write("[foo]\n")
             f.flush()
             ok_filenames = parser.read([f.name])
@@ -2832,7 +2832,7 @@ class UnhosedConfigParserTests(unittest.TestCase):
     def test_read_returns_ok_filenames_like_rawconfigparser(self):
         nonexistent = os.path.join(os.path.dirname(__file__), "nonexistent")
         parser = self._makeOne()
-        with tempfile.NamedTemporaryFile(mode="w+") as f:
+        with TempFileOpen(mode="w+") as f:
             f.write("[foo]\n")
             f.flush()
             ok_filenames = parser.read([nonexistent, f.name])
@@ -2844,7 +2844,7 @@ class UnhosedConfigParserTests(unittest.TestCase):
 
     def test_read_section_to_file_read_one_file(self):
         parser = self._makeOne()
-        with tempfile.NamedTemporaryFile(mode="w+") as f:
+        with TempFileOpen(mode="w+") as f:
             f.write("[foo]\n")
             f.flush()
             parser.read([f.name])
@@ -2852,8 +2852,8 @@ class UnhosedConfigParserTests(unittest.TestCase):
 
     def test_read_section_to_file_read_multiple_files(self):
         parser = self._makeOne()
-        with tempfile.NamedTemporaryFile(mode="w+") as f1:
-            with tempfile.NamedTemporaryFile(mode="w+") as f2:
+        with TempFileOpen(mode="w+") as f1:
+            with TempFileOpen(mode="w+") as f2:
                 f1.write("[foo]\n")
                 f1.flush()
                 f2.write("[bar]\n")
