@@ -552,13 +552,13 @@ class SupervisordTests(unittest.TestCase):
 
     def test_runforever_select_dispatcher_handle_error_via_write(self):
         options = DummyOptions()
-        options.poller.result = [], [6]
+        options.poller.result = [], [sys.stdout]
         supervisord = self._makeOne(options)
         pconfig = DummyPConfig(options, 'foo', '/bin/foo', )
         gconfig = DummyPGroupConfig(options, pconfigs=[pconfig])
         pgroup = DummyProcessGroup(gconfig)
         notimpl = DummyDispatcher(readable=True, error=NotImplementedError)
-        pgroup.dispatchers = {6: notimpl}
+        pgroup.dispatchers = {sys.stdout: notimpl}
         supervisord.process_groups = {'foo': pgroup}
         options.test = True
         supervisord.runforever()
