@@ -986,8 +986,8 @@ class ServerOptions(Options):
             configs.append(config)
 
         if self._parse_servernames(parser, 'unix_http_server'):
-            raise ValueError('unix_http_server not supported.\n'
-                             'remove the section [unix_http_server] from supervisord.conf')
+            raise ValueError('section [unix_http_server] not supported.\n'
+                             'remove this from supervisord.conf')
         return configs
 
     @raise_not_implemented
