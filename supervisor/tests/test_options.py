@@ -2013,9 +2013,7 @@ class ServerOptionsTests(unittest.TestCase):
         from supervisor.options import FastCGIProcessConfig
         text = lstrip("""\
         [fcgi-program:foo]
-        socket = unix:///tmp/%(program_name)s%(ENV_FOO_SOCKET_EXT)s
-        socket_owner = %(ENV_FOO_SOCKET_USER)s:testgroup
-        socket_mode = %(ENV_FOO_SOCKET_MODE)s
+        socket = tcp://localhost:%(ENV_SERVER_PORT)s
         process_name = %(ENV_FOO_PROCESS_PREFIX)s_%(program_name)s_%(process_num)s
         command = /bin/foo --arg1=%(ENV_FOO_COMMAND_ARG1)s
         numprocs = %(ENV_FOO_NUMPROCS)s
@@ -2025,9 +2023,6 @@ class ServerOptionsTests(unittest.TestCase):
         instance = self._makeOne()
         instance.environ_expansions = {'ENV_HOME': '/tmp',
                                        'ENV_SERVER_PORT': '9210',
-                                       'ENV_FOO_SOCKET_EXT': '.usock',
-                                       'ENV_FOO_SOCKET_USER': 'testuser',
-                                       'ENV_FOO_SOCKET_MODE': '0666',
                                        'ENV_FOO_PROCESS_PREFIX': 'fcgi-',
                                        'ENV_FOO_COMMAND_ARG1': 'bar',
                                        'ENV_FOO_NUMPROCS': '2',
@@ -2037,23 +2032,10 @@ class ServerOptionsTests(unittest.TestCase):
         config.expansions = instance.environ_expansions
         config.read_string(text)
 
-        # Patch pwd and grp module functions to give us sentinel
-        # uid/gid values so that the test does not depend on
-        # any specific system users
-        pwd_mock = Mock()
-        pwd_mock.return_value = (None, None, sentinel.uid, sentinel.gid)
-        grp_mock = Mock()
-        grp_mock.return_value = (None, None, sentinel.gid)
-
-        @patch('pwd.getpwuid', pwd_mock)
-        @patch('pwd.getpwnam', pwd_mock)
-        @patch('grp.getgrnam', grp_mock)
         def get_process_groups(instance, config):
             return instance.process_groups_from_parser(config)
 
         gconfigs = get_process_groups(instance, config)
-
-        exp_owner = (sentinel.uid, sentinel.gid)
 
         self.assertEqual(len(gconfigs), 1)
 
@@ -2062,9 +2044,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(gconf_foo.name, 'foo')
         self.assertEqual(gconf_foo.priority, 1)
         self.assertEqual(gconf_foo.socket_config.url,
-                         'unix:///tmp/foo.usock')
-        self.assertEqual(exp_owner, gconf_foo.socket_config.get_owner())
-        self.assertEqual(438, gconf_foo.socket_config.get_mode())  # 0666 in Py2, 0o666 in Py3
+                         'tcp://localhost:9210')
         self.assertEqual(len(gconf_foo.process_configs), 2)
         pconfig_foo = gconf_foo.process_configs[0]
         self.assertEqual(pconfig_foo.__class__, FastCGIProcessConfig)
