@@ -319,7 +319,7 @@ class dispatcher(object):
         if err in (errno.EINPROGRESS,
                    errno.EALREADY,
                    errno.EWOULDBLOCK):
-            return self.handle_error()
+            return
 
         if err in (0, errno.EISCONN):
             self.addr = address
