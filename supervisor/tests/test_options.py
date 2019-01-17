@@ -1142,21 +1142,6 @@ class ServerOptionsTests(unittest.TestCase):
             self.assertEqual(exc.args[0],
                              "section [inet_http_server] has no port value")
 
-    def test_cleanup_afunix_unlink(self):
-        fn = tempfile.mktemp()
-        with open(fn, 'w') as f:
-            f.write('foo')
-        instance = self._makeOne()
-
-        class Server:
-            pass
-
-        instance.httpservers = [({'family': socket.AF_UNIX, 'file': fn},
-                                 Server())]
-        instance.pidfile = ''
-        instance.cleanup()
-        self.assertFalse(os.path.exists(fn))
-
     def test_cleanup_removes_pidfile(self):
         pidfile = tempfile.mktemp()
         try:
