@@ -1006,14 +1006,9 @@ class ServerOptionsTests(unittest.TestCase):
         config = UnhosedConfigParser()
         config.read_string(text)
         instance.configfile = StringIO(text)
-        instance.read_config(StringIO(text))
-        instance.realize(args=[])
-        # unix_http_server
-        options = instance.configroot.supervisord
-        self.assertEqual(options.server_configs[0]['family'], socket.AF_UNIX)
-        self.assertEqual(options.server_configs[0]['file'], '/tmp/supvtest.sock')
-        self.assertEqual(options.server_configs[0]['chmod'], 448)  # defaults
-        self.assertEqual(options.server_configs[0]['chown'], (-1, -1))  # defaults
+
+        # unix socket not supported
+        self.assertRaises(ValueError, instance.read_config, StringIO(text))
 
     def test_options_afunix_chxxx_values_valid(self):
         instance = self._makeOne()
