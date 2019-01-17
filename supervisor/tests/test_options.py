@@ -2556,13 +2556,6 @@ class ServerOptionsTests(unittest.TestCase):
         msg = instance.dropPrivileges(None)
         self.assertEqual(msg, "No user specified to setuid to!")
 
-    @patch('pwd.getpwuid', Mock(return_value=["foo", None, 12, 34]))
-    @patch('os.getuid', Mock(return_value=12))
-    def test_dropPrivileges_nonroot_same_user(self):
-        instance = self._makeOne()
-        msg = instance.dropPrivileges(os.getuid())
-        self.assertEqual(msg, None)  # no error if same user
-
     def test_daemonize_notifies_poller_before_and_after_fork(self):
         instance = self._makeOne()
         instance._daemonize = lambda: None
