@@ -1956,27 +1956,21 @@ class ServerOptionsTests(unittest.TestCase):
         from supervisor.options import FastCGIProcessConfig
         text = lstrip("""\
         [fcgi-program:foo]
-        socket = unix:///tmp/%(program_name)s.sock
-        socket_owner = testuser:testgroup
-        socket_mode = 0666
+        socket = tcp://localhost:5000
         process_name = %(program_name)s_%(process_num)s
         command = /bin/foo
         numprocs = 2
         priority = 1
 
         [fcgi-program:bar]
-        socket = unix:///tmp/%(program_name)s.sock
+        socket = tcp://localhost:5001
         process_name = %(program_name)s_%(process_num)s
         command = /bin/bar
         user = testuser
         numprocs = 3
 
-        [fcgi-program:flub]
-        socket = unix:///tmp/%(program_name)s.sock
-        command = /bin/flub
-
         [fcgi-program:cub]
-        socket = tcp://localhost:6000
+        socket = tcp://localhost:5002
         command = /bin/cub
         """)
         from supervisor.options import UnhosedConfigParser
@@ -1984,30 +1978,19 @@ class ServerOptionsTests(unittest.TestCase):
         config.read_string(text)
         instance = self._makeOne()
 
-        # Patch pwd and grp module functions to give us sentinel
-        # uid/gid values so that the test does not depend on
-        # any specific system users
-        pwd_mock = Mock()
-        pwd_mock.return_value = (None, None, sentinel.uid, sentinel.gid)
-        grp_mock = Mock()
-        grp_mock.return_value = (None, None, sentinel.gid)
-
         def get_process_groups(instance, config):
             return instance.process_groups_from_parser(config)
 
         gconfigs = get_process_groups(instance, config)
 
-        exp_owner = (sentinel.uid, sentinel.gid)
-
-        self.assertEqual(len(gconfigs), 4)
+        self.assertEqual(len(gconfigs), 3)
 
         gconf_foo = gconfigs[0]
         self.assertEqual(gconf_foo.__class__, FastCGIGroupConfig)
         self.assertEqual(gconf_foo.name, 'foo')
         self.assertEqual(gconf_foo.priority, 1)
-
-        self.assertEqual(exp_owner, gconf_foo.socket_config.get_owner())
-        self.assertEqual(438, gconf_foo.socket_config.get_mode())  # 0666 in Py2, 0o666 in Py3
+        self.assertEqual(gconf_foo.socket_config.url,
+                         'tcp://localhost:5000')
         self.assertEqual(len(gconf_foo.process_configs), 2)
         pconfig_foo = gconf_foo.process_configs[0]
         self.assertEqual(pconfig_foo.__class__, FastCGIProcessConfig)
@@ -2015,24 +1998,15 @@ class ServerOptionsTests(unittest.TestCase):
         gconf_bar = gconfigs[1]
         self.assertEqual(gconf_bar.name, 'bar')
         self.assertEqual(gconf_bar.priority, 999)
-
-        self.assertEqual(exp_owner, gconf_bar.socket_config.get_owner())
-        self.assertEqual(448, gconf_bar.socket_config.get_mode())  # 0700 in Py2, 0o700 in Py3
         self.assertEqual(len(gconf_bar.process_configs), 3)
+        self.assertEqual(gconf_bar.socket_config.url,
+                         'tcp://localhost:5001')
 
         gconf_cub = gconfigs[2]
         self.assertEqual(gconf_cub.name, 'cub')
         self.assertEqual(gconf_cub.socket_config.url,
-                         'tcp://localhost:6000')
+                         'tcp://localhost:5002')
         self.assertEqual(len(gconf_cub.process_configs), 1)
-
-        gconf_flub = gconfigs[3]
-        self.assertEqual(gconf_flub.name, 'flub')
-        self.assertEqual(gconf_flub.socket_config.url,
-                         'unix:///tmp/flub.sock')
-        self.assertEqual(None, gconf_flub.socket_config.get_owner())
-        self.assertEqual(448, gconf_flub.socket_config.get_mode())  # 0700 in Py2, 0o700 in Py3
-        self.assertEqual(len(gconf_flub.process_configs), 1)
 
     def test_fcgi_programs_from_parser_with_environment_expansions(self):
         from supervisor.options import FastCGIGroupConfig
