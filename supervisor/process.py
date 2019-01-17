@@ -981,11 +981,12 @@ class EventListenerPool(ProcessGroupBase):
                                                    pool_serial, payload)
                     process.write(as_bytes(envelope))
                 except OSError as why:
-                    if why.args[0] != errno.EPIPE:
+                    if why.args[0] not in (errno.EBADF,
+                                           errno.EPIPE):
                         raise
 
                     self.config.options.logger.debug(
-                        'epipe occurred while sending event %s '
+                        'epipe|ebadf occurred while sending event %s '
                         'to listener %s, listener state unchanged' % (
                             event.serial, process.config.name))
                     continue

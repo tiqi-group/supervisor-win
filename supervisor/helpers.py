@@ -43,7 +43,12 @@ class StreamAsync(threading.Thread):
 
     def run(self):
         while not self._event.is_set():
-            data = self.stream.readline()
+            try:
+                data = self.stream.readline()
+            except IOError:
+                # occurs when the supervisor is
+                # restarted with the reload command
+                break
             if not data:
                 break
             self.res_put.acquire()
