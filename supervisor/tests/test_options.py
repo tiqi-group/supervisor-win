@@ -771,7 +771,7 @@ class ServerOptionsTests(unittest.TestCase):
     def test_read_config_malformed_config_file_raises_valueerror(self):
         instance = self._makeOne()
 
-        with tempfile.NamedTemporaryFile(mode="w+") as f:
+        with TempFileOpen(mode="w+") as f:
             try:
                 f.write("[supervisord]\njunk")
                 f.flush()
