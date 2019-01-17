@@ -1010,10 +1010,7 @@ class ServerOptions(Options):
         return configs
 
     def daemonize(self):
-        # self.poller.before_daemonize()
-        # self._daemonize()
-        # self.poller.after_daemonize()
-        pass
+        warnings.warn("method daemonize unsupported!")
 
     def write_pidfile(self):
         pid = os.getpid()
