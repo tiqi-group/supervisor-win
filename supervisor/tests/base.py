@@ -138,6 +138,9 @@ class DummyOptions:
     def get_pid_history(self, pid):
         return self.pidhistory[pid]
 
+    def remove_pid_history(self, pid):
+        del self.pidhistory[pid]
+
     def cleanup_fds(self):
         self.fds_cleaned_up = True
 

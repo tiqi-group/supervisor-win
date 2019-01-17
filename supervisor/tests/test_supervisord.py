@@ -132,7 +132,7 @@ class SupervisordTests(unittest.TestCase):
 
     def test_reap(self):
         options = DummyOptions()
-        options.waitpid_return = 1, 1
+        options.waitpid_return = [(1, 1)]
         pconfig = DummyPConfig(options, 'process', 'process', '/bin/process1')
         process = DummyProcess(pconfig)
         process.drained = False
