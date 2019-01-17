@@ -2563,13 +2563,6 @@ class ServerOptionsTests(unittest.TestCase):
         msg = instance.dropPrivileges(os.getuid())
         self.assertEqual(msg, None)  # no error if same user
 
-    @patch('pwd.getpwuid', Mock(return_value=["foo", None, 55, 34]))
-    @patch('os.getuid', Mock(return_value=12))
-    def test_dropPrivileges_nonroot_different_user(self):
-        instance = self._makeOne()
-        msg = instance.dropPrivileges(42)
-        self.assertEqual(msg, "Can't drop privilege as nonroot user")
-
     def test_daemonize_notifies_poller_before_and_after_fork(self):
         instance = self._makeOne()
         instance._daemonize = lambda: None
