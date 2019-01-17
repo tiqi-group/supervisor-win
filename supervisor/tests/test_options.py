@@ -1615,7 +1615,7 @@ class ServerOptionsTests(unittest.TestCase):
         [program:foo]
         ;no command
         """)
-        with tempfile.NamedTemporaryFile(mode="w+") as f:
+        with TempFileOpen(mode="w+") as f:
             try:
                 f.write(text)
                 f.flush()
