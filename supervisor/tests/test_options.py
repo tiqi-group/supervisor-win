@@ -2449,7 +2449,7 @@ class ServerOptionsTests(unittest.TestCase):
         instance.logger = DummyLogger()
         instance.clear_autochildlogdir()
         self.assertEqual(instance.logger.data,
-                         ["Failed to clean up '%s'" % filename])
+                         ["Failed to clean up '%r'" % filename])
 
     def test_openhttpservers_reports_friendly_usage_when_eaddrinuse(self):
         supervisord = DummySupervisor()

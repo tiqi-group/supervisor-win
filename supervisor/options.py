@@ -1119,7 +1119,7 @@ class ServerOptions(Options):
                 try:
                     self.remove(pathname)
                 except (OSError, IOError):
-                    self.logger.warn('Failed to clean up %r' % pathname)
+                    self.logger.warn('Failed to clean up \'%r\'' % pathname)
 
     def get_socket_map(self):
         return asyncore.socket_map
