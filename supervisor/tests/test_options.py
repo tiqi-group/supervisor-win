@@ -1157,28 +1157,6 @@ class ServerOptionsTests(unittest.TestCase):
         instance.cleanup()
         self.assertFalse(os.path.exists(fn))
 
-    def test_cleanup_afunix_nounlink(self):
-        fn = tempfile.mktemp()
-        try:
-            with open(fn, 'w') as f:
-                f.write('foo')
-            instance = self._makeOne()
-
-            class Server:
-                pass
-
-            instance.httpservers = [({'family': socket.AF_UNIX, 'file': fn},
-                                     Server())]
-            instance.pidfile = ''
-            instance.unlink_socketfiles = False
-            instance.cleanup()
-            self.assertTrue(os.path.exists(fn))
-        finally:
-            try:
-                os.unlink(fn)
-            except OSError:
-                pass
-
     def test_cleanup_removes_pidfile(self):
         pidfile = tempfile.mktemp()
         try:
