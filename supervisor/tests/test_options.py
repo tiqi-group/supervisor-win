@@ -1179,30 +1179,6 @@ class ServerOptionsTests(unittest.TestCase):
             except OSError:
                 pass
 
-    def test_cleanup_afunix_ignores_oserror_enoent(self):
-        notfound = os.path.join(os.path.dirname(__file__), 'notfound')
-        socketname = tempfile.mktemp()
-        try:
-            with open(socketname, 'w') as f:
-                f.write('foo')
-            instance = self._makeOne()
-
-            class Server:
-                pass
-
-            instance.httpservers = [
-                ({'family': socket.AF_UNIX, 'file': notfound}, Server()),
-                ({'family': socket.AF_UNIX, 'file': socketname}, Server()),
-            ]
-            instance.pidfile = ''
-            instance.cleanup()
-            self.assertFalse(os.path.exists(socketname))
-        finally:
-            try:
-                os.unlink(socketname)
-            except OSError:
-                pass
-
     def test_cleanup_removes_pidfile(self):
         pidfile = tempfile.mktemp()
         try:
