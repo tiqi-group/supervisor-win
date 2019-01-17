@@ -355,6 +355,7 @@ def profile(cmd, globals, locals, sort_order, callers):  # pragma: no cover
         else:
             stats.print_stats(.3)
     finally:
+        os.close(fd)
         os.remove(fn)
 
 

@@ -31,8 +31,8 @@ class EntryPointTests(unittest.TestCase):
         new_stdout = StringIO()
         new_stdout.fileno = lambda: 1
         old_stdout = sys.stdout
+        tempdir = tempfile.mkdtemp()
         try:
-            tempdir = tempfile.mkdtemp()
             log = os.path.join(tempdir, 'log')
             pid = os.path.join(tempdir, 'pid')
             sys.stdout = new_stdout
@@ -53,8 +53,8 @@ class EntryPointTests(unittest.TestCase):
             new_stdout = StringIO()
             new_stdout.fileno = lambda: 1
             old_stdout = sys.stdout
+            tempdir = tempfile.mkdtemp()
             try:
-                tempdir = tempfile.mkdtemp()
                 log = os.path.join(tempdir, 'log')
                 pid = os.path.join(tempdir, 'pid')
                 sys.stdout = new_stdout
