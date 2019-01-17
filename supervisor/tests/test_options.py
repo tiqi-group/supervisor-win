@@ -1221,7 +1221,7 @@ class ServerOptionsTests(unittest.TestCase):
         stdout_logfile_backups = 1
         stdout_logfile_maxbytes = 100MB
         stdout_events_enabled = true
-        stopsignal = KILL
+        stopsignal = TERM
         stopwaitsecs = 100
         killasgroup = true
         exitcodes = 1,4
@@ -1242,12 +1242,12 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(pconfig.autorestart, False)
         self.assertEqual(pconfig.startsecs, 100)
         self.assertEqual(pconfig.startretries, 100)
-        self.assertEqual(pconfig.uid, 0)
+        self.assertEqual(pconfig.uid, None)
         self.assertEqual(pconfig.stdout_logfile, None)
         self.assertEqual(pconfig.stdout_capture_maxbytes, 0)
         self.assertEqual(pconfig.stdout_logfile_maxbytes, 104857600)
         self.assertEqual(pconfig.stdout_events_enabled, True)
-        self.assertEqual(pconfig.stopsignal, signal.SIGKILL)
+        self.assertEqual(pconfig.stopsignal, signal.SIGTERM)
         self.assertEqual(pconfig.stopasgroup, False)
         self.assertEqual(pconfig.killasgroup, True)
         self.assertEqual(pconfig.stopwaitsecs, 100)
