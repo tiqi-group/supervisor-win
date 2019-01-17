@@ -2409,20 +2409,20 @@ class ServerOptionsTests(unittest.TestCase):
         dn = tempfile.mkdtemp()
         try:
             instance = self._makeOne()
+            instance.logger = DummyLogger()
             instance.childlogdir = dn
             sid = 'supervisor'
             instance.identifier = sid
             logfn = instance.get_autochildlog_name('foo', sid, 'stdout')
             first = logfn + '.1'
             second = logfn + '.2'
-            f1 = open(first, 'w')
-            f2 = open(second, 'w')
+            # files need to be closed otherwise the test will fail to remove them
+            open(first, 'w').close()
+            open(second, 'w').close()
             instance.clear_autochildlogdir()
             self.assertFalse(os.path.exists(logfn))
             self.assertFalse(os.path.exists(first))
             self.assertFalse(os.path.exists(second))
-            f1.close()
-            f2.close()
         finally:
             shutil.rmtree(dn)
 
