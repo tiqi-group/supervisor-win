@@ -295,7 +295,7 @@ class Supervisor(object):
                 self.ticks[period] = this_tick
                 events.notify(event(this_tick, self))
 
-    def reap(self, once=False, recursionguard=0):
+    def reap(self, **kwargs):
         for pid, sts in self.options.waitpid():
             if not pid:
                 break
