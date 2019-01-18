@@ -62,7 +62,11 @@ class Supervisor(object):
         if not self.options.first:
             # prevent crash on libdispatch-based systems, at least for the
             # first request
-            self.options.cleanup_fds()
+            try:
+                self.options.cleanup_fds()
+            except NotImplementedError:
+                pass
+
         info_messages = []
         critical_messages = []
         warn_messages = []

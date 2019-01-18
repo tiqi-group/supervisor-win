@@ -1104,14 +1104,10 @@ class ServerOptions(Options):
     def get_socket_map(self):
         return asyncore.socket_map
 
+    @raise_not_implemented
     def cleanup_fds(self):
-        # try to close any leaked file descriptors (for reload)
-        start = 5
-        for x in range(start, self.minfds):
-            try:
-                os.close(x)
-            except OSError:
-                pass
+        """dummy"""
+        pass
 
     def kill(self, pid, sig):
         self.pidhistory[pid].process.send_signal(sig)
