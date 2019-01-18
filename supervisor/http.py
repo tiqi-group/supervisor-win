@@ -676,15 +676,20 @@ class tail_f_producer(object):
         self.closed = False
         self.handler = None
         self.reopen()
-        sz = self.file.tell()
-        if sz >= self.head:
-            self.sz = sz - self.head
+        self.update_sz()
 
     def __del__(self):
         self.close()
 
     def reopen(self):
         self._open()
+
+    def update_sz(self):
+        """Is the difference in size between an old
+        version and currently being read"""
+        sz = self.file.tell()
+        if sz >= self.head:
+            self.sz = sz - self.head
 
     def more(self):
         self._follow()
@@ -713,7 +718,7 @@ class tail_f_producer(object):
         try:
             self.file = codecs.open(self.filename, 'rb',
                                     loggers.Handler.encoding)
-            self.ctime = os.stat(self.filename)[stat.ST_MTIME]
+            self.mtime = os.stat(self.filename)[stat.ST_MTIME]
             self.file.seek(0, os.SEEK_END)
             self.closed = False
         except:
@@ -728,7 +733,7 @@ class tail_f_producer(object):
 
     def _follow(self):
         try:
-            ctime = os.stat(self.filename)[stat.ST_MTIME]
+            mtime = os.stat(self.filename)[stat.ST_MTIME]
         except (OSError, ValueError):
             # file was unlinked
             return
@@ -736,8 +741,8 @@ class tail_f_producer(object):
         if self.closed and os.path.isfile(self.filename):
             self.reopen()
 
-        if self.ctime != ctime:  # log rotation occurred
-            self.sz = 0
+        if self.mtime != mtime:  # log rotation occurred
+            self.update_sz()
 
     def _fsize(self):
         return os.fstat(self.file.fileno())[stat.ST_SIZE]
