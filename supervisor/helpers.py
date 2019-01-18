@@ -58,10 +58,14 @@ class StreamAsync(threading.Thread):
             finally:
                 self.res_put.release()
 
-    def stop(self):
+    def close(self):
         """Stops thread execution"""
         self._event.set()
         self.readline()
+        try:
+            self.stream.close()
+        except IOError:
+            pass
 
     def readline(self):
         """read one line from queue"""
