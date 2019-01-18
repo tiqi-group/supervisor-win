@@ -1145,7 +1145,7 @@ class ServerOptions(Options):
             subprocess = self.pidhistory[pid]
             process = subprocess.process
             if process.killed or process.poll() is not None:
-                stopped.append((pid, (process.wait(), 'stopped')))
+                stopped.append((pid, (process.poll(), 'stopped')))
         if not stopped:
             stopped.append((None, None))
         return stopped
