@@ -317,7 +317,7 @@ class PStreamOutputDispatcher(POutputDispatcher):
             return super(PStreamOutputDispatcher, self).close()
         finally:
             if self.fd.is_alive():
-                self.fd.stop()
+                self.fd.close()
 
 
 class PEventListenerDispatcher(PLogDispatcher):
@@ -507,7 +507,8 @@ class PStreamEventListenerDispatcher(PEventListenerDispatcher):
         try:
             super(PStreamEventListenerDispatcher, self).close()
         finally:
-            self.fd.close()
+            if self.fd.is_alive():
+                self.fd.close()
 
 
 class PInputDispatcher(PDispatcher):
