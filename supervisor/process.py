@@ -43,19 +43,21 @@ class ProcessJobHandler(object):
     https://stackoverflow.com/questions/23434842/python-how-to-kill-child-processes-when-parent-dies/23587108#23587108
     """
 
-    def __init__(self):
-        self.hJob = win32job.CreateJobObject(None, "SupervisorJob{}".format(os.getpid()))
+    def __init__(self, suffix):
+        self.hJob = win32job.CreateJobObject(None, "SupervisorJob{}".format(suffix))
         extended_info = win32job.QueryInformationJobObject(self.hJob, win32job.JobObjectExtendedLimitInformation)
         extended_info['BasicLimitInformation']['LimitFlags'] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
         win32job.SetInformationJobObject(self.hJob, win32job.JobObjectExtendedLimitInformation, extended_info)
 
-    def add_child(self, child_pid):
+    def add_child(self, pid):
         """Adds the child process to the job"""
         # Convert process id to process handle
         perms = win32con.PROCESS_TERMINATE | win32con.PROCESS_SET_QUOTA
-        hProcess = win32api.OpenProcess(perms, False, child_pid)
-
+        hProcess = win32api.OpenProcess(perms, False, pid)
         win32job.AssignProcessToJobObject(self.hJob, hProcess)
+
+    def terminate(self):
+        win32job.TerminateJobObject(self.hJob, 0)
 
 
 class ProcessCpuHandler(object):
