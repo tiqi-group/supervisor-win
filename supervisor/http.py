@@ -718,7 +718,7 @@ class tail_f_producer(object):
         try:
             self.file = codecs.open(self.filename, 'rb',
                                     loggers.Handler.encoding)
-            self.mtime = os.stat(self.filename)[stat.ST_MTIME]
+            self.ctime = os.stat(self.filename)[stat.ST_CTIME]
             self.file.seek(0, os.SEEK_END)
             self.closed = False
         except:
@@ -733,7 +733,7 @@ class tail_f_producer(object):
 
     def _follow(self):
         try:
-            mtime = os.stat(self.filename)[stat.ST_MTIME]
+            ctime = os.stat(self.filename)[stat.ST_CTIME]
         except (OSError, ValueError):
             # file was unlinked
             return
@@ -741,7 +741,7 @@ class tail_f_producer(object):
         if self.closed and os.path.isfile(self.filename):
             self.reopen()
 
-        if self.mtime != mtime:  # log rotation occurred
+        if self.ctime != ctime:  # log rotation occurred
             self.update_sz()
 
     def _fsize(self):
