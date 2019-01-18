@@ -528,16 +528,22 @@ class PInputDispatcher(PDispatcher):
 
     def flush(self):
         # other code depends on this raising EPIPE if the pipe is closed
-        sent = self.process.config.options.write(self.fd,
-                                                 self.input_buffer)
-        self.input_buffer = self.input_buffer[sent:]
+        try:
+            sent = self.process.config.options.write(self.fd,
+                                                     self.input_buffer)
+            self.input_buffer = self.input_buffer[sent:]
+        except OSError as err:
+            if err[0] not in (errno.EBADF,
+                              errno.EPIPE):
+                raise
 
     def handle_write_event(self):
         if self.input_buffer:
             try:
                 self.flush()
             except OSError as why:
-                if why.args[0] == errno.EPIPE:
+                if why.args[0] in (errno.EPIPE,
+                                   errno.EBADF):
                     self.input_buffer = ''
                     self.close()
                 else:
