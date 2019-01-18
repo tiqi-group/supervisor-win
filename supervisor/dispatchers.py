@@ -534,8 +534,11 @@ class PInputDispatcher(PDispatcher):
                                                      self.input_buffer)
             self.input_buffer = self.input_buffer[sent:]
         except OSError as why:
-            if why.args[0] not in (errno.EBADF,
-                                   errno.EPIPE):
+            if why.args[0] in (errno.EBADF,
+                               errno.EPIPE):
+                self.input_buffer = ''
+                self.close()
+            else:
                 raise
 
     def handle_write_event(self):
