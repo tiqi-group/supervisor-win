@@ -533,9 +533,9 @@ class PInputDispatcher(PDispatcher):
             sent = self.process.config.options.write(self.fd,
                                                      self.input_buffer)
             self.input_buffer = self.input_buffer[sent:]
-        except OSError as err:
-            if err[0] not in (errno.EBADF,
-                              errno.EPIPE):
+        except OSError as why:
+            if why.args[0] not in (errno.EBADF,
+                                   errno.EPIPE):
                 raise
 
     def handle_write_event(self):
