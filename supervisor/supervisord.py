@@ -51,6 +51,7 @@ class Supervisor(object):
     lastshutdownreport = 0  # throttle for delayed process error reports at stop
     process_groups = None  # map of process group name to process group object
     stop_groups = None  # list used for priority ordered shutdown
+    job_handler = None
 
     def __init__(self, options):
         self.options = options
@@ -91,6 +92,7 @@ class Supervisor(object):
         self.process_groups = {}  # clear
         self.stop_groups = None  # clear
         events.clear()
+        self.make_job_handler()  # container
         try:
             for config in self.options.process_group_configs:
                 self.add_process_group(config)
@@ -110,6 +112,19 @@ class Supervisor(object):
             raise
         finally:
             self.options.cleanup()
+            if self.options.job_handler:
+                self.options.job_handler.terminate()
+
+    def make_job_handler(self):
+        """Object that manages subprocesses (simulates a process tree, causing the subprocess
+        to be closed if the supervisor stops working unexpectedly)
+        """
+        try:
+            from supervisor.process import ProcessJobHandler
+            self.options.job_handler = ProcessJobHandler(os.getpid())
+        except (ImportError, Exception):  # Supervisor can not stop due to execution failure
+            self.options.job_handler = None
+        return self.options.job_handler
 
     def diff_to_active(self, new=None):
         if not new:
@@ -362,30 +377,16 @@ def profile(cmd, globals, locals, sort_order, callers):  # pragma: no cover
         os.remove(fn)
 
 
-def make_job_handler():
-    """Object that manages subprocesses (simulates a process tree, causing the subprocess
-    to be closed if the supervisor stops working unexpectedly)
-    """
-    try:
-        from supervisor.process import ProcessJobHandler
-        job_handler = ProcessJobHandler()
-    except (ImportError, Exception):  # Supervisor can not stop due to execution failure
-        job_handler = None
-    return job_handler
-
-
 # Main program
 def main(args=None, test=False):
     # assert os.name == "posix", "This code makes Unix-specific assumptions"
     # if we hup, restart by making a new Supervisor()
     first = True
-    job_handler = make_job_handler()
     while 1:
         options = ServerOptions()
         options.realize(args, doc=__doc__)
         options.first = first
         options.test = test
-        options.job_handler = job_handler
         try:
             if options.profile_options:
                 sort_order, callers = options.profile_options
