@@ -90,10 +90,10 @@ class PLogDispatcher(PDispatcher):
             for handler in log.handlers:
                 try:
                     handler.remove()
-                except OSError as err:
+                except OSError as why:
                     # the file is already being used by another process.
                     # tail -f can cause this.
-                    if not err[0] == errno.EPIPE:
+                    if not why.args[0] == errno.EPIPE:
                         raise
                 finally:
                     handler.reopen()
