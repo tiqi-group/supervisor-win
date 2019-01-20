@@ -21,7 +21,6 @@ from supervisor.compat import (
 )
 from supervisor.datatypes import RestartUnconditionally
 from supervisor.dispatchers import EventListenerStates
-from supervisor.helpers import StreamAsync
 from supervisor.medusa import asyncore_25 as asyncore
 from supervisor.options import (
     ProcessException,
@@ -61,22 +60,15 @@ class ProcessJobHandler(object):
 
 
 class ProcessCpuHandler(object):
-    REALTIME = "realtime"
-    HIGH = "high"
-    ABOVE = "above"
-    NORMAL = "normal"
-    BELOW = "below"
-    IDLE = "idle"
-
-    options = {
-        IDLE: win32process.IDLE_PRIORITY_CLASS,
-        BELOW: win32process.BELOW_NORMAL_PRIORITY_CLASS,
-        NORMAL: win32process.NORMAL_PRIORITY_CLASS,
-        ABOVE: win32process.ABOVE_NORMAL_PRIORITY_CLASS,
-        HIGH: win32process.HIGH_PRIORITY_CLASS,
-        REALTIME: win32process.REALTIME_PRIORITY_CLASS
-    }
-
+    class priority(object):
+        realtime = win32process.REALTIME_PRIORITY_CLASS
+        high = win32process.HIGH_PRIORITY_CLASS
+        above = win32process.ABOVE_NORMAL_PRIORITY_CLASS
+        normal = win32process.NORMAL_PRIORITY_CLASS
+        below = win32process.BELOW_NORMAL_PRIORITY_CLASS
+        idle = win32process.IDLE_PRIORITY_CLASS
+        default = "normal"
+    
     def __init__(self, pid=None):
         self.pHandle = self._get_handle_for_pid(pid=pid, ro=False)
 
@@ -116,9 +108,9 @@ class ProcessCpuHandler(object):
         except win32process.error as e:
             raise ValueError(e)
 
-    def set_priority(self, priority=NORMAL):
+    def set_priority(self, value=priority.default):
         """ Set The Priority of a Windows Process """
-        win32process.SetPriorityClass(self.pHandle, self.options[priority])
+        win32process.SetPriorityClass(self.pHandle, getattr(self.priority, value))
 
     @staticmethod
     def _get_handle_for_pid(pid, ro=True):
