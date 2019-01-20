@@ -562,7 +562,8 @@ class DummyPConfig:
                  stderr_logfile_backups=0, stderr_logfile_maxbytes=0,
                  redirect_stderr=False,
                  stopsignal=None, stopwaitsecs=10, stopasgroup=False, killasgroup=False,
-                 exitcodes=(0, 2), environment=None, serverurl=None):
+                 exitcodes=(0, 2), environment=None, serverurl=None,
+                 systemjob=None):
         self.options = options
         self.name = name
         self.command = command
@@ -572,6 +573,7 @@ class DummyPConfig:
         self.startsecs = startsecs
         self.startretries = startretries
         self.uid = uid
+        self.systemjob = systemjob
         self.stdout_logfile = stdout_logfile
         self.stdout_capture_maxbytes = stdout_capture_maxbytes
         self.stdout_events_enabled = stdout_events_enabled
