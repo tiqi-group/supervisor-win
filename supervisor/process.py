@@ -401,7 +401,10 @@ class Subprocess(object):
         options.setpgrp()
 
         # set user
-        setuid_msg = self.set_uid()
+        try:
+            setuid_msg = self.set_uid()
+        except NotImplementedError:
+            setuid_msg = None
         if setuid_msg:
             uid = self.config.uid
             msg = "couldn't setuid to %s: %s\n" % (uid, setuid_msg)
