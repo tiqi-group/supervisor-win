@@ -348,26 +348,26 @@ class Subprocess(object):
         if self.config.systemjob and isinstance(job_handler, ProcessJobHandler):
             try:
                 job_handler.add_child(proc.pid)
-            except Exception as e:
-                options.logger.error("subprocess job/add: %s" % e)
+            except Exception as err:
+                options.logger.error("subprocess job add: %s" % err)
         try:
             cpu_handler = ProcessCpuHandler(proc.pid)
-        except Exception as e:
-            options.logger.error("subprocess cpu-handler: %s" % e)
+        except Exception as err:
+            options.logger.error("subprocess cpu: %s" % err)
             cpu_handler = None
         if cpu_handler:
             try:
                 # Configures the process cpu priority
                 if self.config.cpupriority:
                     cpu_handler.set_priority(self.config.cpupriority)
-            except Exception as e:
-                options.logger.error("subprocess cpu-priority: %s" % e)
+            except Exception as err:
+                options.logger.error("subprocess cpu priority: %s" % err)
             try:
                 # Sets the number of cores to process
                 if self.config.cpuaffinity > 0:
                     cpu_handler.set_affinity_mask(self.config.cpuaffinity)
-            except Exception as e:
-                options.logger.error("subprocess cpu-affinity: %s" % e)
+            except Exception as err:
+                options.logger.error("subprocess cpu affinity: %s" % err)
 
     def _open(self, filename, argv, **kwargs):
         """start process"""
