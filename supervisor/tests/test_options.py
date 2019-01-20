@@ -1079,7 +1079,7 @@ class ServerOptionsTests(unittest.TestCase):
 
         @patch('os.close', close)
         def f():
-            instance.cleanup_fds()
+            self.assertRaises(NotImplementedError, instance.cleanup_fds)
 
         f()
         self.assertEqual(closed, [5, 6, 8, 9])
