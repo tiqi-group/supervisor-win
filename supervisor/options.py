@@ -543,6 +543,7 @@ class ServerOptions(Options):
             try:
                 parser.read_file(fp)
             except AttributeError:
+                # noinspection PyDeprecation
                 parser.readfp(fp)
         except ConfigParser.ParsingError as why:
             raise ValueError(str(why))
