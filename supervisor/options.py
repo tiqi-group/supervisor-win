@@ -1226,7 +1226,7 @@ class ServerOptions(Options):
 
     def get_path(self):
         """Return a list corresponding to $PATH, or a default."""
-        path = ["/bin", "/usr/bin", "/usr/local/bin"]
+        path = []
         if "PATH" in os.environ:
             p = os.environ["PATH"]
             if p:
