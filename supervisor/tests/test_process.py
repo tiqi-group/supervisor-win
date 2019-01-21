@@ -830,7 +830,7 @@ class SubprocessTests(unittest.TestCase):
         from supervisor import events
         events.subscribe(events.Event, L.append)
         instance.state = ProcessStates.BACKOFF
-        instance.kill(signal.SIGKILL)
+        instance.kill(signal.SIGTERM)
         self.assertEqual(options.logger.data[0],
                          'Attempted to kill test, which is in BACKOFF state.')
         self.assertEqual(instance.killing, 0)
