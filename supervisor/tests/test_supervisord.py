@@ -239,12 +239,12 @@ class SupervisordTests(unittest.TestCase):
 
     def test_handle_unknown_signal(self):
         options = DummyOptions()
-        options._signal = signal.SIGUSR1
+        options._signal = signal.SIGSEGV
         supervisord = self._makeOne(options)
         supervisord.handle_signal()
         self.assertEqual(supervisord.options.mood, 1)
         self.assertEqual(options.logger.data[0],
-                         'received SIGUSR1 indicating nothing')
+                         'received SIGSEGV indicating nothing')
 
     def test_get_state(self):
         from supervisor.states import SupervisorStates
