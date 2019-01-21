@@ -196,7 +196,12 @@ class DummyOptions:
         return os.stat(filename)
 
     def get_path(self):
-        return ["/bin", "/usr/bin", "/usr/local/bin"]
+        path = []
+        if "PATH" in os.environ:
+            p = os.environ["PATH"]
+            if p:
+                path = p.split(os.pathsep)
+        return path
 
     def get_pid(self):
         import os

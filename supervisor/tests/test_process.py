@@ -157,14 +157,15 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(args[1], ['/bin/sh', 'foo'])
 
     def test_get_execv_args_rel(self):
-        executable = 'sh foo'
+        executable = 'cmd.exe foo'
         options = DummyOptions()
-        config = DummyPConfig(options, 'sh', executable)
+        config = DummyPConfig(options, 'cmd.exe', executable)
         instance = self._makeOne(config)
         args = instance.get_execv_args()
         self.assertEqual(len(args), 2)
-        self.assertEqual(args[0], '/bin/sh')
-        self.assertEqual(args[1], ['sh', 'foo'])
+        self.assertEqual(args[0].lower(),
+                         os.environ.get("ComSpec").lower())
+        self.assertEqual(args[1], ['cmd.exe', 'foo'])
 
     def test_record_spawnerr(self):
         options = DummyOptions()
