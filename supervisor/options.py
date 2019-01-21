@@ -428,7 +428,7 @@ class ServerOptions(Options):
         self.add("nodaemon", "supervisord.nodaemon", "n", "nodaemon", flag=1,
                  default=0)
         self.add("delay_secs", "supervisord.delay_secs", "p",
-                 "delay_secs", default=0.5)
+                 "delay_secs", default=0.2)
         self.add("user", "supervisord.user", "u:", "user=")
         self.add("umask", "supervisord.umask", "m:", "umask=",
                  octal_type, default='022')
@@ -610,7 +610,7 @@ class ServerOptions(Options):
         section.pidfile = existing_dirpath(get('pidfile', 'supervisord.pid'))
         section.identifier = get('identifier', 'supervisor')
         section.nodaemon = boolean(get('nodaemon', 'false'))
-        section.delay_secs = float(get("delay_secs", 0.5))
+        section.delay_secs = float(get("delay_secs", 0.2))
 
         tempdir = tempfile.gettempdir()
         section.childlogdir = existing_directory(get('childlogdir', tempdir))
