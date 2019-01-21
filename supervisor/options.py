@@ -1052,6 +1052,7 @@ class ServerOptions(Options):
             receive = self.signal_receiver.receive
             signal.signal(signal.SIGTERM, receive)
             signal.signal(signal.SIGINT, receive)
+            signal.signal(signal.SIGABRT, receive)
 
     def get_signal(self):
         return self.signal_receiver.get_signal()
