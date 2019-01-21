@@ -2727,9 +2727,9 @@ class SignalReceiverTests(unittest.TestCase):
         from supervisor.options import SignalReceiver
         sr = SignalReceiver()
         sr.receive(signal.SIGTERM, 'frame')
-        sr.receive(signal.SIGCHLD, 'frame')
+        sr.receive(signal.SIGINT, 'frame')
         self.assertEqual(sr.get_signal(), signal.SIGTERM)
-        self.assertEqual(sr.get_signal(), signal.SIGCHLD)
+        self.assertEqual(sr.get_signal(), signal.SIGINT)
         self.assertEqual(sr.get_signal(), None)
 
     def test_does_not_queue_duplicate_signals(self):
@@ -2746,8 +2746,8 @@ class SignalReceiverTests(unittest.TestCase):
         sr.receive(signal.SIGTERM, 'frame')
         self.assertEqual(sr.get_signal(), signal.SIGTERM)
         self.assertEqual(sr.get_signal(), None)
-        sr.receive(signal.SIGCHLD, 'frame')
-        self.assertEqual(sr.get_signal(), signal.SIGCHLD)
+        sr.receive(signal.SIGABRT, 'frame')
+        self.assertEqual(sr.get_signal(), signal.SIGABRT)
         self.assertEqual(sr.get_signal(), None)
 
 
