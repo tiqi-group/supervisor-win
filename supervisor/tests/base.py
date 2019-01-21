@@ -64,12 +64,13 @@ class DummyOptions:
     loglevel = 20
 
     def __init__(self):
+        tempdir = tempfile.gettempdir()
         self.identifier = 'supervisor'
-        self.childlogdir = '/tmp'
+        self.childlogdir = tempdir
         self.uid = 999
         self.logger = self.getLogger()
         self.backofflimit = 10
-        self.logfile = '/tmp/logfile'
+        self.logfile = os.path.join(tempdir, 'logfile')
         self.nocleanup = False
         self.strip_ansi = False
         self.pidhistory = {}
@@ -109,7 +110,7 @@ class DummyOptions:
         self.environment_processed = False
         self.write_accept = None
         self.write_error = None
-        self.tempfile_name = '/foo/bar'
+        self.tempfile_name = os.path.join(tempdir, 'foo\\bar')
         self.remove_error = None
         self.removed = []
         self.existing = []
