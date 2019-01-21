@@ -17,7 +17,8 @@ from supervisor.compat import (
     as_bytes,
     maxint,
     total_ordering,
-    unicode
+    unicode,
+    SubprocessError
 )
 from supervisor.datatypes import RestartUnconditionally
 from supervisor.dispatchers import EventListenerStates
@@ -68,7 +69,7 @@ class ProcessCpuHandler(object):
         below = win32process.BELOW_NORMAL_PRIORITY_CLASS
         idle = win32process.IDLE_PRIORITY_CLASS
         default = "normal"
-    
+
     def __init__(self, pid=None):
         self.pHandle = self._get_handle_for_pid(pid=pid, ro=False)
 
@@ -282,7 +283,7 @@ class Subprocess(object):
 
     def record_spawnerr(self, msg):
         self.spawnerr = msg
-        self.config.options.logger.info("spawnerr: %s" % msg)
+        self.config.options.logger.error("spawnerr: %s" % msg)
 
     def close_all_dispatchers(self):
         """Ends the execution of the data reading threads"""
@@ -341,17 +342,17 @@ class Subprocess(object):
             self._assertInState(ProcessStates.STARTING)
             self.change_state(ProcessStates.BACKOFF)
 
-    def __configure_handlers(self, proc):
+    def _setup_system_resource(self):
         # Adds the process to the job
         options = self.config.options
         job_handler = options.job_handler
         if self.config.systemjob and isinstance(job_handler, ProcessJobHandler):
             try:
-                job_handler.add_child(proc.pid)
+                job_handler.add_child(self.pid)
             except Exception as err:
                 options.logger.error("subprocess job add: %s" % err)
         try:
-            cpu_handler = ProcessCpuHandler(proc.pid)
+            cpu_handler = ProcessCpuHandler(self.pid)
         except Exception as err:
             options.logger.error("subprocess cpu: %s" % err)
             cpu_handler = None
@@ -369,22 +370,23 @@ class Subprocess(object):
             except Exception as err:
                 options.logger.error("subprocess cpu affinity: %s" % err)
 
-    def _open(self, filename, argv, **kwargs):
-        """start process"""
+    @classmethod
+    def execute(cls, filename, argv, **kwargs):
+        """Runs a new process and returns its reference"""
+        redirect_stderr = kwargs.pop('redirect_stderr', False)
         kwargs.update(dict(
             universal_newlines=True,
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE
         ))
         # stderr goes to stdout
-        if self.config.redirect_stderr:
+        if redirect_stderr:
             kwargs['stderr'] = subprocess.STDOUT
         else:
             kwargs['stderr'] = subprocess.PIPE
         proc = helpers.Popen(argv, **kwargs)
         if proc.pid <= 0:
             raise OSError('failure initializing new process ' + ' '.join(argv))
-        self.__configure_handlers(proc)
         return proc
 
     def _spawn_as_child(self, filename, argv):
@@ -437,20 +439,40 @@ class Subprocess(object):
                 options.setumask(self.config.umask)
             kwargs = {
                 'env': env,
-                'cwd': self.config.directory
+                'cwd': self.config.directory,
+                'redirect_stderr': self.config.redirect_stderr
             }
-            self.process = self._open(filename, argv, **kwargs)
-            self.pid = options.execve(self)
+            try:
+                self.process = options.execve(filename, argv, env)
+                if self.process is None:
+                    raise SubprocessError("child process was not spawned\n")
+            except NotImplementedError:
+                self.process = self.execute(filename, argv, **kwargs)
+        except SubprocessError as err:
+            msg = str(err)
+            options.write(2, msg)
+            self.record_spawnerr(msg)
+            self._assertInState(ProcessStates.STARTING)
+            self.change_state(ProcessStates.BACKOFF)
         except OSError as why:
             code = errno.errorcode.get(why.args[0], why.args[0])
             msg = "couldn't exec %s: %s\n" % (argv[0], code)
-            options.logger.error("supervisor/process: " + msg)
+            options.write(2, "supervisor: " + msg)
+            self.record_spawnerr(msg)
+            self._assertInState(ProcessStates.STARTING)
+            self.change_state(ProcessStates.BACKOFF)
         except:
             (file, fun, line), t, v, tbinfo = asyncore.compact_traceback()
             error = '%s, %s: file: %s line: %s' % (t, v, file, line)
             msg = "couldn't exec %s: %s\n" % (filename, error)
-            options.logger.error("supervisor/process: " + msg)
+            options.write(2, "supervisor: " + msg)
+            self.record_spawnerr(msg)
+            self._assertInState(ProcessStates.STARTING)
+            self.change_state(ProcessStates.BACKOFF)
         else:
+            self.pid = self.process.pid
+            self._setup_system_resource()
+            options.register_pid(self.process.pid, self)
             options.logger.info('Spawned: %r with pid %s' % (self.config.name, self.pid))
             self.delay = time.time() + self.config.startsecs
             self.spawnerr = None  # no error

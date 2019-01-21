@@ -75,6 +75,12 @@ def total_ordering(cls):  # pragma: no cover
     return cls
 
 
+try: # pragma: no cover
+    from subprocess import SubprocessError
+except ImportError:
+    class SubprocessError(Exception):
+        pass
+
 try:  # pragma: no cover
     import xmlrpc.client as xmlrpclib
 except ImportError:  # pragma: no cover

@@ -418,6 +418,7 @@ class ServerOptions(Options):
     httpservers = ()
     unlink_socketfiles = True
     mood = states.SupervisorStates.RUNNING
+    job_handler = None
 
     def __init__(self):
         Options.__init__(self)
@@ -1128,6 +1129,9 @@ class ServerOptions(Options):
         """dummy"""
         pass
 
+    def register_pid(self, pid, sproc):
+        self.pidhistory[pid] = sproc
+
     def get_pid_history(self, pid):
         """Returns the subprocess registered for id"""
         return self.pidhistory[pid]
@@ -1196,11 +1200,10 @@ class ServerOptions(Options):
     def stat(self, filename):
         return os.stat(filename)
 
-    def execve(self, subprocess, *args, **kwargs):
-        """register process id only"""
-        pid = subprocess.process.pid
-        self.pidhistory[pid] = subprocess
-        return pid
+    @raise_not_implemented
+    def execve(self, filename, argv, **kwargs):
+        """dummy"""
+        pass
 
     def mktempfile(self, suffix, prefix, dir):
         # set os._urandomfd as a hack around bad file descriptor bug

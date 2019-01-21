@@ -51,7 +51,6 @@ class Supervisor(object):
     lastshutdownreport = 0  # throttle for delayed process error reports at stop
     process_groups = None  # map of process group name to process group object
     stop_groups = None  # list used for priority ordered shutdown
-    job_handler = None
 
     def __init__(self, options):
         self.options = options
