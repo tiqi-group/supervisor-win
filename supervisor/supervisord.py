@@ -333,14 +333,14 @@ class Supervisor(object):
     def handle_signal(self):
         sig = self.options.get_signal()
         if sig:
-            if sig == signal.SIGTERM:
+            if sig in (signal.SIGTERM, signal.SIGINT):
                 self.options.logger.warn('received %s indicating exit request' % signame(sig))
                 self.options.mood = SupervisorStates.SHUTDOWN
-            elif sig == signal.SIGINT:
+            elif sig == signal.SIGABRT:
                 self.options.logger.warn('received %s indicating restart request' % signame(sig))
                 self.options.mood = SupervisorStates.RESTARTING
-            elif sig == signal.SIGABRT:
-                self.options.logger.debug('received %s indicating a child quit' % signame(sig))
+            # elif sig == signal.SIGCHLD:
+            #     self.options.logger.debug('received %s indicating a child quit' % signame(sig))
             # elif sig == signal.SIGUSR2:
             #     self.options.logger.info('received %s indicating log reopen request' % signame(sig))
             #     self.options.reopenlogs()
