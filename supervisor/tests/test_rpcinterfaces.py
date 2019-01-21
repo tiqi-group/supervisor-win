@@ -3,6 +3,8 @@ import errno
 import operator
 import os
 import sys
+import tempfile
+
 import time
 import unittest
 
@@ -1458,7 +1460,7 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
     def test_readProcessStderrLog(self):
         options = DummyOptions()
         pconfig = DummyPConfig(options, 'foo', '/bin/foo',
-                               stderr_logfile='/tmp/fooooooo')
+                               stderr_logfile=os.path.join(tempfile.gettempdir(), '/fooooooo'))
         supervisord = PopulatedDummySupervisor(options, 'foo', pconfig)
         interface = self._makeOne(supervisord)
         process = supervisord.process_groups['foo'].processes['foo']
