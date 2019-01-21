@@ -26,7 +26,8 @@ from supervisor.medusa import asyncore_25 as asyncore
 from supervisor.options import (
     ProcessException,
     BadCommand,
-    signame
+    signame,
+    decode_wait_status
 )
 from supervisor.socket_manager import SocketManager
 from supervisor.states import (
@@ -610,8 +611,7 @@ class Subprocess(object):
         """ The process was reaped and we need to report and manage its state
         """
         self.drain()
-        es, msg = sts
-
+        es, msg = decode_wait_status(sts)
         now = time.time()
         self.laststop = now
         processname = self.config.name

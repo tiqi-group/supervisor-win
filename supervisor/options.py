@@ -1146,7 +1146,7 @@ class ServerOptions(Options):
             subprocess = self.pidhistory[pid]
             process = subprocess.process
             if process.killed or process.poll() is not None:
-                stopped.append((pid, (process.poll(), 'stopped')))
+                stopped.append((pid, (process.poll(), process.message)))
         if not stopped:
             stopped.append((None, None))
         return stopped
@@ -1829,23 +1829,11 @@ def decode_wait_status(sts):
     is a message telling what happened.  It is the caller's
     responsibility to display the message.
     """
-    if os.WIFEXITED(sts):
-        es = os.WEXITSTATUS(sts) & 0xffff
-        msg = "exit status %s" % es
-        return es, msg
-    elif os.WIFSIGNALED(sts):
-        sig = os.WTERMSIG(sts)
-        msg = "terminated by %s" % signame(sig)
-        if hasattr(os, "WCOREDUMP"):
-            iscore = os.WCOREDUMP(sts)
-        else:
-            iscore = sts & 0x80
-        if iscore:
-            msg += " (core dumped)"
-        return -1, msg
-    else:
-        msg = "unknown termination cause 0x%04x" % sts
-        return -1, msg
+    try:
+        es, msg = sts
+    except TypeError:
+        es, msg = sts, "unknown termination cause"
+    return es, msg
 
 
 _signames = None

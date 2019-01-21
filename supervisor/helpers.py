@@ -22,6 +22,16 @@ class Popen(subprocess.Popen):
         super(Popen, self).send_signal(sig)
         self.killed = True
 
+    @property
+    def message(self):
+        if self.returncode == 0:
+            msg = "normal termination"
+        elif self.returncode < 0:
+            msg = "termination by signal"
+        else:
+            msg = "unknown termination cause"
+        return msg
+
 
 class StreamAsync(threading.Thread):
     """
