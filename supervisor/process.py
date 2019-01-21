@@ -17,8 +17,7 @@ from supervisor.compat import (
     as_bytes,
     maxint,
     total_ordering,
-    unicode,
-    SubprocessError
+    unicode
 )
 from supervisor.datatypes import RestartUnconditionally
 from supervisor.dispatchers import EventListenerStates
@@ -438,23 +437,17 @@ class Subprocess(object):
         try:
             if self.config.umask is not None:
                 options.setumask(self.config.umask)
-            kwargs = {
-                'env': env,
-                'cwd': self.config.directory,
-                'redirect_stderr': self.config.redirect_stderr
-            }
+            kwargs = dict(
+                env=env,
+                cwd=self.config.directory,
+                redirect_stderr=self.config.redirect_stderr
+            )
             try:
                 self.process = options.execve(filename, argv, env)
                 if self.process is None:
-                    raise SubprocessError("child process was not spawned\n")
+                    options.write(2, "child process was not spawned\n")
             except NotImplementedError:
                 self.process = self.execute(filename, argv, **kwargs)
-        except SubprocessError as err:
-            msg = str(err)
-            options.write(2, msg)
-            self.record_spawnerr(msg)
-            self._assertInState(ProcessStates.STARTING)
-            self.change_state(ProcessStates.BACKOFF)
         except OSError as why:
             code = errno.errorcode.get(why.args[0], why.args[0])
             msg = "couldn't exec %s: %s\n" % (argv[0], code)
@@ -470,7 +463,8 @@ class Subprocess(object):
             self.record_spawnerr(msg)
             self._assertInState(ProcessStates.STARTING)
             self.change_state(ProcessStates.BACKOFF)
-        else:
+
+        if self.process:
             self.pid = self.process.pid
             self._setup_system_resource()
             options.register_pid(self.process.pid, self)
