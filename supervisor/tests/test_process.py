@@ -894,12 +894,12 @@ class SubprocessTests(unittest.TestCase):
         from supervisor.states import ProcessStates
         instance.state = ProcessStates.RUNNING
 
-        instance.signal(signal.SIGWINCH)
+        instance.signal(signal.SIGTERM)
 
         self.assertEqual(killedpid, [instance.pid, ])
-        self.assertEqual(killedsig, [signal.SIGWINCH, ])
+        self.assertEqual(killedsig, [signal.SIGTERM, ])
 
-        self.assertEqual(options.logger.data[0], 'sending test (pid 11) sig SIGWINCH')
+        self.assertEqual(options.logger.data[0], 'sending test (pid 11) sig SIGTERM')
 
     def test_signal_stopped(self):
         options = DummyOptions()
