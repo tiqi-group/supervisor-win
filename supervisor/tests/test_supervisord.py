@@ -13,6 +13,8 @@ from supervisor.tests.base import DummyPConfig
 from supervisor.tests.base import DummyPGroupConfig
 from supervisor.tests.base import DummyProcess
 from supervisor.tests.base import DummyProcessGroup
+from supervisor.states import SupervisorStates
+
 
 try:
     import pstats
@@ -173,7 +175,7 @@ class SupervisordTests(unittest.TestCase):
         options._signal = signal.SIGTERM
         supervisord = self._makeOne(options)
         supervisord.handle_signal()
-        self.assertEqual(supervisord.options.mood, -1)
+        self.assertEqual(supervisord.options.mood, SupervisorStates.SHUTDOWN)
         self.assertEqual(options.logger.data[0],
                          'received SIGTERM indicating exit request')
 
@@ -182,60 +184,60 @@ class SupervisordTests(unittest.TestCase):
         options._signal = signal.SIGINT
         supervisord = self._makeOne(options)
         supervisord.handle_signal()
-        self.assertEqual(supervisord.options.mood, -1)
+        self.assertEqual(supervisord.options.mood, SupervisorStates.SHUTDOWN)
         self.assertEqual(options.logger.data[0],
                          'received SIGINT indicating exit request')
 
-    def test_handle_sigquit(self):
+    def test_handle_sigabrt(self):
         options = DummyOptions()
-        options._signal = signal.SIGQUIT
+        options._signal = signal.SIGABRT
         supervisord = self._makeOne(options)
         supervisord.handle_signal()
-        self.assertEqual(supervisord.options.mood, -1)
+        self.assertEqual(supervisord.options.mood, SupervisorStates.RESTARTING)
         self.assertEqual(options.logger.data[0],
-                         'received SIGQUIT indicating exit request')
+                         'received SIGABRT indicating restart request')
 
-    def test_handle_sighup(self):
-        options = DummyOptions()
-        options._signal = signal.SIGHUP
-        supervisord = self._makeOne(options)
-        supervisord.handle_signal()
-        self.assertEqual(supervisord.options.mood, 0)
-        self.assertEqual(options.logger.data[0],
-                         'received SIGHUP indicating restart request')
-
-    def test_handle_sigchld(self):
-        options = DummyOptions()
-        options._signal = signal.SIGCHLD
-        supervisord = self._makeOne(options)
-        supervisord.handle_signal()
-        self.assertEqual(supervisord.options.mood, 1)
-        # supervisor.options.signame(signal.SIGCHLD) may return "SIGCLD"
-        # on linux or other systems where SIGCHLD = SIGCLD.
-        msgs = ('received SIGCHLD indicating a child quit',
-                'received SIGCLD indicating a child quit')
-        self.assertTrue(options.logger.data[0] in msgs)
-
-    def test_handle_sigusr2(self):
-        options = DummyOptions()
-        options._signal = signal.SIGUSR2
-        pconfig1 = DummyPConfig(options, 'process1', 'process1', '/bin/process1')
-        from supervisor.process import ProcessStates
-        process1 = DummyProcess(pconfig1, state=ProcessStates.STOPPING)
-        process1.delay = time.time() - 1
-        supervisord = self._makeOne(options)
-        pconfigs = [DummyPConfig(options, 'foo', 'foo', '/bin/foo')]
-        options.process_group_configs = DummyPGroupConfig(
-            options, 'foo',
-            pconfigs=pconfigs)
-        dummypgroup = DummyProcessGroup(options)
-        supervisord.process_groups = {None: dummypgroup}
-        supervisord.handle_signal()
-        self.assertEqual(supervisord.options.mood, 1)
-        self.assertEqual(options.logs_reopened, True)
-        self.assertEqual(options.logger.data[0],
-                         'received SIGUSR2 indicating log reopen request')
-        self.assertEqual(dummypgroup.logs_reopened, True)
+    # def test_handle_sighup(self):
+    #     options = DummyOptions()
+    #     options._signal = signal.SIGHUP
+    #     supervisord = self._makeOne(options)
+    #     supervisord.handle_signal()
+    #     self.assertEqual(supervisord.options.mood, 0)
+    #     self.assertEqual(options.logger.data[0],
+    #                      'received SIGHUP indicating restart request')
+    #
+    # def test_handle_sigchld(self):
+    #     options = DummyOptions()
+    #     options._signal = signal.SIGCHLD
+    #     supervisord = self._makeOne(options)
+    #     supervisord.handle_signal()
+    #     self.assertEqual(supervisord.options.mood, 1)
+    #     # supervisor.options.signame(signal.SIGCHLD) may return "SIGCLD"
+    #     # on linux or other systems where SIGCHLD = SIGCLD.
+    #     msgs = ('received SIGCHLD indicating a child quit',
+    #             'received SIGCLD indicating a child quit')
+    #     self.assertTrue(options.logger.data[0] in msgs)
+    #
+    # def test_handle_sigusr2(self):
+    #     options = DummyOptions()
+    #     options._signal = signal.SIGUSR2
+    #     pconfig1 = DummyPConfig(options, 'process1', 'process1', '/bin/process1')
+    #     from supervisor.process import ProcessStates
+    #     process1 = DummyProcess(pconfig1, state=ProcessStates.STOPPING)
+    #     process1.delay = time.time() - 1
+    #     supervisord = self._makeOne(options)
+    #     pconfigs = [DummyPConfig(options, 'foo', 'foo', '/bin/foo')]
+    #     options.process_group_configs = DummyPGroupConfig(
+    #         options, 'foo',
+    #         pconfigs=pconfigs)
+    #     dummypgroup = DummyProcessGroup(options)
+    #     supervisord.process_groups = {None: dummypgroup}
+    #     supervisord.handle_signal()
+    #     self.assertEqual(supervisord.options.mood, 1)
+    #     self.assertEqual(options.logs_reopened, True)
+    #     self.assertEqual(options.logger.data[0],
+    #                      'received SIGUSR2 indicating log reopen request')
+    #     self.assertEqual(dummypgroup.logs_reopened, True)
 
     def test_handle_unknown_signal(self):
         options = DummyOptions()
