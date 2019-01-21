@@ -1,3 +1,9 @@
+4.0.1
+-----------------------------
+- Bug fixes (covered by unit tests).
+- Supervisor installation script as a service.
+- python -m supervisor.services install -c "{path}\supervisord.conf"
+
 4.0.0.dev0 (Next 4.x Release)
 -----------------------------
 
