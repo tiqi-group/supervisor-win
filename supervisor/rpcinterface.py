@@ -14,7 +14,7 @@ from supervisor.events import (
     RemoteCommunicationEvent,
     notify
 )
-from supervisor.http import NOT_DONE_YET, HTTP_READY
+from supervisor.http import NOT_DONE_YET
 from supervisor.options import (
     readFile,
     tailFile,
@@ -331,11 +331,7 @@ class SupervisorNamespaceRPCInterface(object):
             onwait.delay = 0.05
             onwait.rpcinterface = self
             return onwait  # deferred
-
-        def ready():
-            return HTTP_READY(['started'])
-        ready.delay = 0.0
-        return ready
+        return True
 
     def startProcessGroup(self, name, wait=True):
         """ Start all processes in the group named 'name'
@@ -428,11 +424,7 @@ class SupervisorNamespaceRPCInterface(object):
             onwait.delay = 0.05
             onwait.rpcinterface = self
             return onwait  # deferred
-
-        def ready():
-            return HTTP_READY(['stopped'])
-        ready.delay = 0.0
-        return ready
+        return True
 
     def stopProcessGroup(self, name, wait=True):
         """ Stop all processes in the process group named 'name'

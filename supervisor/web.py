@@ -1,3 +1,5 @@
+import types
+
 import datetime
 import os
 import re
@@ -350,8 +352,10 @@ class StatusView(MeldView):
                     callback = rpcinterface.supervisor.stopProcess(namespec)
 
                     def stopprocess():
-                        result = callback()
-
+                        if isinstance(callback, types.FunctionType):
+                            result = callback()
+                        else:
+                            result = callback
                         if result is NOT_DONE_YET:
                             return NOT_DONE_YET
 
@@ -380,8 +384,7 @@ class StatusView(MeldView):
 
                 elif action == 'start':
                     try:
-                        callback = rpcinterface.supervisor.startProcess(
-                            namespec)
+                        callback = rpcinterface.supervisor.startProcess( namespec)
                     except RPCError as e:
                         if e.code == Faults.NO_FILE:
                             msg = 'no such file'
@@ -404,7 +407,10 @@ class StatusView(MeldView):
 
                     def startprocess():
                         try:
-                            result = callback()
+                            if isinstance(callback, types.FunctionType):
+                                result = callback()
+                            else:
+                                result = callback
                         except RPCError as e:
                             if e.code == Faults.SPAWN_ERROR:
                                 msg = 'spawn error'

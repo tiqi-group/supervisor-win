@@ -31,10 +31,6 @@ class NOT_DONE_YET(object):
     """Object returned when the response of a call to rpc is not yet ready"""
 
 
-class HTTP_READY(tuple):
-    """End response to a rpc call"""
-
-
 class deferring_chunked_producer(object):
     """A producer that implements the 'chunked' transfer coding for HTTP/1.1.
     Here is a sample usage:
