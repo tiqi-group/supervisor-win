@@ -16,6 +16,7 @@ import warnings
 import pkg_resources
 
 from supervisor import helpers
+from supervisor.compat import PY2
 from supervisor.compat import ConfigParser
 from supervisor.compat import as_bytes, as_string
 from supervisor.compat import xmlrpclib
@@ -1462,6 +1463,12 @@ class UnhosedConfigParser(ConfigParser.RawConfigParser):
         # RawConfigParser behave differently than it did on Python 2.  This
         # makes it behave the same by default on Python 2 and 3.
         kwargs['inline_comment_prefixes'] = kwargs.pop('inline_comment_prefixes', (';', '#'))
+
+        # strict was added in Python 3 but its default makes RawConfigParser
+        # behave differently than it did on Python 2.  This makes it behave
+        # the same by default on Python 2 and 3.
+        if not PY2:
+            kwargs['strict'] = False
         # fix backports issue
         try:
             ConfigParser.RawConfigParser.__init__(self, *args, **kwargs)
