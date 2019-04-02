@@ -318,7 +318,7 @@ class ClientOptionsTests(unittest.TestCase):
         options = instance.configroot.supervisorctl
         self.assertEqual(options.serverurl, 'http://localhost:9001')
 
-    def test_options_parsers_as_nonstrict_for_py2_py3_compat(self):
+    def test_options_parses_as_nonstrict_for_py2_py3_compat(self):
         text = lstrip("""
         [supervisorctl]
         serverurl=http://localhost:9001 ;duplicate
@@ -677,7 +677,7 @@ class ServerOptionsTests(unittest.TestCase):
         options = instance.configroot.supervisord
         self.assertEqual(options.identifier, 'foo')
 
-    def test_options_parsers_as_nonstrict_for_py2_py3_compat(self):
+    def test_options_parses_as_nonstrict_for_py2_py3_compat(self):
         text = lstrip("""
         [supervisord]
 
