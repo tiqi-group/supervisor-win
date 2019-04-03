@@ -268,25 +268,24 @@ class SystemNamespaceRPCInterface(object):
             if not producers:
                 return []
 
-            while len(producers) > 0:
-                callback = producers.pop(0)
-                if isinstance(callback, types.FunctionType):
-                    try:
-                        value = callback()
-                    except RPCError as err:
-                        value = {
-                            'faultCode': err.code,
-                            'faultString': err.text
-                        }
-                    if value is NOT_DONE_YET:
-                        # push it back in the front of the queue because we
-                        # need to finish the calls in requested order
-                        producers.insert(0, callback)
-                        return NOT_DONE_YET
-                else:
-                    value = callback
+            callback = producers.pop(0)
+            if isinstance(callback, types.FunctionType):
+                try:
+                    value = callback()
+                except RPCError as err:
+                    value = {
+                        'faultCode': err.code,
+                        'faultString': err.text
+                    }
+                if value is NOT_DONE_YET:
+                    # push it back in the front of the queue because we
+                    # need to finish the calls in requested order
+                    producers.insert(0, callback)
+                    return NOT_DONE_YET
+            else:
+                value = callback
 
-                results.append(value)
+            results.append(value)
 
             if producers:
                 # only finish when all producers are finished
