@@ -365,13 +365,7 @@ class StatusView(MeldView):
                     return stopprocess
 
                 elif action == 'restart':
-                    callback = rpcinterface.system.multicall(
-                        [{'methodName': 'supervisor.stopProcess',
-                          'params': [namespec]},
-                         {'methodName': 'supervisor.startProcess',
-                          'params': [namespec]},
-                         ]
-                    )
+                    callback = rpcinterface.supervisor.restartProcess(namespec)
 
                     def restartprocess():
                         result = callback()

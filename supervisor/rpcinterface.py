@@ -259,6 +259,39 @@ class SupervisorNamespaceRPCInterface(object):
 
         return group, process
 
+    def restartProcess(self, name, wait=True):
+        """restarts a process"""
+
+        class Action(object):
+            def __init__(self, callback):
+                self.starting = False
+                self.callback = callback
+
+            @property
+            def result(self):
+                if callable(self.callback):
+                    result = self.callback()
+                else:
+                    result = self.callback
+                return result
+
+        callback = self.stopProcess(name, wait=wait)
+        action = Action(callback)
+
+        def onwait():
+            result = action.result
+            if result is NOT_DONE_YET:
+                return NOT_DONE_YET
+            elif not action.starting:
+                action.callback = self.startProcess(name, wait=wait)
+                action.starting = True
+                result = action.result
+            return result
+
+        onwait.delay = 0.05
+        onwait.rpcinterface = self
+        return onwait  # deferred
+
     def startProcess(self, name, wait=True):
         """ Start a process
 
