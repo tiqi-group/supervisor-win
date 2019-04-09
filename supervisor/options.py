@@ -1186,7 +1186,7 @@ class ServerOptions(Options):
             self.logger,
             self.logfile,
             format,
-            rotating=True,
+            rotating=not not self.logfile_maxbytes,
             maxbytes=self.logfile_maxbytes,
             backups=self.logfile_backups,
         )
