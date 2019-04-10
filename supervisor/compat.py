@@ -108,17 +108,7 @@ try:  # pragma: no cover
 except ImportError:  # pragma: no cover
     from sys import maxsize as maxint
 
-try:  # pragma: no cover
-    from urllib.parse import parse_qs, parse_qsl
-except ImportError:  # pragma: no cover
-    from urlparse import parse_qs, parse_qsl
-
-try:  # pragma: no cover
-    from urllib.parse import unquote, splitquery
-except ImportError:
-    from urllib import unquote, splitquery
-
-try:  # pragma: no cover
+try: # pragma: no cover
     import http.client as httplib
 except ImportError:  # pragma: no cover
     import httplib
