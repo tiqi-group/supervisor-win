@@ -1,6 +1,8 @@
 4.0.2
 -----------------------------
 - Process restart correction
+- Fixed ``DeprecationWarning: Parameters to load are deprecated. Call
+  .resolve and .require separately.`` on setuptools >= 11.3.
 
 
 4.0.1
