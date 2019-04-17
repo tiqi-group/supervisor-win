@@ -94,9 +94,9 @@ except ImportError:  # pragma: no cover
             pass
 
 try:  # pragma: no cover
-    import configparser as ConfigParser
-except ImportError:  # pragma: no cover
     import ConfigParser
+except ImportError:  # pragma: no cover
+    import configparser as ConfigParser
 
 try:  # pragma: no cover
     from StringIO import StringIO
