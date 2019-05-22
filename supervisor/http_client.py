@@ -3,14 +3,12 @@ import re
 import socket
 import sys
 
-from supervisor.compat import (
-    urlparse,
-    as_bytes,
-    as_string,
-    encodestring
-)
+from supervisor.compat import as_bytes
+from supervisor.compat import as_string
+from supervisor.compat import encodestring
+from supervisor.compat import PY2
+from supervisor.compat import urlparse
 from supervisor.medusa import asynchat_25 as asynchat
-from supervisor.compat import PY3
 
 CR = b'\x0d'
 LF = b'\x0a'
@@ -44,7 +42,7 @@ class Listener(object):
         try:
             sys.stdout.write(sdata)
         except UnicodeEncodeError as e:
-            if sys.version_info[0] < 3:
+            if PY2:
                 # This might seem like The Wrong Thing To Do (writing bytes
                 # rather than text to an output stream), but it seems to work
                 # OK for Python 2.7.
@@ -227,7 +225,7 @@ class HTTPHandler(asynchat.async_chat):
         if not line:
             return
         try:
-            crlf = as_bytes(CRLF) if PY3 and isinstance(line, bytes) else CRLF
+            crlf = as_bytes(CRLF) if not PY2 and isinstance(line, bytes) else CRLF
             data = re.split(re.escape(crlf), line)
             chunk_size = int(data[0], 16)
         except ValueError:
