@@ -305,7 +305,7 @@ class dispatcher(object):
     def listen(self, num):
         self.accepting = True
         if os.name == 'nt' and num > 5:
-            num = 1
+            num = 5
         return self.socket.listen(num)
 
     def bind(self, addr):
