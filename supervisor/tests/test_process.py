@@ -1,6 +1,7 @@
 import errno
 import os
 import signal
+import sys
 import time
 import unittest
 
@@ -569,16 +570,15 @@ class SubprocessTests(unittest.TestCase):
 
     def test_spawn_redirect_stderr(self):
         options = DummyOptions()
-        options.forkpid = 10
         config = DummyPConfig(options, 'good', '/good/filename',
                               redirect_stderr=True)
         instance = self._makeOne(config)
         result = instance.spawn()
-        self.assertEqual(result, 10)
-        self.assertEqual(instance.dispatchers[4].__class__, DummyDispatcher)
-        self.assertEqual(instance.dispatchers[5].__class__, DummyDispatcher)
-        self.assertEqual(instance.pipes['stdin'], 4)
-        self.assertEqual(instance.pipes['stdout'], 5)
+        self.assertEqual(result, None)
+        self.assertEqual(instance.dispatchers[sys.stdin].__class__, DummyDispatcher)
+        self.assertEqual(instance.dispatchers[sys.stdout].__class__, DummyDispatcher)
+        self.assertEqual(instance.pipes['stdin'], sys.stdin)
+        self.assertEqual(instance.pipes['stdout'], sys.stdout)
         self.assertEqual(instance.pipes['stderr'], None)
 
     def test_write(self):
