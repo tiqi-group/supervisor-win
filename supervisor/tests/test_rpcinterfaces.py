@@ -875,13 +875,14 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
         supervisord = PopulatedDummySupervisor(options, 'foo', pconfig)
         supervisord.set_procattr('foo', 'state', ProcessStates.RUNNING)
 
+        sig = signal.SIGABRT
         interface = self._makeOne(supervisord)
-        result = interface.signalProcess('foo', 10)
+        result = interface.signalProcess('foo', sig)
 
         self.assertEqual(interface.update_text, 'signalProcess')
         self.assertEqual(result, True)
         p = supervisord.process_groups[supervisord.group_name].processes['foo']
-        self.assertEqual(p.sent_signal, 10)
+        self.assertEqual(p.sent_signal, sig)
 
     def test_signalProcess_with_signal_name(self):
         options = DummyOptions()
