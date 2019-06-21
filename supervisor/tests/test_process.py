@@ -713,7 +713,7 @@ class SubprocessTests(unittest.TestCase):
         instance = self._makeOne(config)
         instance.kill(signal.SIGTERM)
         self.assertEqual(options.logger.data[0],
-                         'attempted to kill test with sig SIGTERM but it wasn\'t running')
+                         'Attempted to kill test with sig SIGTERM but it wasn\'t running')
         self.assertEqual(instance.killing, 0)
 
     def test_kill_error(self):
