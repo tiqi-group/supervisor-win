@@ -618,7 +618,7 @@ class Subprocess(object):
         self.laststop = now
         processname = self.config.name
 
-        if now > self.laststart:
+        if now >= self.laststart:
             too_quickly = now - self.laststart < self.config.startsecs
         else:
             too_quickly = False
