@@ -1,3 +1,4 @@
+import random
 import subprocess
 import threading
 
@@ -6,6 +7,17 @@ __author__ = 'alex'
 """
 Extension of existing classes by changing or adding behaviors.
 """
+
+
+class DummyPopen(object):
+    """Test process"""
+
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.pid = random.randint(1, 500)
+        self.killed = False
+        self.returncode = 0
 
 
 class Popen(subprocess.Popen):

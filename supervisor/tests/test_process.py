@@ -582,7 +582,7 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(instance.pipes['stderr'], None)
 
     def test_write(self):
-        executable = '/bin/cat'
+        executable = 'cmd.exe'
         options = DummyOptions()
         config = DummyPConfig(options, 'output', executable)
         instance = self._makeOne(config)
@@ -815,11 +815,11 @@ class SubprocessTests(unittest.TestCase):
         from supervisor import events
         events.subscribe(events.Event, lambda x: L.append(x))
         instance.state = ProcessStates.STOPPING
-        instance.kill(signal.SIGKILL)
+        instance.kill(signal.SIGTERM)
         self.assertEqual(options.logger.data[0], 'killing test (pid 11) with '
-                                                 'signal SIGKILL')
+                                                 'signal SIGTERM')
         self.assertEqual(instance.killing, 1)
-        self.assertEqual(options.kills[11], signal.SIGKILL)
+        self.assertEqual(options.kills[11], signal.SIGTERM)
         self.assertEqual(L, [])  # no event because we didn't change state
 
     def test_kill_from_backoff(self):
@@ -848,11 +848,11 @@ class SubprocessTests(unittest.TestCase):
         from supervisor import events
         events.subscribe(events.Event, lambda x: L.append(x))
         instance.state = ProcessStates.STOPPING
-        instance.kill(signal.SIGKILL)
+        instance.kill(signal.SIGTERM)
         self.assertEqual(options.logger.data[0], 'killing test (pid 11) '
-                                                 'process group with signal SIGKILL')
+                                                 'process group with signal SIGTERM')
         self.assertEqual(instance.killing, 1)
-        self.assertEqual(options.kills[-11], signal.SIGKILL)
+        self.assertEqual(options.kills[-11], signal.SIGTERM)
         self.assertEqual(L, [])  # no event because we didn't change state
 
     def test_stopasgroup(self):
@@ -921,9 +921,9 @@ class SubprocessTests(unittest.TestCase):
         from supervisor.states import ProcessStates
         instance.state = ProcessStates.STOPPED
 
-        instance.signal(signal.SIGWINCH)
+        instance.signal(signal.SIGABRT)
 
-        self.assertEqual(options.logger.data[0], "attempted to send test sig SIGWINCH "
+        self.assertEqual(options.logger.data[0], "attempted to send test sig SIGABRT "
                                                  "but it wasn't running")
 
         self.assertEqual(killedpid, [])
@@ -940,9 +940,9 @@ class SubprocessTests(unittest.TestCase):
                          lambda x: L.append(x))
         instance.pid = 11
         instance.state = ProcessStates.RUNNING
-        instance.signal(signal.SIGWINCH)
+        instance.signal(signal.SIGABRT)
         self.assertEqual(options.logger.data[0],
-                         'sending test (pid 11) sig SIGWINCH')
+                         'sending test (pid 11) sig SIGABRT')
         self.assertTrue(options.logger.data[1].startswith(
             'unknown problem sending sig test (11)'))
         self.assertEqual(instance.killing, 0)
@@ -1443,8 +1443,8 @@ class SubprocessTests(unittest.TestCase):
         self.assertNotEqual(process.delay, 0)
         self.assertEqual(process.state, ProcessStates.STOPPING)
         self.assertEqual(options.logger.data[0],
-                         "killing 'process' (1) with SIGKILL")
-        self.assertEqual(options.kills[1], signal.SIGKILL)
+                         "killing 'process' (1) with SIGTERM")
+        self.assertEqual(options.kills[1], signal.SIGTERM)
         self.assertEqual(L, [])
 
     def test_change_state_doesnt_notify_if_no_state_change(self):

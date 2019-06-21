@@ -2,6 +2,8 @@ import os
 import sys
 import tempfile
 
+from supervisor.helpers import DummyPopen
+
 _NOW = 1151365354
 _TIMEFORMAT = '%b %d %I:%M %p'
 
@@ -122,6 +124,9 @@ class DummyOptions:
         self.chdir_error = None
         self.umaskset = None
         self.poller = DummyPoller(self)
+
+    def register_pid(self, pid, process):
+        self.pidhistory[pid] = process
 
     def getLogger(self, *args, **kw):
         logger = DummyLogger()
@@ -264,6 +269,7 @@ class DummyOptions:
                 raise RuntimeError(self.execv_error)
         self.execv_args = (filename, argv)
         self.execv_environment = environment
+        return DummyPopen(filename, argv, environment)
 
     def dropPrivileges(self, uid):
         if self.setuid_msg:

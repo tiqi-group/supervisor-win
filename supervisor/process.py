@@ -21,6 +21,7 @@ from supervisor.compat import (
 )
 from supervisor.datatypes import RestartUnconditionally
 from supervisor.dispatchers import EventListenerStates
+from supervisor.helpers import DummyPopen
 from supervisor.medusa import asyncore_25 as asyncore
 from supervisor.options import (
     ProcessException,
@@ -464,10 +465,13 @@ class Subprocess(object):
             self._assertInState(ProcessStates.STARTING)
             self.change_state(ProcessStates.BACKOFF)
 
-        if self.process:
+        if self.process is not None:
             self.pid = self.process.pid
-            self._setup_system_resource()
             options.register_pid(self.process.pid, self)
+
+            if not isinstance(self.process, DummyPopen):
+                self._setup_system_resource()
+
             options.logger.info('Spawned: %r with pid %s' % (self.config.name, self.pid))
             self.delay = time.time() + self.config.startsecs
             self.spawnerr = None  # no error
