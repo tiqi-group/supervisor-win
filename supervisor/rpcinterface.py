@@ -260,7 +260,12 @@ class SupervisorNamespaceRPCInterface(object):
         return group, process
 
     def restartProcess(self, name, wait=True):
-        """restarts a process"""
+        """Restarts a process.
+
+        @param string name         name of process to restast
+        @param boolean wait Wait for process to be fully started
+        @return boolean result     Indicates whether the removal was successful
+        """
 
         class Action(object):
             def __init__(self, callback):
