@@ -1655,7 +1655,7 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
         from supervisor.compat import letters
         options = DummyOptions()
         pconfig = DummyPConfig(options, 'foo', '/bin/foo',
-                               stderr_logfile='/tmp/fooooooo')
+                               stderr_logfile=TempFileOpen.make_path('stderr-logfile-1.log'))
         supervisord = PopulatedDummySupervisor(options, 'foo', pconfig)
         interface = self._makeOne(supervisord)
         process = supervisord.process_groups['foo'].processes['foo']
