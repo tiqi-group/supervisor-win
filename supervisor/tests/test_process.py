@@ -2,11 +2,13 @@ import errno
 import os
 import signal
 import sys
+import tempfile
 import time
 import unittest
 
 from supervisor.compat import as_bytes
 from supervisor.compat import maxint
+from supervisor.helpers import DummyPopen
 from supervisor.options import BadCommand
 from supervisor.process import Subprocess
 from supervisor.tests.base import DummyDispatcher
@@ -364,15 +366,13 @@ class SubprocessTests(unittest.TestCase):
         options = DummyOptions()
         options.forkpid = 0
         config = DummyPConfig(options, 'good', '/good/filename',
-                              directory='/tmp')
+                              directory=tempfile.gettempdir())
         instance = self._makeOne(config)
         result = instance.spawn()
         self.assertEqual(result, None)
         self.assertEqual(options.parent_pipes_closed, None)
         self.assertEqual(options.child_pipes_closed, None)
         self.assertEqual(options.pgrp_set, True)
-        self.assertEqual(len(options.duped), 3)
-        self.assertEqual(len(options.fds_closed), options.minfds - 3)
         self.assertEqual(options.execv_args,
                          ('/good/filename', ['/good/filename']))
         self.assertEqual(options.changed_directory, True)
@@ -380,8 +380,7 @@ class SubprocessTests(unittest.TestCase):
         # if the real execve() succeeds, the code that writes the
         # "was not spawned" message won't be reached.  this assertion
         # is to test that no other errors were written.
-        self.assertEqual(options.written,
-                         {2: "supervisor: child process was not spawned\n"})
+        self.assertIsInstance(instance.process, DummyPopen)
 
     def test_spawn_as_child_sets_umask(self):
         options = DummyOptions()

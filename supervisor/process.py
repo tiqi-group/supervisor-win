@@ -438,6 +438,10 @@ class Subprocess(object):
         try:
             if self.config.umask is not None:
                 options.setumask(self.config.umask)
+
+            if self.config.directory:
+                options.chdir(self.config.directory)
+
             kwargs = dict(
                 env=env,
                 cwd=self.config.directory,

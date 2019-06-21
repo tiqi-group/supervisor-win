@@ -1282,7 +1282,8 @@ class ServerOptions(Options):
         os.environ.update(self.environment or {})
 
     def chdir(self, dir):
-        os.chdir(dir)
+        """dummy interface only"""
+        pass
 
     def make_pipes(self, pid, stderr=True):
         """ Create pipes for parent to child stdin/stdout/stderr
