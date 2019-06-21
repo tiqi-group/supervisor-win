@@ -942,12 +942,12 @@ class SubprocessTests(unittest.TestCase):
         instance.finish(123, 1)
         self.assertEqual(instance.killing, 0)
         self.assertEqual(instance.pid, 0)
-        self.assertEqual(options.parent_pipes_closed, pipes)
+        self.assertIsNone(options.parent_pipes_closed)
         self.assertEqual(instance.pipes, {})
         self.assertEqual(instance.dispatchers, {})
         self.assertEqual(options.logger.data[0], 'stopped: notthere '
-                                                 '(terminated by SIGHUP)')
-        self.assertEqual(instance.exitstatus, -1)
+                                                 '(unknown termination cause(1))')
+        self.assertEqual(instance.exitstatus, 1)
         self.assertEqual(len(L), 1)
         event = L[0]
         self.assertEqual(event.__class__, events.ProcessStateStoppedEvent)
