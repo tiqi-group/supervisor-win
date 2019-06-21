@@ -1092,7 +1092,8 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
         supervisord.set_procattr('process1', 'state', ProcessStates.RUNNING)
 
         from supervisor.datatypes import signal_number
-        signame = 'hup'
+
+        signame = 'abrt'
         signum = signal_number(signame)
 
         interface = self._makeOne(supervisord)
