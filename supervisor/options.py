@@ -1230,10 +1230,12 @@ class ServerOptions(Options):
         os.remove(path)
 
     def _exit(self, code):
-        os._exit(code)
+        """dummy interface"""
+        pass
 
     def setumask(self, mask):
-        os.umask(mask)
+        """dummy interface"""
+        pass
 
     def get_path(self):
         """Return a list corresponding to $PATH, or a default."""
