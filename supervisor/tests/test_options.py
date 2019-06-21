@@ -2490,16 +2490,15 @@ class TestProcessConfig(unittest.TestCase):
                 instance.redirect_stderr = False
                 process1 = DummyProcess(instance)
                 dispatchers, pipes = instance.make_dispatchers(process1)
-                self.assertEqual(dispatchers[5].channel, 'stdout')
+                stdout, stderr = pipes['stdout'], pipes['stderr']
+                self.assertEqual(dispatchers[stdout].channel, 'stdout')
                 from supervisor.events import ProcessCommunicationStdoutEvent
-                self.assertEqual(dispatchers[5].event_type,
+                self.assertEqual(dispatchers[stdout].event_type,
                                  ProcessCommunicationStdoutEvent)
-                self.assertEqual(pipes['stdout'], 5)
-                self.assertEqual(dispatchers[7].channel, 'stderr')
+                self.assertEqual(dispatchers[stderr].channel, 'stderr')
                 from supervisor.events import ProcessCommunicationStderrEvent
-                self.assertEqual(dispatchers[7].event_type,
+                self.assertEqual(dispatchers[stderr].event_type,
                                  ProcessCommunicationStderrEvent)
-                self.assertEqual(pipes['stderr'], 7)
 
     def test_make_dispatchers_stderr_redirected(self):
         options = DummyOptions()
