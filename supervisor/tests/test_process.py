@@ -320,28 +320,6 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(event1.__class__, events.ProcessStateStartingEvent)
         self.assertEqual(event2.__class__, events.ProcessStateBackoffEvent)
 
-    def test_spawn_as_child_setuid_ok(self):
-        options = DummyOptions()
-        options.forkpid = 0
-        config = DummyPConfig(options, 'good', '/good/filename', uid=1)
-        instance = self._makeOne(config)
-        result = instance.spawn()
-        self.assertEqual(result, None)
-        self.assertEqual(options.parent_pipes_closed, None)
-        self.assertEqual(options.child_pipes_closed, None)
-        self.assertEqual(options.pgrp_set, True)
-        self.assertEqual(len(options.duped), 3)
-        self.assertEqual(len(options.fds_closed), options.minfds - 3)
-        self.assertEqual(options.privsdropped, 1)
-        self.assertEqual(options.execv_args,
-                         ('/good/filename', ['/good/filename']))
-        self.assertEqual(options.execve_called, True)
-        # if the real execve() succeeds, the code that writes the
-        # "was not spawned" message won't be reached.  this assertion
-        # is to test that no other errors were written.
-        self.assertEqual(options.written,
-                         {2: "supervisor: child process was not spawned\n"})
-
     def test_spawn_as_child_setuid_fail(self):
         options = DummyOptions()
         options.forkpid = 0
