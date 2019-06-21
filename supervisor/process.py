@@ -411,7 +411,10 @@ class Subprocess(object):
         if setuid_msg:
             uid = self.config.uid
             msg = "couldn't setuid to %s: %s\n" % (uid, setuid_msg)
-            options.logger.error("supervisor/process: " + msg)
+            options.logger.error("supervisor[process]: " + msg)
+            options.write(2, "supervisor: " + msg)
+            options.write(2, "supervisor: child process was not spawned\n")
+            options._exit(127)  # exit process with code for spawn failure
             return  # finally clause will exit the child process
 
         # set environment
