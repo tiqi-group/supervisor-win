@@ -1352,7 +1352,7 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
         from supervisor import xmlrpc
         options = DummyOptions()
         pconfig = DummyPConfig(options, 'process1', '/bin/process1', priority=1,
-                               stdout_logfile='/tmp/process1.log')
+                               stdout_logfile=TempFileOpen.make_path('process1.log'))
         supervisord = PopulatedDummySupervisor(options, 'process1', pconfig)
         interface = self._makeOne(supervisord)
         process = supervisord.process_groups['process1'].processes['process1']
