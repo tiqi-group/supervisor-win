@@ -1503,11 +1503,6 @@ class FastCGISubprocessTests(unittest.TestCase):
         instance.group = DummyFCGIProcessGroup(gconfig)
         result = instance.spawn()
         self.assertEqual(result, None)
-        self.assertEqual(len(options.duped), 3)
-        self.assertEqual(options.duped[7], 0)
-        self.assertEqual(options.duped[instance.pipes['child_stdout']], 1)
-        self.assertEqual(options.duped[instance.pipes['child_stderr']], 2)
-        self.assertEqual(len(options.fds_closed), options.minfds - 3)
 
     def test_prepare_child_fds_stderr_redirected(self):
         options = DummyOptions()
