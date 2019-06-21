@@ -427,8 +427,6 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(options.parent_pipes_closed, None)
         self.assertEqual(options.child_pipes_closed, None)
         self.assertEqual(options.pgrp_set, True)
-        self.assertEqual(len(options.duped), 3)
-        self.assertEqual(len(options.fds_closed), options.minfds - 3)
         msg = options.written[2]  # dict, 2 is fd #
         head = "supervisor: couldn't exec /good/filename:"
         self.assertTrue(msg.startswith(head))
