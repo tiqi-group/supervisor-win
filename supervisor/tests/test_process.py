@@ -449,28 +449,6 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(options.written,
                          {2: "supervisor: child process was not spawned\n"})
 
-    def test_spawn_as_parent(self):
-        options = DummyOptions()
-        options.forkpid = 10
-        config = DummyPConfig(options, 'good', '/good/filename')
-        instance = self._makeOne(config)
-        result = instance.spawn()
-        self.assertEqual(result, 10)
-        self.assertEqual(instance.dispatchers[4].__class__, DummyDispatcher)
-        self.assertEqual(instance.dispatchers[5].__class__, DummyDispatcher)
-        self.assertEqual(instance.dispatchers[7].__class__, DummyDispatcher)
-        self.assertEqual(instance.pipes['stdin'], 4)
-        self.assertEqual(instance.pipes['stdout'], 5)
-        self.assertEqual(instance.pipes['stderr'], 7)
-        self.assertEqual(options.parent_pipes_closed, None)
-        self.assertEqual(len(options.child_pipes_closed), 6)
-        self.assertEqual(options.logger.data[0], "spawned: 'good' with pid 10")
-        self.assertEqual(instance.spawnerr, None)
-        self.assertTrue(instance.delay)
-        self.assertEqual(instance.config.options.pidhistory[10], instance)
-        from supervisor.states import ProcessStates
-        self.assertEqual(instance.state, ProcessStates.STARTING)
-
     def test_spawn_redirect_stderr(self):
         options = DummyOptions()
         config = DummyPConfig(options, 'good', '/good/filename',
