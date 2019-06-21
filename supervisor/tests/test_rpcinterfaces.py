@@ -942,7 +942,7 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
         proc.signal = signalreturn
         interface = self._makeOne(supervisord)
         self._assertRPCError(
-            xmlrpc.Faults.FAILED, interface.signalProcess, 'foo', 10
+            xmlrpc.Faults.FAILED, interface.signalProcess, 'foo', signal.SIGTERM
         )
 
     def test_signalProcess_withgroup(self):
