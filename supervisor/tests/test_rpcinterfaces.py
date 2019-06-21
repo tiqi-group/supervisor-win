@@ -1460,7 +1460,7 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
     def test_readProcessStderrLog(self):
         options = DummyOptions()
         pconfig = DummyPConfig(options, 'foo', '/bin/foo',
-                               stderr_logfile=os.path.join(tempfile.gettempdir(), '/fooooooo'))
+                               stderr_logfile=os.path.join(tempfile.gettempdir(), 'stderr-redirect.log'))
         supervisord = PopulatedDummySupervisor(options, 'foo', pconfig)
         interface = self._makeOne(supervisord)
         process = supervisord.process_groups['foo'].processes['foo']
