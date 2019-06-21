@@ -42,6 +42,10 @@ class TempFileOpen(object):
     def __repr__(self):
         return "{0.tmpfile}".format(self)
 
+    @staticmethod
+    def make_path(*args):
+        return os.path.join(tempfile.gettempdir(), *args)
+
     def close(self):
         self.tmpfile.close()
         self.remove()
