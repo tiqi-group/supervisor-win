@@ -996,14 +996,14 @@ class SubprocessTests(unittest.TestCase):
         L = []
         events.subscribe(events.ProcessStateExitedEvent, lambda x: L.append(x))
         instance.pid = 123
-        instance.finish(123, 1)
+        instance.finish(123, -1)
         self.assertEqual(instance.killing, 0)
         self.assertEqual(instance.pid, 0)
-        self.assertEqual(options.parent_pipes_closed, pipes)
+        self.assertIsNone(options.parent_pipes_closed)
         self.assertEqual(instance.pipes, {})
         self.assertEqual(instance.dispatchers, {})
         self.assertEqual(options.logger.data[0],
-                         'exited: notthere (terminated by SIGHUP; expected)')
+                         'exited: notthere (unknown termination cause(-1); expected)')
         self.assertEqual(instance.exitstatus, -1)
         self.assertEqual(len(L), 1)
         event = L[0]
