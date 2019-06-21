@@ -2502,13 +2502,12 @@ class TestProcessConfig(unittest.TestCase):
 
     def test_make_dispatchers_stderr_redirected(self):
         options = DummyOptions()
-        instance = self._makeOne(options)
+        instance = self._makeOne(options, redirect_stderr=True)
         with TempFileOpen() as stdout_logfile:
             instance.stdout_logfile = stdout_logfile.name
             process1 = DummyProcess(instance)
             dispatchers, pipes = instance.make_dispatchers(process1)
-            self.assertEqual(dispatchers[5].channel, 'stdout')
-            self.assertEqual(pipes['stdout'], 5)
+            self.assertEqual(dispatchers[pipes['stdout']].channel, 'stdout')
             self.assertEqual(pipes['stderr'], None)
 
 
