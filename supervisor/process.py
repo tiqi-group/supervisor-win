@@ -473,12 +473,12 @@ class Subprocess(object):
             self.pid = self.process.pid
             options.register_pid(self.process.pid, self)
 
-            if not isinstance(self.process, DummyPopen):
-                self._setup_system_resource()
-
-            options.logger.info('Spawned: %r with pid %s' % (self.config.name, self.pid))
             self.delay = time.time() + self.config.startsecs
             self.spawnerr = None  # no error
+
+            if not isinstance(self.process, DummyPopen):
+                self._setup_system_resource()
+                options.logger.info('Spawned: %r with pid %s' % (self.config.name, self.pid))
         else:
             options.write(2, "supervisor: child process was not spawned\n")
             options._exit(127)  # exit process with code for spawn failure
