@@ -923,7 +923,7 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
         supervisord.set_procattr('foo', 'state', ProcessStates.STOPPED)
         interface = self._makeOne(supervisord)
         self._assertRPCError(
-            xmlrpc.Faults.NOT_RUNNING, interface.signalProcess, 'foo', 10
+            xmlrpc.Faults.NOT_RUNNING, interface.signalProcess, 'foo', signal.SIGTERM
         )
 
     def test_signalProcess_signal_returns_message(self):
