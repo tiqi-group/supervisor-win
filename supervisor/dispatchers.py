@@ -534,8 +534,7 @@ class PInputDispatcher(PDispatcher):
                                                      self.input_buffer)
             self.input_buffer = self.input_buffer[sent:]
         except OSError as why:
-            if why.args[0] in (errno.EBADF,
-                               errno.EPIPE):
+            if why.args[0] == errno.EPIPE:
                 self.input_buffer = ''
                 self.close()
             else:
@@ -546,8 +545,7 @@ class PInputDispatcher(PDispatcher):
             try:
                 self.flush()
             except OSError as why:
-                if why.args[0] in (errno.EPIPE,
-                                   errno.EBADF):
+                if why.args[0] == errno.EPIPE:
                     self.input_buffer = ''
                     self.close()
                 else:
