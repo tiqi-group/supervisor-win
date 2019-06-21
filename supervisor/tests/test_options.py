@@ -2436,7 +2436,7 @@ class TestProcessConfig(unittest.TestCase):
         return ProcessConfig
 
     def _makeOne(self, *arg, **kw):
-        defaults = {}
+        defaults = {'redirect_stderr': False}
         for name in ('name', 'command', 'directory', 'umask',
                      'priority', 'autostart', 'autorestart',
                      'startsecs', 'startretries', 'uid',
@@ -2445,7 +2445,7 @@ class TestProcessConfig(unittest.TestCase):
                      'stderr_logfile', 'stderr_capture_maxbytes',
                      'stderr_events_enabled', 'stderr_syslog',
                      'stopsignal', 'stopwaitsecs', 'stopasgroup',
-                     'killasgroup', 'exitcodes', 'redirect_stderr',
+                     'killasgroup', 'exitcodes',
                      'environment'):
             defaults[name] = name
         for name in ('stdout_logfile_backups', 'stdout_logfile_maxbytes',
