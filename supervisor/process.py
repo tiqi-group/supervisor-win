@@ -442,17 +442,14 @@ class Subprocess(object):
             if self.config.directory:
                 options.chdir(self.config.directory)
 
+            self.process = options.execve(filename, argv, env)
+        except NotImplementedError:
             kwargs = dict(
                 env=env,
                 cwd=self.config.directory,
                 redirect_stderr=self.config.redirect_stderr
             )
-            try:
-                self.process = options.execve(filename, argv, env)
-                if self.process is None:
-                    options.write(2, "child process was not spawned\n")
-            except NotImplementedError:
-                self.process = self.execute(filename, argv, **kwargs)
+            self.process = self.execute(filename, argv, **kwargs)
         except OSError as why:
             code = errno.errorcode.get(why.args[0], why.args[0])
             msg = "couldn't exec %s: %s\n" % (argv[0], code)
@@ -479,6 +476,9 @@ class Subprocess(object):
             options.logger.info('Spawned: %r with pid %s' % (self.config.name, self.pid))
             self.delay = time.time() + self.config.startsecs
             self.spawnerr = None  # no error
+        else:
+            options.write(2, "supervisor: child process was not spawned\n")
+            options._exit(127)  # exit process with code for spawn failure
 
     def stop(self):
         """ Administrative stop """

@@ -410,8 +410,6 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(options.parent_pipes_closed, None)
         self.assertEqual(options.child_pipes_closed, None)
         self.assertEqual(options.pgrp_set, True)
-        self.assertEqual(len(options.duped), 3)
-        self.assertEqual(len(options.fds_closed), options.minfds - 3)
         out = {2: "supervisor: couldn't exec /good/filename: EPERM\n"
                   "supervisor: child process was not spawned\n"}
         self.assertEqual(options.written, out)
