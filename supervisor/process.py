@@ -390,6 +390,11 @@ class Subprocess(object):
             raise OSError('failure initializing new process ' + ' '.join(argv))
         return proc
 
+    def spawn_child_error(self, code=127):
+        options = self.config.options
+        options.write(2, "supervisor: child process was not spawned\n")
+        options._exit(code)  # exit process with code for spawn failure
+
     def _spawn_as_child(self, filename, argv):
         options = self.config.options
         # try:
@@ -413,8 +418,7 @@ class Subprocess(object):
             msg = "couldn't setuid to %s: %s\n" % (uid, setuid_msg)
             options.logger.error("supervisor[process]: " + msg)
             options.write(2, "supervisor: " + msg)
-            options.write(2, "supervisor: child process was not spawned\n")
-            options._exit(127)  # exit process with code for spawn failure
+            self.spawn_child_error()
             return  # finally clause will exit the child process
 
         # set environment
@@ -472,16 +476,15 @@ class Subprocess(object):
         if self.process is not None:
             self.pid = self.process.pid
             options.register_pid(self.process.pid, self)
-
             self.delay = time.time() + self.config.startsecs
             self.spawnerr = None  # no error
-
             if not isinstance(self.process, DummyPopen):
                 self._setup_system_resource()
                 options.logger.info('Spawned: %r with pid %s' % (self.config.name, self.pid))
+            else:
+                self.spawn_child_error()
         else:
-            options.write(2, "supervisor: child process was not spawned\n")
-            options._exit(127)  # exit process with code for spawn failure
+            self.spawn_child_error()
 
     def stop(self):
         """ Administrative stop """

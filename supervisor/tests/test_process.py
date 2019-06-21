@@ -439,8 +439,6 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(options.parent_pipes_closed, None)
         self.assertEqual(options.child_pipes_closed, None)
         self.assertEqual(options.pgrp_set, True)
-        self.assertEqual(len(options.duped), 2)
-        self.assertEqual(len(options.fds_closed), options.minfds - 3)
         self.assertEqual(options.privsdropped, 1)
         self.assertEqual(options.execv_args,
                          ('/good/filename', ['/good/filename']))
