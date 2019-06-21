@@ -2,6 +2,7 @@
 import errno
 import operator
 import os
+import signal
 import sys
 import tempfile
 
@@ -1060,8 +1061,9 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
                                                pconfig2)
         supervisord.set_procattr('process1', 'state', ProcessStates.RUNNING)
         supervisord.set_procattr('process2', 'state', ProcessStates.RUNNING)
+        sig_sent = signal.SIGTERM
         interface = self._makeOne(supervisord)
-        result = interface.signalAllProcesses(10)
+        result = interface.signalAllProcesses(sig_sent)
         self.assertEqual(interface.update_text, 'signalAllProcesses')
 
         # Sort so we get deterministic results despite hash randomization
@@ -1080,9 +1082,9 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
              'description': 'OK'},
         ])
         process1 = supervisord.process_groups['foo'].processes['process1']
-        self.assertEqual(process1.sent_signal, 10)
+        self.assertEqual(process1.sent_signal, sig_sent)
         process2 = supervisord.process_groups['foo'].processes['process2']
-        self.assertEqual(process2.sent_signal, 10)
+        self.assertEqual(process2.sent_signal, sig_sent)
 
     def test_signalAllProcesses_with_signal_name(self):
         options = DummyOptions()
