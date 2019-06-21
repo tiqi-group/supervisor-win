@@ -774,7 +774,7 @@ class Subprocess(object):
                 # sigkill.  if this doesn't kill it, the process will be stuck
                 # in the STOPPING state forever.
                 self.config.options.logger.warn(
-                    'killing %r (%s) with SIGKILL' % (self.config.name,
+                    'killing %r (%s) with SIGTERM' % (self.config.name,
                                                       self.pid))
                 self.kill(signal.SIGTERM)
 
