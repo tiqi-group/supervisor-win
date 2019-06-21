@@ -992,7 +992,8 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
         supervisord.set_procattr('process1', 'state', ProcessStates.RUNNING)
         supervisord.set_procattr('process2', 'state', ProcessStates.RUNNING)
         interface = self._makeOne(supervisord)
-        result = interface.signalProcessGroup('foo', 10)
+        sig = signal.SIGABRT
+        result = interface.signalProcessGroup('foo', sig)
         self.assertEqual(interface.update_text, 'signalProcessGroup')
         # Sort so we get deterministic results despite hash randomization
         result = sorted(result, key=operator.itemgetter('name'))
@@ -1010,9 +1011,9 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
              'description': 'OK'},
         ])
         process1 = supervisord.process_groups['foo'].processes['process1']
-        self.assertEqual(process1.sent_signal, 10)
+        self.assertEqual(process1.sent_signal, sig)
         process2 = supervisord.process_groups['foo'].processes['process2']
-        self.assertEqual(process2.sent_signal, 10)
+        self.assertEqual(process2.sent_signal, sig)
 
     def test_signalProcessGroup_with_signal_name(self):
         options = DummyOptions()
