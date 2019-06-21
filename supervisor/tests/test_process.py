@@ -293,33 +293,6 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(event1.__class__, events.ProcessStateStartingEvent)
         self.assertEqual(event2.__class__, events.ProcessStateBackoffEvent)
 
-    def test_spawn_fork_fail_eagain(self):
-        options = DummyOptions()
-        options.fork_error = errno.EAGAIN
-        config = DummyPConfig(options, 'good', '/good/filename')
-        instance = self._makeOne(config)
-        from supervisor.states import ProcessStates
-        instance.state = ProcessStates.BACKOFF
-        from supervisor import events
-        L = []
-        events.subscribe(events.ProcessStateEvent, lambda x: L.append(x))
-        result = instance.spawn()
-        self.assertEqual(result, None)
-        self.assertEqual(instance.spawnerr,
-                         "Too many processes in process table to spawn 'good'")
-        self.assertEqual(options.logger.data[0],
-                         "spawnerr: Too many processes in process table to spawn 'good'")
-        self.assertEqual(len(options.parent_pipes_closed), 6)
-        self.assertEqual(len(options.child_pipes_closed), 6)
-        self.assertTrue(instance.delay)
-        self.assertTrue(instance.backoff)
-        from supervisor.states import ProcessStates
-        self.assertEqual(instance.state, ProcessStates.BACKOFF)
-        self.assertEqual(len(L), 2)
-        event1, event2 = L
-        self.assertEqual(event1.__class__, events.ProcessStateStartingEvent)
-        self.assertEqual(event2.__class__, events.ProcessStateBackoffEvent)
-
     def test_spawn_as_child_setuid_fail(self):
         options = DummyOptions()
         options.forkpid = 0
