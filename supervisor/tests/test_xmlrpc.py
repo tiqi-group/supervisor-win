@@ -40,9 +40,7 @@ class RPCErrorTests(unittest.TestCase):
     def test___str___shows_code_and_text(self):
         from supervisor import xmlrpc
         e = self._makeOne(xmlrpc.Faults.NO_FILE, '/nonexistent')
-        self.assertEqual(str(e),
-            "code=%r, text='NO_FILE: /nonexistent'" % xmlrpc.Faults.NO_FILE
-            )
+        self.assertEqual(str(e), "code=%r, text='NO_FILE: /nonexistent'" % xmlrpc.Faults.NO_FILE)
 
 
 class XMLRPCMarshallingTests(unittest.TestCase):
