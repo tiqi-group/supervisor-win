@@ -350,9 +350,11 @@ class StatusView(MeldView):
                 elif action == 'stop':
                     try:
                         callback = rpcinterface.supervisor.stopProcess(namespec)
-                    except RPCError as e:
+                    except RPCError as exc:
+                        code = exc.code
+                        text = exc.text
                         def stoperr():
-                            return 'unexpected rpc fault [%d] %s' % (e.code, e.text)
+                            return 'unexpected rpc fault [%d] %s' % (code, text)
                         stoperr.delay = 0.05
                         return stoperr
 
@@ -386,19 +388,19 @@ class StatusView(MeldView):
                 elif action == 'start':
                     try:
                         callback = rpcinterface.supervisor.startProcess( namespec)
-                    except RPCError as e:
-                        if e.code == Faults.NO_FILE:
+                    except RPCError as exc:
+                        if exc.code == Faults.NO_FILE:
                             msg = 'no such file'
-                        elif e.code == Faults.NOT_EXECUTABLE:
+                        elif exc.code == Faults.NOT_EXECUTABLE:
                             msg = 'file not executable'
-                        elif e.code == Faults.ALREADY_STARTED:
+                        elif exc.code == Faults.ALREADY_STARTED:
                             msg = 'already started'
-                        elif e.code == Faults.SPAWN_ERROR:
+                        elif exc.code == Faults.SPAWN_ERROR:
                             msg = 'spawn error'
-                        elif e.code == Faults.ABNORMAL_TERMINATION:
+                        elif exc.code == Faults.ABNORMAL_TERMINATION:
                             msg = 'abnormal termination'
                         else:
-                            msg = 'unexpected rpc fault [%d] %s' % (e.code, e.text)
+                            msg = 'unexpected rpc fault [%d] %s' % (exc.code, exc.text)
                         def starterr():
                             return 'ERROR: Process %s: %s' % (namespec, msg)
 
@@ -411,13 +413,13 @@ class StatusView(MeldView):
                                 result = callback()
                             else:
                                 result = callback
-                        except RPCError as e:
-                            if e.code == Faults.SPAWN_ERROR:
+                        except RPCError as exc:
+                            if exc.code == Faults.SPAWN_ERROR:
                                 msg = 'spawn error'
-                            elif e.code == Faults.ABNORMAL_TERMINATION:
+                            elif exc.code == Faults.ABNORMAL_TERMINATION:
                                 msg = 'abnormal termination'
                             else:
-                                msg = 'unexpected rpc fault [%d] %s' % (e.code, e.text)
+                                msg = 'unexpected rpc fault [%d] %s' % (exc.code, exc.text)
                             return 'ERROR: Process %s: %s' % (namespec, msg)
 
                         if result is NOT_DONE_YET:
@@ -430,9 +432,11 @@ class StatusView(MeldView):
                 elif action == 'clearlog':
                     try:
                         callback = rpcinterface.supervisor.clearProcessLogs(namespec)
-                    except RPCError as e:
+                    except RPCError as exc:
+                        code = exc.code
+                        text = exc.text
                         def clearerr():
-                            return 'unexpected rpc fault [%d] %s' % (e.code, e.text)
+                            return 'unexpected rpc fault [%d] %s' % (code, text)
                         clearerr.delay = 0.05
                         return clearerr
 
