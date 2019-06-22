@@ -1343,11 +1343,11 @@ class ServerOptionsTests(unittest.TestCase):
 
     def test_processes_from_section_redirect_stderr_with_filename(self):
         instance = self._makeOne()
-        text = lstrip("""\
+        text = lstrip("""
         [program:foo]
         command = /bin/foo
         redirect_stderr = true
-        stderr_logfile = /tmp/logfile
+        stderr_logfile = %(ENV_TEMP)s\\logfile
         """)
         from supervisor.options import UnhosedConfigParser
         config = UnhosedConfigParser()
