@@ -1683,7 +1683,7 @@ class ServerOptionsTests(unittest.TestCase):
         [supervisord]
 
         [include]
-        files=%s/conf.d/*.conf
+        files=%s\\conf.d\\*.conf
         """ % dirname)
         with open(supervisord_conf, 'w') as f:
             f.write(text)
@@ -1693,7 +1693,7 @@ class ServerOptionsTests(unittest.TestCase):
         included_conf = os.path.join(conf_d, "included.conf")
         text = lstrip('''\
         [program:cat]
-        command = /bin/cat
+        command = %(here)s\\bin\\cat
         stopsignal = NOTASIGNAL
         ''')
         with open(included_conf, 'w') as f:
