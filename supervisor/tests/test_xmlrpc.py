@@ -224,7 +224,8 @@ class XMLRPCHandlerTests(unittest.TestCase):
         self.assertTrue(repr(data) in logdata[2])
         self.assertTrue("Traceback" in logdata[2])
         self.assertTrue("TypeError: cannot marshal" in logdata[2])
-self.assertEqual(request._error, 500)
+        self.assertEqual(request._error, 500)
+
     def test_continue_request_value_is_function(self):
         class DummyRPCNamespace(object):
             def foo(self):

@@ -946,8 +946,6 @@ class ServerOptionsTests(unittest.TestCase):
             shutil.rmtree(dirname, ignore_errors=True)
         options = instance.configroot.supervisord
         self.assertEqual(len(options.server_configs), 1)
-        msg = 'Included extra file "%s" during parsing' % conf_file
-        self.assertTrue(msg in instance.parse_infos)
 
     def test_read_config_include_expands_here(self):
         conf = os.path.join(
