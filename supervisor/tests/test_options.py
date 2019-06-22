@@ -1537,11 +1537,11 @@ class ServerOptionsTests(unittest.TestCase):
         [supervisord]
 
         [program:cat]
-        command=%(here)s/bin/cat
-        directory=%(here)s/thedirectory
-        environment=FOO=%(here)s/foo
-        stdout_logfile=%(here)s/stdout.log
-        stderr_logfile=%(here)s/stderr.log
+        command=%(here)s\\bin\\cat
+        directory=%(here)s\\thedirectory
+        environment=FOO='%(here)s\\foo'
+        stdout_logfile=%(here)s\\stdout.log
+        stderr_logfile=%(here)s\\stderr.log
         ''')
         here = tempfile.mkdtemp()
         supervisord_conf = os.path.join(here, 'supervisord.conf')
@@ -1563,7 +1563,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(proc.directory,
             os.path.join(here, 'thedirectory'))
         self.assertEqual(proc.command,
-            os.path.join(here, 'bin/cat'))
+            os.path.join(here, 'bin\\cat'))
         self.assertEqual(proc.environment,
             {'FOO': os.path.join(here, 'foo')})
         self.assertEqual(proc.stdout_logfile,
@@ -1578,11 +1578,11 @@ class ServerOptionsTests(unittest.TestCase):
 
         [eventlistener:memmon]
         events=TICK_60
-        command=%(here)s/bin/memmon
-        directory=%(here)s/thedirectory
-        environment=FOO=%(here)s/foo
-        stdout_logfile=%(here)s/stdout.log
-        stderr_logfile=%(here)s/stderr.log
+        command=%(here)s\\bin\\memmon
+        directory=%(here)s\\thedirectory
+        environment=FOO='%(here)s\\foo'
+        stdout_logfile=%(here)s\\stdout.log
+        stderr_logfile=%(here)s\\stderr.log
         ''')
         here = tempfile.mkdtemp()
         supervisord_conf = os.path.join(here, 'supervisord.conf')
@@ -1604,7 +1604,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(proc.directory,
             os.path.join(here, 'thedirectory'))
         self.assertEqual(proc.command,
-            os.path.join(here, 'bin/memmon'))
+            os.path.join(here, 'bin\\memmon'))
         self.assertEqual(proc.environment,
             {'FOO': os.path.join(here, 'foo')})
         self.assertEqual(proc.stdout_logfile,
