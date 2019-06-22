@@ -5,7 +5,6 @@ import os
 import signal
 import sys
 import tempfile
-
 import time
 import unittest
 
@@ -1130,18 +1129,24 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
 
         interface = self._makeOne(supervisord)
         configs = interface.getAllConfigInfo()
-        self.assertEqual(configs, [{'group': 'group1',
-                                    'name': 'process1',
-                                    'inuse': True,
-                                    'autostart': True,
-                                    'process_prio': 999,
-                                    'group_prio': 999},
-                                   {'group': 'group1',
-                                    'name': 'process2',
-                                    'inuse': True,
-                                    'autostart': True,
-                                    'process_prio': 999,
-                                    'group_prio': 999}])
+        sample_config = [{
+            'group': 'group1',
+            'name': 'process1',
+            'inuse': True,
+            'autostart': True,
+            'process_prio': 999,
+            'group_prio': 999
+        }, {
+            'group': 'group1',
+             'name': 'process2',
+             'inuse': True,
+             'autostart': True,
+             'process_prio': 999,
+             'group_prio': 999
+        }]
+        for config_info, sample_conf in zip(configs, sample_config):
+            for key in sample_conf:
+                self.assertEqual(config_info[key], sample_conf[key])
 
     def test__interpretProcessInfo(self):
         supervisord = DummySupervisor()
