@@ -1617,11 +1617,11 @@ class ServerOptionsTests(unittest.TestCase):
         instance = self._makeOne()
         text = lstrip('''
         [supervisord]
-        logfile = %(here)s/%(ENV_LOGNAME)s.log
+        logfile = %(here)s\\%(ENV_LOGNAME)s.log
 
         [program:cat]
         ''')
-        text += ('command = %(here)s/bin/cat --foo=%(ENV_FOO)s '
+        text += ('command = %(here)s\\bin\\cat --foo=%(ENV_FOO)s '
                  '--num=%(process_num)d --node=%(host_node_name)s')
 
         here = tempfile.mkdtemp()
@@ -1645,7 +1645,7 @@ class ServerOptionsTests(unittest.TestCase):
         cat_group = section.process_group_configs[0]
         cat_0 = cat_group.process_configs[0]
         expected = '%s --foo=bar --num=0 --node=%s' % (
-            os.path.join(here, 'bin/cat'),
+            os.path.join(here, 'bin', 'cat'),
             platform.node()
             )
         self.assertEqual(cat_0.command, expected)
