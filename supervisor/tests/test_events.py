@@ -248,6 +248,7 @@ class TestEventTypes(unittest.TestCase):
         inst = ProcessGroupRemovedEvent('myprocess')
         self.assertEqual(inst.group, 'myprocess')
 
+
 class TestSerializations(unittest.TestCase):
     def _deserialize(self, serialization):
         data = serialization.split('\n')
@@ -487,6 +488,7 @@ class TestSerializations(unittest.TestCase):
             self.assertEqual(headers, {'when':'1'})
             self.assertEqual(payload, '')
 
+
 class TestUtilityFunctions(unittest.TestCase):
     def test_getEventNameByType(self):
         from supervisor import events
@@ -504,8 +506,10 @@ class TestUtilityFunctions(unittest.TestCase):
         finally:
             del events.EventTypes.FOO
 
+
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')

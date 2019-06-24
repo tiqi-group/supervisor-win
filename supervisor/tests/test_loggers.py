@@ -227,6 +227,7 @@ class FileHandlerTests(HandlerTests, unittest.TestCase):
         self.assertTrue(dummy_stderr.written.endswith(b'OSError\n'),
                         dummy_stderr.written)
 
+
 if os.path.exists('/dev/stdout'):
     StdoutTestsBase = FileHandlerTests
 else:
