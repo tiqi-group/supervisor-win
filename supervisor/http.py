@@ -698,7 +698,7 @@ class tail_f_producer(object):
                 self.file.seek(-bytes_added, os.SEEK_END)
                 bytes = self.file.read(bytes_added)
                 self.sz = newsz
-                return bytes
+                return as_bytes(bytes, getattr(self.file, 'encoding', 'utf-8'))
         finally:
             self.close()
         return NOT_DONE_YET
