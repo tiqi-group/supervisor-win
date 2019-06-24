@@ -367,7 +367,7 @@ class dispatcher(object):
                                errno.ENOTCONN,
                                errno.ESHUTDOWN):
                 self.handle_close()
-                return ''
+                return b''
             else:
                 raise
 
