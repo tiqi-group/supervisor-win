@@ -141,7 +141,7 @@ class Controller(cmd.Cmd):
         return
 
     def default(self, line):
-        super(Controller, self).default(line)
+        cmd.Cmd.default(self, line)
         self.set_exitstatus(LSBInitErrorCodes.GENERIC)
 
     def exec_cmdloop(self, args, options):
