@@ -136,7 +136,7 @@ class TailFProducerTests(unittest.TestCase):
             self.assertEqual(result, b'a' * 80)
 
             # test 2
-            tmpfile.write(as_bytes(b'b' * 100))
+            tmpfile.write(b'b' * 100)
             tmpfile.flush()
             result = producer.more()
             self.assertEqual(result, b'b' * 100)
@@ -192,22 +192,18 @@ class TailFProducerTests(unittest.TestCase):
 
     def test_handle_more_follow_file_gone(self):
         request = DummyRequest('/logtail/foo', None, None, None)
-        tmpfile = TempFileOpen()
-        tmpfile.write(b'a' * 80)
-        try:
+        with TempFileOpen(mode='wb') as tmpfile:
+            tmpfile.write(b'a' * 80)
+
             producer = self._makeOne(request, tmpfile.name, 80)
-            producer.close()
-        finally:
-            tmpfile.close()
-        result = producer.more()
-        self.assertEqual(result, b'a' * 80)
-        with open(tmpfile.name, 'wb') as tmpfile:
-            tmpfile.write(as_bytes(b'b' * 80))
-        try:
+            result = producer.more()
+            self.assertEqual(result, b'a' * 80)
+
+            with open(tmpfile.name, 'wb') as tmpfile:
+                tmpfile.write(b'b' * 80)
+
             result = producer.more()  # should open in new file
             self.assertEqual(result, b'b' * 80)
-        finally:
-            os.remove(tmpfile.name)
 
 
 class DeferringChunkedProducerTests(unittest.TestCase):
