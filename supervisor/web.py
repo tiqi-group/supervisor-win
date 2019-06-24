@@ -13,8 +13,8 @@ from supervisor.compat import (
     parse_qs,
     parse_qsl,
     as_string,
-    PY3
-)
+    PY3,
+    as_bytes)
 from supervisor.http import NOT_DONE_YET
 from supervisor.medusa import producers
 from supervisor.medusa.http_server import get_header
@@ -185,7 +185,7 @@ class MeldView(object):
         headers['Pragma'] = 'no-cache'
         headers['Cache-Control'] = 'no-cache'
         headers['Expires'] = http_date.build_http_date(0)
-        response['body'] = as_string(body)
+        response['body'] = as_bytes(body)
         return response
 
     def render(self):
@@ -544,7 +544,7 @@ class StatusView(MeldView):
         copyright_year = str(datetime.date.today().year)
         root.findmeld('copyright_date').content(copyright_year)
 
-        return as_string(root.write_xhtmlstring())
+        return as_bytes(root.write_xhtmlstring())
 
 
 class OKView(object):
