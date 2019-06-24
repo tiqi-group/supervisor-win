@@ -549,7 +549,7 @@ class Subprocess(object):
         if killasgroup:
             as_group = "process group "
 
-        options.logger.debug('killing %s (pid %s) %swith signal %s'
+        options.logger.debug('killing %s (pid %s) %s with signal %s'
                              % (processname,
                                 self.pid,
                                 as_group,
@@ -809,6 +809,7 @@ class Subprocess(object):
                     'killing \'%s\' (%s) with SIGTERM' % (processname,
                                                           self.pid))
                 self.kill(signal.SIGTERM)
+
 
 class FastCGISubprocess(Subprocess):
     """Extends Subprocess class to handle FastCGI subprocesses"""
