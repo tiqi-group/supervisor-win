@@ -321,7 +321,7 @@ class Controller(cmd.Cmd):
             if len(words) == 1 and not line.endswith(' '):
                 matches = self._complete_actions(text)
             # actions that accept an action name
-            elif action in ('help'):
+            elif action in ('help',):
                 matches = self._complete_actions(text)
             # actions that accept a group name
             elif action in ('add', 'remove', 'update'):
