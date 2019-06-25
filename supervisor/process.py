@@ -287,7 +287,7 @@ class Subprocess(object):
 
     def record_spawnerr(self, msg):
         self.spawnerr = msg
-        self.config.options.logger.error("spawnerr: %s" % msg)
+        self.config.options.logger.error("spawnerr: %s" % msg.rstrip('\n'))
 
     def close_all_dispatchers(self):
         """Ends the execution of the data reading threads"""
@@ -396,7 +396,9 @@ class Subprocess(object):
 
     def spawn_child_error(self, code=127):
         options = self.config.options
-        options.write(2, "supervisor: child process was not spawned\n")
+        msg = "supervisor: child process was not spawned"
+        options.write(2, msg + '\n')
+        self.config.options.logger.error(msg)
         options._exit(code)  # exit process with code for spawn failure
 
     def _spawn_as_child(self, filename, argv):
@@ -453,29 +455,26 @@ class Subprocess(object):
             if self.config.directory:
                 options.chdir(self.config.directory)
 
-            self.process = options.execve(filename, argv, env)
-        except NotImplementedError:
-            kwargs = dict(
-                env=env,
-                cwd=self.config.directory,
-                redirect_stderr=self.config.redirect_stderr
-            )
-            self.process = self.execute(filename, argv, **kwargs)
+            try:
+                self.process = options.execve(filename, argv, env)
+            except NotImplementedError:
+                kwargs = dict(
+                    env=env,
+                    cwd=self.config.directory,
+                    redirect_stderr=self.config.redirect_stderr
+                )
+                self.process = self.execute(filename, argv, **kwargs)
         except OSError as why:
             code = errno.errorcode.get(why.args[0], why.args[0])
             msg = "couldn't exec %s: %s\n" % (argv[0], code)
             options.write(2, "supervisor: " + msg)
             self.record_spawnerr(msg)
-            self._assertInState(ProcessStates.STARTING)
-            self.change_state(ProcessStates.BACKOFF)
         except:
             (file, fun, line), t, v, tbinfo = asyncore.compact_traceback()
             error = '%s, %s: file: %s line: %s' % (t, v, file, line)
             msg = "couldn't exec %s: %s\n" % (filename, error)
             options.write(2, "supervisor: " + msg)
             self.record_spawnerr(msg)
-            self._assertInState(ProcessStates.STARTING)
-            self.change_state(ProcessStates.BACKOFF)
 
         if self.process is not None:
             self.pid = self.process.pid
