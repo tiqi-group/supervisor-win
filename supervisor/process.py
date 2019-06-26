@@ -287,7 +287,7 @@ class Subprocess(object):
 
     def record_spawnerr(self, msg):
         self.spawnerr = msg
-        self.config.options.logger.error("spawnerr: %s" % msg.rstrip('\n'))
+        self.config.options.logger.info("spawnerr: %s" % msg)
 
     def close_all_dispatchers(self):
         """Ends the execution of the data reading threads"""
@@ -396,9 +396,7 @@ class Subprocess(object):
 
     def spawn_child_error(self, code=127):
         options = self.config.options
-        msg = "supervisor: child process was not spawned"
-        options.write(2, msg + '\n')
-        self.config.options.logger.error(msg)
+        options.write(2, '"supervisor: child process was not spawned\n')
         options._exit(code)  # exit process with code for spawn failure
 
     def _spawn_as_child(self, filename, argv):
