@@ -546,9 +546,9 @@ class Subprocess(object):
 
         as_group = ""
         if killasgroup:
-            as_group = "process group "
+            as_group = " process group"
 
-        options.logger.debug('killing %s (pid %s) %s with signal %s'
+        options.logger.debug('killing %s (pid %s)%s with signal %s'
                              % (processname,
                                 self.pid,
                                 as_group,
