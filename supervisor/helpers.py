@@ -1,12 +1,12 @@
+"""
+Extension of existing classes by changing or adding behaviors.
+"""
+
 import random
 import subprocess
 import threading
 
 __author__ = 'alex'
-
-"""
-Extension of existing classes by changing or adding behaviors.
-"""
 
 
 class DummyPopen(object):
@@ -16,7 +16,6 @@ class DummyPopen(object):
         self.args = args
         self.kwargs = kwargs
         self.pid = random.randint(1, 500)
-        self.killed = False
         self.returncode = 0
 
 
@@ -26,22 +25,15 @@ class Popen(subprocess.Popen):
     process was killed (using the kill attribute).
     """
 
-    def __init__(self, *args, **kwargs):
-        super(Popen, self).__init__(*args, **kwargs)
-        self.killed = False
-
-    def send_signal(self, sig):
-        super(Popen, self).send_signal(sig)
-        self.killed = True
-
     @property
     def message(self):
+        msg = "termination unknown"
+        if self.returncode is None:
+            return msg
         if self.returncode == 0:
-            msg = "normal termination"
+            msg = "termination normal"
         elif self.returncode < 0:
             msg = "termination by signal"
-        else:
-            msg = "unknown termination cause"
         return msg
 
 
