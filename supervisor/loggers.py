@@ -102,11 +102,11 @@ class Handler(object):
             if hasattr(self.stream, 'encoding'):
                 self.stream.write(as_string(msg,
                                             encoding=self.encoding,
-                                            force_type=True))
+                                            ignore=True))
             else:
                 self.stream.write(as_bytes(msg,
                                            encoding=self.encoding,
-                                           force_type=True))
+                                           ignore=True))
             self.flush()
         except:
             self.handleError()

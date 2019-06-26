@@ -4,6 +4,21 @@ import sys
 
 PY3 = sys.version_info[0] == 3
 
+
+class _Stream(object):
+    def __init__(self, value, obj):
+        self.value = value
+        self.obj = obj
+
+    def encode(self, encoding='utf8', ignore=False):
+        return self.value if isinstance(self.value, self.obj) else \
+            self.value.encode(encoding,  'ignore' if ignore else 'strict')
+
+    def decode(self, encoding='utf8', ignore=False):
+        return self.value if isinstance(self.value, self.obj) else \
+            self.value.decode(encoding, 'ignore' if ignore else 'strict')
+
+
 if PY3:  # pragma: no cover
     long = int
     basestring = str
@@ -14,11 +29,11 @@ if PY3:  # pragma: no cover
         def __init__(self, string, encoding, errors):
             str.__init__(self, string)
 
-    def as_bytes(s, encoding='utf-8', force_type=False):
-        return s if isinstance(s, bytes) else s.encode(encoding, 'strict' if not force_type else 'ignore')
+    def as_bytes(s, encoding='utf-8', ignore=False):
+        return _Stream(s, bytes).encode(encoding=encoding, ignore=ignore)
 
-    def as_string(s, encoding='utf-8', force_type=False):
-        return s if isinstance(s, str) else s.decode(encoding, 'strict' if not force_type else 'ignore')
+    def as_string(s, encoding='utf-8', ignore=False):
+        return _Stream(s, str).decode(encoding=encoding, ignore=ignore)
 
     from functools import reduce
 
@@ -32,11 +47,11 @@ else:  # pragma: no cover
     unicode = unicode
     basestring = basestring
 
-    def as_bytes(s, encoding='utf-8', force_type=False):
-        return s if isinstance(s, str) else s.encode(encoding, 'strict' if not force_type else 'ignore')
+    def as_bytes(s, encoding='utf-8', ignore=False):
+        return _Stream(s, str).encode(encoding=encoding, ignore=ignore)
 
-    def as_string(s, encoding='utf-8', force_type=False):
-        return s if isinstance(s, unicode) else s.decode(encoding, 'strict' if not force_type else 'ignore')
+    def as_string(s, encoding='utf-8', ignore=False):
+        return _Stream(s, unicode).decode(encoding=encoding, ignore=ignore)
 
     reduce = reduce
 
