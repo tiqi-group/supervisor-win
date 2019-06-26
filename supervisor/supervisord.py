@@ -301,7 +301,7 @@ class Supervisor(object):
 
             try:
                 # Avoid overloading the processor
-                time.sleep(self.options.delay_secs)
+                time.sleep(self.options.delaysecs)
             except IOError:
                 continue
 
