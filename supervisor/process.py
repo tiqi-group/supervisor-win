@@ -396,7 +396,7 @@ class Subprocess(object):
 
     def spawn_child_error(self, code=127):
         options = self.config.options
-        options.write(2, '"supervisor: child process was not spawned\n')
+        options.write(2, 'supervisor: child process was not spawned\n')
         options._exit(code)  # exit process with code for spawn failure
 
     def _spawn_as_child(self, filename, argv):
