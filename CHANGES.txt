@@ -1,3 +1,9 @@
+4.0.3
+-----------------------------
+- Merge supervisor unix changes until
+- https://github.com/Supervisor/supervisor/commit/3a956ce4913e25c18760f4430220b6d5df866c7f).
+- Fixed process exit detection.
+
 4.0.2
 -----------------------------
 - Process restart correction
