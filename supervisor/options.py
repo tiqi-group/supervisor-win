@@ -1453,11 +1453,13 @@ class UnhosedConfigParser(ConfigParser.RawConfigParser):
         # inline_comment_prefixes was added in Python 3 but its default makes
         # RawConfigParser behave differently than it did on Python 2.  This
         # makes it behave the same by default on Python 2 and 3.
-        if PY3 and ('inline_comment_prefixes' not in kwargs):
-            kwargs['inline_comment_prefixes'] = (';', '#')
-
-        ConfigParser.RawConfigParser.__init__(self, *args, **kwargs)
-
+        kwargs['inline_comment_prefixes'] = kwargs.pop('inline_comment_prefixes', (';', '#'))
+        # fix backports issue
+        try:
+            ConfigParser.RawConfigParser.__init__(self, *args, **kwargs)
+        except TypeError:
+            del kwargs['inline_comment_prefixes']
+            ConfigParser.RawConfigParser.__init__(self, *args, **kwargs)
         self.section_to_file = {}
         self.expansions = {}
 
