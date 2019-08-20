@@ -1285,7 +1285,14 @@ class ServerOptions(Options):
         return stream.readline()
 
     def write(self, fd, data):
-        return os.write(fd if type(fd) is int else fd.fileno(), as_bytes(data))
+        try:
+            return os.write(fd if type(fd) is int else fd.fileno(), as_bytes(data))
+        except OSError:
+            if fd == 1 and not sys.stdout.isatty():
+                self.logger.info(data)
+            elif fd == 2 and not sys.stderr.isatty():
+                self.logger.error(data)
+            return 0
 
     def process_environment(self):
         os.environ.update(self.environment or {})
