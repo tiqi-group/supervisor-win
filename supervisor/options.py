@@ -1841,17 +1841,16 @@ def tailFile(filename, offset, length):
     try:
         with open(filename, 'rb') as f:
             overflow = False
-            f.seek(0, 2)
+            f.seek(0, os.SEEK_END)
             sz = f.tell()
 
             if sz > (offset + length):
                 overflow = True
-                offset = sz - 1
-
-            if (offset + length) > sz:
-                if offset > (sz - 1):
-                    length = 0
                 offset = sz - length
+
+            if offset > sz:
+                length = 0
+                offset = sz
 
             if offset < 0:
                 offset = 0
