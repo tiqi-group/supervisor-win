@@ -1289,9 +1289,9 @@ class ServerOptions(Options):
             return os.write(fd if type(fd) is int else fd.fileno(), as_bytes(data))
         except OSError:
             if fd == 1 and not sys.stdout.isatty():
-                self.logger.info(data)
+                self.logger.info(data.rstrip())
             elif fd == 2 and not sys.stderr.isatty():
-                self.logger.error(data)
+                self.logger.error(data.rstrip())
             return 0
 
     def process_environment(self):
