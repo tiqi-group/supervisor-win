@@ -617,7 +617,7 @@ class DummyPConfig:
         self.serverurl = serverurl
 
     def get_path(self):
-        return ["/bin", "/usr/bin", "/usr/local/bin"]
+        return [os.path.join(os.environ['windir'], 'system32')]
 
     def create_autochildlogs(self):
         self.autochildlogs_created = True

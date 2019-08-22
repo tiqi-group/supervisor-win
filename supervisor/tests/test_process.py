@@ -1,7 +1,7 @@
 import errno
 import os
+import re
 import signal
-import tempfile
 import sys
 import tempfile
 import time
@@ -167,8 +167,7 @@ class SubprocessTests(unittest.TestCase):
         instance = self._makeOne(config)
         args = instance.get_execv_args()
         self.assertEqual(len(args), 2)
-        self.assertEqual(args[0].lower(),
-                         os.environ.get("ComSpec").lower())
+        self.assertTrue(re.match(re.escape(args[0]), os.environ.get("ComSpec"), re.I))
         self.assertEqual(args[1], ['cmd.exe', 'foo'])
 
     def test_get_execv_args_rel_searches_using_pconfig_path(self):
