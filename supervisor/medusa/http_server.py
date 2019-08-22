@@ -12,10 +12,7 @@ import socket
 import sys
 import time
 
-from supervisor.compat import (
-    splitquery,
-    unquote
-)
+from supervisor.compat import urllib
 from supervisor.compat import as_bytes
 
 # async modules
@@ -588,12 +585,12 @@ class http_channel(asynchat.async_chat):
 
             # unquote path if necessary (thanks to Skip Montanaro for pointing
             # out that we must unquote in piecemeal fashion).
-            rpath, rquery = splitquery(uri)
+            rpath, rquery = urllib.splitquery(uri)
             if '%' in rpath:
                 if rquery:
-                    uri = unquote(rpath) + '?' + rquery
+                    uri = urllib.unquote(rpath) + '?' + rquery
                 else:
-                    uri = unquote(rpath)
+                    uri = urllib.unquote(rpath)
 
             r = http_request(self, request, command, uri, version, header)
             self.request_counter.increment()

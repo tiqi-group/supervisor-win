@@ -18,7 +18,7 @@ import supervisor.medusa.http_server as http_server
 import supervisor.medusa.producers as producers
 from supervisor.medusa.util import html_repr
 
-unquote = http_server.unquote
+unquote = http_server.urllib.unquote
 
 # This is the 'default' handler.  it implements the base set of
 # features expected of a simple file-delivering HTTP server.  file
