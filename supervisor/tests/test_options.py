@@ -680,14 +680,14 @@ class ServerOptionsTests(unittest.TestCase):
     def test_options_ignores_space_prefixed_inline_comments(self):
         text = lstrip("""
         [supervisord]
-        logfile=/tmp/supervisord.log ;(main log file;default $CWD/supervisord.log)
+        logfile=%(ENV_TMP)s\\supervisord.log ;(main log file;default $CWD/supervisord.log)
         minfds=123 ; (min. avail startup file descriptors;default 1024)
         """)
         instance = self._makeOne()
         instance.configfile = StringIO(text)
         instance.realize(args=[])
         options = instance.configroot.supervisord
-        self.assertEqual(options.logfile, "/tmp/supervisord.log")
+        self.assertEqual(options.logfile, os.path.join(os.environ['TMP'], "supervisord.log"))
         self.assertEqual(options.minfds, 123)
 
     def test_options_ignores_tab_prefixed_inline_comments(self):
