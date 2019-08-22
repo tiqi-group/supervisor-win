@@ -409,7 +409,7 @@ class deferring_http_channel(http_server.http_channel):
             self.current_request.found_terminator()
         else:
             # we convert the header to text to facilitate processing.
-            # some of the underlying APIs (such as splitquery)
+            # some of the underlying APIs (such as urllib.splitquery)
             # expect text rather than bytes.
             header = as_string(self.in_buffer)
             self.in_buffer = b''
@@ -437,12 +437,12 @@ class deferring_http_channel(http_server.http_channel):
 
             # unquote path if necessary (thanks to Skip Montanaro for pointing
             # out that we must unquote in piecemeal fashion).
-            rpath, rquery = http_server.splitquery(uri)
+            rpath, rquery = urllib.splitquery(uri)
             if '%' in rpath:
                 if rquery:
-                    uri = http_server.unquote(rpath) + '?' + rquery
+                    uri = urllib.unquote(rpath) + '?' + rquery
                 else:
-                    uri = http_server.unquote(rpath)
+                    uri = urllib.unquote(rpath)
 
             r = deferring_http_request(self, request, command, uri, version,
                                        header)
