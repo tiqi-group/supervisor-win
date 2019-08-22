@@ -2740,7 +2740,7 @@ class ProcessConfigTests(unittest.TestCase):
 
     def test_get_path_env_dict_with_PATH_uses_it(self):
         options = DummyOptions()
-        instance = self._makeOne(options, environment={'PATH': '/a:/b:/c'})
+        instance = self._makeOne(options, environment={'PATH': '/a;/b;/c'})
         self.assertNotEqual(instance.get_path(), options.get_path())
         self.assertEqual(instance.get_path(), ['/a', '/b', '/c'])
 
