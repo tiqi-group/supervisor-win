@@ -693,7 +693,7 @@ class ServerOptionsTests(unittest.TestCase):
     def test_options_ignores_tab_prefixed_inline_comments(self):
         text = lstrip("""
         [supervisord]
-        logfile=/tmp/supervisord.log\t;(main log file;default $CWD/supervisord.log)
+        logfile=%(ENV_TMP)s\\supervisord.log\t;(main log file;default $CWD/supervisord.log)
         minfds=123\t; (min. avail startup file descriptors;default 1024)
         """)
         instance = self._makeOne()
