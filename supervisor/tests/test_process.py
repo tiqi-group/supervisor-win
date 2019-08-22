@@ -998,7 +998,7 @@ class SubprocessTests(unittest.TestCase):
         instance.finish(123, 1)
         self.assertFalse(instance.killing)
         self.assertEqual(instance.pid, 0)
-        self.assertEqual(options.parent_pipes_closed, pipes)
+        self.assertIsNone(options.parent_pipes_closed)
         self.assertEqual(instance.pipes, {})
         self.assertEqual(instance.dispatchers, {})
         self.assertEqual(options.logger.data[0],
