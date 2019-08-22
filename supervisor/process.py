@@ -217,7 +217,7 @@ class Subprocess(object):
         else:
             raise BadCommand("command is empty")
 
-        if "/" in program:
+        if os.path.isabs(program):
             filename = program
             try:
                 st = self.config.options.stat(filename)
