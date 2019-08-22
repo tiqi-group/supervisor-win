@@ -704,6 +704,7 @@ class Subprocess(object):
         self.pid = 0
         self.pipes = {}
         self.dispatchers = {}
+        self.process = None
 
         # if we died before we processed the current event (only happens
         # if we're an event listener), notify the event system that this
