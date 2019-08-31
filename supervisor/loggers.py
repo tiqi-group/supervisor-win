@@ -14,12 +14,9 @@ import sys
 import time
 import traceback
 
-from supervisor.compat import (
-    syslog,
-    as_string,
-    as_bytes,
-    long
-)
+from supervisor.compat import syslog
+from supervisor.compat import long
+from supervisor.compat import is_text_stream
 
 
 class LevelsByName(object):
@@ -151,7 +148,6 @@ class BoundIO(object):
 
     def clear(self):
         self.buf = b''
-
 
 class FileHandler(Handler):
     """File handler which supports reopening of logs.

@@ -5,7 +5,7 @@
 Usage: %s [options] [action [arguments]]
 
 Options:
--c/--configuration FILENAME -- configuration file path (default /etc/supervisord.conf)
+-c/--configuration FILENAME -- configuration file path (searches if not given)
 -h/--help -- print usage message and exit
 -i/--interactive -- start an interactive shell after executing commands
 -s/--serverurl URL -- URL on which supervisord server is listening
@@ -29,18 +29,11 @@ import socket
 import sys
 import threading
 
-from supervisor import (
-    xmlrpc,
-    states,
-    http_client
-)
-from supervisor.compat import (
-    xmlrpclib,
-    urlparse,
-    unicode,
-    raw_input,
-    as_string
-)
+from supervisor.compat import xmlrpclib
+from supervisor.compat import urlparse
+from supervisor.compat import unicode
+from supervisor.compat import raw_input
+from supervisor.compat import as_string
 
 from supervisor.medusa import asyncore_25 as asyncore
 from supervisor.options import (
@@ -69,6 +62,23 @@ DEAD_PROGRAM_FAULTS = (xmlrpc.Faults.SPAWN_ERROR,
                        xmlrpc.Faults.ABNORMAL_TERMINATION,
                        xmlrpc.Faults.NOT_RUNNING)
 
+
+class LSBInitExitStatuses:
+    SUCCESS = 0
+    GENERIC = 1
+    INVALID_ARGS = 2
+    UNIMPLEMENTED_FEATURE = 3
+    INSUFFICIENT_PRIVILEGES = 4
+    NOT_INSTALLED = 5
+    NOT_RUNNING = 7
+
+class LSBStatusExitStatuses:
+    NOT_RUNNING = 3
+    UNKNOWN = 4
+
+DEAD_PROGRAM_FAULTS = (xmlrpc.Faults.SPAWN_ERROR,
+                       xmlrpc.Faults.ABNORMAL_TERMINATION,
+                       xmlrpc.Faults.NOT_RUNNING)
 
 class fgthread(threading.Thread):
     """ A subclass of threading.Thread, with a kill() method.
@@ -149,7 +159,7 @@ class Controller(cmd.Cmd):
         return
 
     def default(self, line):
-        cmd.Cmd.default(self, line)
+        self.output('*** Unknown syntax: %s' % line)
         self.exitstatus = LSBInitExitStatuses.GENERIC
 
     def exec_cmdloop(self, args, options):
@@ -183,6 +193,14 @@ class Controller(cmd.Cmd):
         except KeyboardInterrupt:
             self.output('')
             pass
+
+    def set_exitstatus_from_xmlrpc_fault(self, faultcode, ignored_faultcode=None):
+        if faultcode in (ignored_faultcode, xmlrpc.Faults.SUCCESS):
+            pass
+        elif faultcode in DEAD_PROGRAM_FAULTS:
+            self.exitstatus = LSBInitExitStatuses.NOT_RUNNING
+        else:
+            self.exitstatus = LSBInitExitStatuses.GENERIC
 
     def set_exitstatus_from_xmlrpc_fault(self, faultcode, ignored_faultcode=None):
         if faultcode in (ignored_faultcode, xmlrpc.Faults.SUCCESS):
@@ -459,6 +477,7 @@ def check_encoding(ctl):
         ctl.output('Warning: sys.stdout.encoding is set to %s, so Unicode '
                    'output may fail. Check your LANG and PYTHONIOENCODING '
                    'environment settings.' % problematic_enc)
+
 
 class DefaultControllerPlugin(ControllerPluginBase):
     name = 'default'
@@ -1130,7 +1149,7 @@ class DefaultControllerPlugin(ControllerPluginBase):
             self._formatChanges(result[0])
 
     def help_reread(self):
-        self.ctl.output("reread \t\t\tReload the daemon's configuration files")
+        self.ctl.output("reread \t\t\tReload the daemon's configuration files without add/remove")
 
     def do_add(self, arg):
         names = arg.split()
@@ -1250,8 +1269,8 @@ class DefaultControllerPlugin(ControllerPluginBase):
             log(gname, "added process group")
 
     def help_update(self):
-        self.ctl.output("update\t\t\tReload config and add/remove as necessary")
-        self.ctl.output("update all\t\tReload config and add/remove as necessary")
+        self.ctl.output("update\t\t\tReload config and add/remove as necessary, and will restart affected programs")
+        self.ctl.output("update all\t\tReload config and add/remove as necessary, and will restart affected programs")
         self.ctl.output("update <gname> [...]\tUpdate specific groups")
 
     def _clearresult(self, result):
@@ -1341,69 +1360,75 @@ class DefaultControllerPlugin(ControllerPluginBase):
             "version\t\t\tShow the version of the remote supervisord "
             "process")
 
-    def do_fg(self, args=None):
+    def do_fg(self, arg):
         if not self.ctl.upcheck():
             return
-        if not args:
-            self.ctl.output('Error: no process name supplied')
+
+        names = arg.split()
+        if not names:
+            self.ctl.output('ERROR: no process name supplied')
             self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
             self.help_fg()
             return
-        args = args.split()
-        if len(args) > 1:
-            self.ctl.output('Error: too many process names supplied')
+        if len(names) > 1:
+            self.ctl.output('ERROR: too many process names supplied')
             self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
             return
-        program = args[0]
+
+        name = names[0]
         supervisor = self.ctl.get_supervisor()
+
         try:
-            info = supervisor.getProcessInfo(program)
-        except xmlrpclib.Fault as msg:
-            if msg.faultCode == xmlrpc.Faults.BAD_NAME:
-                self.ctl.output('Error: bad process name supplied')
+            info = supervisor.getProcessInfo(name)
+        except xmlrpclib.Fault as e:
+            if e.faultCode == xmlrpc.Faults.BAD_NAME:
+                self.ctl.output('ERROR: bad process name supplied')
                 self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
-                return
-            # for any other fault
-            self.ctl.output(str(msg))
+            else:
+                self.ctl.output('ERROR: ' + str(e))
             return
-        if not info['state'] == states.ProcessStates.RUNNING:
-            self.ctl.output('Error: process not running')
+
+        if info['state'] != states.ProcessStates.RUNNING:
+            self.ctl.output('ERROR: process not running')
             self.ctl.exitstatus = LSBInitExitStatuses.GENERIC
             return
-        # everything good; continue
+
+        self.ctl.output('==> Press Ctrl-C to exit <==')
+
         a = None
         try:
-            a = fgthread(program, self.ctl)
-            # this thread takes care of
-            # the output/error messages
+            # this thread takes care of the output/error messages
+            a = fgthread(name, self.ctl)
             a.start()
+
+            # this takes care of the user input
             while True:
-                # this takes care of the user input
                 inp = raw_input() + '\n'
                 try:
-                    supervisor.sendProcessStdin(program, inp)
-                except xmlrpclib.Fault as msg:
-                    if msg.faultCode == xmlrpc.Faults.NOT_RUNNING:
+                    supervisor.sendProcessStdin(name, inp)
+                except xmlrpclib.Fault as e:
+                    if e.faultCode == xmlrpc.Faults.NOT_RUNNING:
                         self.ctl.output('Process got killed')
-                        self.ctl.output('Exiting foreground')
-                        a.kill()
-                        return
-                info = supervisor.getProcessInfo(program)
-                if not info['state'] == states.ProcessStates.RUNNING:
+                    else:
+                        self.ctl.output('ERROR: ' + str(e))
+                    self.ctl.output('Exiting foreground')
+                    a.kill()
+                    return
+
+                info = supervisor.getProcessInfo(name)
+                if info['state'] != states.ProcessStates.RUNNING:
                     self.ctl.output('Process got killed')
                     self.ctl.output('Exiting foreground')
                     a.kill()
                     return
-                continue
         except (KeyboardInterrupt, EOFError):
+            self.ctl.output('Exiting foreground')
             if a:
                 a.kill()
-            self.ctl.output('Exiting foreground')
-        return
 
     def help_fg(self, args=None):
         self.ctl.output('fg <process>\tConnect to a process in foreground mode')
-        self.ctl.output('Press Ctrl+C to exit foreground')
+        self.ctl.output("\t\tCtrl-C to exit")
 
 
 def main(args=None,
