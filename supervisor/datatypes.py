@@ -220,6 +220,7 @@ class InetStreamSocketConfig(SocketConfig):
         self.port = port_number(port)
         self.url = 'tcp://%s:%d' % (self.host, self.port)
         self.backlog = kwargs.get('backlog', None)
+        self.so_reuse_addr = kwargs.get('so_reuse_addr', True)
 
     def addr(self):
         return self.host, self.port
@@ -227,7 +228,7 @@ class InetStreamSocketConfig(SocketConfig):
     def create_and_bind(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, self.so_reuse_addr)
             sock.bind(self.addr())
         except:
             sock.close()

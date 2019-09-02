@@ -799,8 +799,7 @@ class ServerOptions(Options):
         if m:
             host = m.group(1)
             port = int(m.group(2))
-            return InetStreamSocketConfig(host, port,
-                    backlog=socket_backlog)
+            return InetStreamSocketConfig(host, port)
 
         raise ValueError("Bad socket format %s", sock)
 
@@ -1046,7 +1045,9 @@ class ServerOptions(Options):
             self.logger.info('supervisord started with pid %s' % pid)
 
     def cleanup(self):
-        self._try_unlink(self.pidfile)
+        if self.unlink_pidfile:
+            self._try_unlink(self.pidfile)
+        self.poller.close()
 
     def _try_unlink(self, path):
         try:
@@ -1153,7 +1154,7 @@ class ServerOptions(Options):
     def kill(self, pid, sig):
         self.pidhistory[pid].process.send_signal(sig)
 
-    def set_uid(self):
+    def set_uid_or_exit(self):
         if self.uid is None:
             if False and os.getuid() == 0:
                 return 'Supervisor running as root (no user in config file)'
@@ -1191,7 +1192,7 @@ class ServerOptions(Options):
         return stopped
 
     @raise_not_implemented
-    def set_rlimits(self):
+    def set_rlimits_or_exit(self):
         """dummy"""
         pass
 

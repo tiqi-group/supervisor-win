@@ -10,6 +10,7 @@ import errno
 import weakref
 import traceback
 
+from supervisor import loggers
 from supervisor.compat import urllib
 from supervisor.compat import sha1
 from supervisor.compat import as_bytes

@@ -1261,6 +1261,7 @@ class DummyStream:
             self.error = None
             raise error
         self.written += as_bytes(msg)
+
     def seek(self, num, whence=0):
         pass
 

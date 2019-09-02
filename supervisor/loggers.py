@@ -16,7 +16,8 @@ import traceback
 
 from supervisor.compat import syslog
 from supervisor.compat import long
-from supervisor.compat import is_text_stream
+from supervisor.compat import as_string
+from supervisor.compat import as_bytes
 
 
 class LevelsByName(object):

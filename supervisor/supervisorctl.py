@@ -36,11 +36,12 @@ from supervisor.compat import raw_input
 from supervisor.compat import as_string
 
 from supervisor.medusa import asyncore_25 as asyncore
-from supervisor.options import (
-    ClientOptions,
-    make_namespec,
-    split_namespec
-)
+from supervisor.options import ClientOptions
+from supervisor.options import make_namespec
+from supervisor.options import split_namespec
+from supervisor import xmlrpc
+from supervisor import states
+from supervisor import http_client
 
 
 class LSBInitExitStatuses(object):
@@ -62,23 +63,6 @@ DEAD_PROGRAM_FAULTS = (xmlrpc.Faults.SPAWN_ERROR,
                        xmlrpc.Faults.ABNORMAL_TERMINATION,
                        xmlrpc.Faults.NOT_RUNNING)
 
-
-class LSBInitExitStatuses:
-    SUCCESS = 0
-    GENERIC = 1
-    INVALID_ARGS = 2
-    UNIMPLEMENTED_FEATURE = 3
-    INSUFFICIENT_PRIVILEGES = 4
-    NOT_INSTALLED = 5
-    NOT_RUNNING = 7
-
-class LSBStatusExitStatuses:
-    NOT_RUNNING = 3
-    UNKNOWN = 4
-
-DEAD_PROGRAM_FAULTS = (xmlrpc.Faults.SPAWN_ERROR,
-                       xmlrpc.Faults.ABNORMAL_TERMINATION,
-                       xmlrpc.Faults.NOT_RUNNING)
 
 class fgthread(threading.Thread):
     """ A subclass of threading.Thread, with a kill() method.
@@ -1451,6 +1435,7 @@ def main(args=None,
     if options.interactive:
         c.exec_cmdloop(args, options)
         sys.exit(0)  # exitstatus always 0 for interactive mode
+
 
 if __name__ == "__main__":
     main()

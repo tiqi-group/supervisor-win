@@ -1,30 +1,28 @@
-import sys
 import errno
 import os
 import re
 import signal
+import sys
 import tempfile
 import time
 import unittest
 
 from supervisor.compat import as_bytes
 from supervisor.compat import maxint
-
-from supervisor.tests.base import Mock, patch, sentinel
-from supervisor.tests.base import DummyOptions
-from supervisor.tests.base import DummyPConfig
-from supervisor.tests.base import DummyProcess
-from supervisor.tests.base import DummyPGroupConfig
-from supervisor.tests.base import DummyDispatcher
-from supervisor.tests.base import DummyEvent
-from supervisor.tests.base import DummyFCGIGroupConfig
-from supervisor.tests.base import DummySocketConfig
-from supervisor.tests.base import DummyProcessGroup
-from supervisor.tests.base import DummyFCGIProcessGroup
-
 from supervisor.helpers import DummyPopen
 from supervisor.options import BadCommand
 from supervisor.process import Subprocess
+from supervisor.tests.base import DummyDispatcher
+from supervisor.tests.base import DummyEvent
+from supervisor.tests.base import DummyFCGIGroupConfig
+from supervisor.tests.base import DummyFCGIProcessGroup
+from supervisor.tests.base import DummyOptions
+from supervisor.tests.base import DummyPConfig
+from supervisor.tests.base import DummyPGroupConfig
+from supervisor.tests.base import DummyProcess
+from supervisor.tests.base import DummyProcessGroup
+from supervisor.tests.base import DummySocketConfig
+from supervisor.tests.base import Mock, patch, sentinel
 
 
 class SubprocessTests(unittest.TestCase):
@@ -973,6 +971,7 @@ class SubprocessTests(unittest.TestCase):
         from supervisor.states import ProcessStates
         from supervisor import events
         instance.state = ProcessStates.STARTING
+        time.sleep(0.001)  # time starting
         L = []
         events.subscribe(events.ProcessStateEvent, lambda x: L.append(x))
         instance.pid = 123
@@ -998,13 +997,14 @@ class SubprocessTests(unittest.TestCase):
                               stdout_logfile='/tmp/foo', startsecs=10)
         instance = self._makeOne(config)
         instance.config.options.pidhistory[123] = instance
-        pipes = {'stdout':'','stderr':''}
+        pipes = {'stdout': '', 'stderr': ''}
         instance.pipes = pipes
-        instance.config.exitcodes =[-1]
+        instance.config.exitcodes = [-1]
         instance.laststart = time.time()
         from supervisor.states import ProcessStates
         from supervisor import events
         instance.state = ProcessStates.RUNNING
+        time.sleep(0.01)  # time running
         L = []
         events.subscribe(events.ProcessStateEvent, lambda x: L.append(x))
         instance.pid = 123
@@ -1015,14 +1015,14 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(instance.pipes, {})
         self.assertEqual(instance.dispatchers, {})
         self.assertEqual(options.logger.data[0],
-                         'exited: notthere (terminated by SIGHUP; expected)')
-        self.assertEqual(instance.exitstatus, -1)
+                         'exited: notthere (unknown termination cause(1); not expected)')
+        self.assertEqual(instance.exitstatus, 1)
         self.assertEqual(len(L), 1)
         event = L[0]
         self.assertEqual(event.__class__,
                          events.ProcessStateExitedEvent)
-        self.assertEqual(event.expected, True)
-        self.assertEqual(event.extra_values, [('expected', True), ('pid', 123)])
+        self.assertEqual(event.expected, False)
+        self.assertEqual(event.extra_values, [('expected', 0), ('pid', 123)])
         self.assertEqual(event.from_state, ProcessStates.RUNNING)
 
     def test_finish_running_state_laststart_in_future(self):
@@ -1397,6 +1397,8 @@ class SubprocessTests(unittest.TestCase):
 
         # Ensure process.delay has rolled backward
         self.assertTrue(process.delay < future_time)
+
+        time.sleep(0.01)  # now x execution
 
         # This iteration of transition() should actaully trigger the state
         # transition to STARTING

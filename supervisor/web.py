@@ -11,6 +11,7 @@ import meld3
 from supervisor.compat import urllib
 from supervisor.compat import urlparse
 from supervisor.compat import as_string
+from supervisor.compat import as_bytes
 from supervisor.compat import PY2
 from supervisor.compat import unicode
 
@@ -351,20 +352,21 @@ class StatusView(MeldView):
                         bool_or_callback = (
                             rpcinterface.supervisor.startProcess(namespec)
                             )
-                    except RPCError as exc:
-                        if exc.code == Faults.NO_FILE:
+                    except RPCError as e:
+                        if e.code == Faults.NO_FILE:
                             msg = 'no such file'
-                        elif exc.code == Faults.NOT_EXECUTABLE:
+                        elif e.code == Faults.NOT_EXECUTABLE:
                             msg = 'file not executable'
-                        elif exc.code == Faults.ALREADY_STARTED:
+                        elif e.code == Faults.ALREADY_STARTED:
                             msg = 'already started'
-                        elif exc.code == Faults.SPAWN_ERROR:
+                        elif e.code == Faults.SPAWN_ERROR:
                             msg = 'spawn error'
-                        elif exc.code == Faults.ABNORMAL_TERMINATION:
+                        elif e.code == Faults.ABNORMAL_TERMINATION:
                             msg = 'abnormal termination'
                         else:
                             msg = 'unexpected rpc fault [%d] %s' % (
                                 e.code, e.text)
+
                         def starterr():
                             return 'ERROR: Process %s: %s' % (namespec, msg)
                         starterr.delay = 0.05
@@ -384,12 +386,12 @@ class StatusView(MeldView):
                                         e.code, e.text)
                                 return 'ERROR: Process %s: %s' % (namespec, msg)
 
-                        if result is NOT_DONE_YET:
-                            return NOT_DONE_YET
-                        return 'Process %s started' % namespec
-
-                    startprocess.delay = 0.05
-                    return startprocesselse:
+                            if result is NOT_DONE_YET:
+                                return NOT_DONE_YET
+                            return 'Process %s started' % namespec
+                        startprocess.delay = 0.05
+                        return startprocess
+                    else:
                         def startdone():
                             return 'Process %s started' % namespec
                         startdone.delay = 0.05

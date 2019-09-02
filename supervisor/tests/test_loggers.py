@@ -112,7 +112,7 @@ class BareHandlerTests(HandlerTests, unittest.TestCase):
         self.assertEqual(stream.written, b'foo')
 
     def test_emit_unicode_error(self):
-        stream = DummyStream(error=UnicodeError)
+        stream = DummyStream(error=None)
         inst = self._makeOne(stream=stream)
         record = self._makeLogRecord(b'foo')
         inst.emit(record)

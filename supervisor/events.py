@@ -11,6 +11,7 @@ def subscribe(type, callback):
 def unsubscribe(type, callback):
     callbacks.remove((type, callback))
 
+
 def notify(event):
     for type, callback in callbacks:
         if isinstance(event, type):
@@ -52,6 +53,7 @@ class ProcessLogEvent(Event):
                         as_string(self.channel), data)
         return result
 
+
 class ProcessLogStdoutEvent(ProcessLogEvent):
     channel = 'stdout'
 
@@ -84,6 +86,7 @@ class ProcessCommunicationEvent(Event):
             groupname,
             self.pid,
             data)
+
 
 class ProcessCommunicationStdoutEvent(ProcessCommunicationEvent):
     channel = 'stdout'

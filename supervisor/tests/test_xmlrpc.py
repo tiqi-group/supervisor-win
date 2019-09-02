@@ -823,9 +823,7 @@ class TestSystemNamespaceRPCInterface(unittest.TestCase):
         callback = inst.multicall(calls)
         results = NOT_DONE_YET
         while results is NOT_DONE_YET:
-        results = callback(
-        )
-
+            results = callback()
         bad_name = {'faultCode': Faults.BAD_NAME,
                     'faultString': 'BAD_NAME: foo'}
         os_error = {'faultCode': Faults.FAILED,
@@ -862,8 +860,9 @@ class TestSystemNamespaceRPCInterface(unittest.TestCase):
         callback = inst.multicall(calls)
         results = NOT_DONE_YET
         while results is NOT_DONE_YET:
-        results = callback()
+            results = callback()
         self.assertEqual(results, ['stop result', 'start result'])
+
 
 class Test_gettags(unittest.TestCase):
     def _callFUT(self, comment):

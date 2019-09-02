@@ -337,6 +337,7 @@ class DeferringHookedProducerTests(unittest.TestCase):
         producer = self._makeOne(None, None)
         self.assertEqual(producer.more(), b'')
 
+
 class DeferringHttpRequestTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.http import deferring_http_request

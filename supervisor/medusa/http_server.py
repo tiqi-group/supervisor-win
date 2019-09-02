@@ -22,14 +22,11 @@ import supervisor.medusa.asynchat_25 as asynchat
 import supervisor.medusa.http_date as http_date
 import supervisor.medusa.producers as producers
 import supervisor.medusa.logger as logger
+from supervisor.medusa.counter import counter
+
+from supervisor.compat import urllib
 
 VERSION_STRING = RCS_ID.split()[2]
-
-from supervisor.medusa.counter import counter
-try:
-    from urllib import unquote, splitquery
-except ImportError:
-    from urllib.parse import unquote, splitquery
 
 # ===========================================================================
 #                                                       Request Object

@@ -6,7 +6,6 @@ import tempfile
 import time
 import unittest
 
-from supervisor.states import ProcessStates
 from supervisor.states import SupervisorStates
 
 from supervisor.tests.base import DummyOptions
@@ -14,6 +13,7 @@ from supervisor.tests.base import DummyPConfig
 from supervisor.tests.base import DummyPGroupConfig
 from supervisor.tests.base import DummyProcess
 from supervisor.tests.base import DummyProcessGroup
+from supervisor.tests.base import DummyDispatcher
 
 from supervisor.compat import StringIO
 

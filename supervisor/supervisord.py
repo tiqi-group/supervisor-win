@@ -34,13 +34,12 @@ import os
 import signal
 import time
 
-from supervisor.medusa import asyncore_25 as asyncore
-
 from supervisor.compat import as_string
-from supervisor.options import ServerOptions,
+from supervisor.medusa import asyncore_25 as asyncore
+from supervisor.options import ServerOptions
 from supervisor.options import signame
 from supervisor import events
-from supervisor.states import SupervisorStates,
+from supervisor.states import SupervisorStates
 from supervisor.states import getProcessStateDescription
 
 
@@ -64,8 +63,8 @@ class Supervisor(object):
             except NotImplementedError:
                 pass
 
-
         self.options.set_uid_or_exit()
+
         if self.options.first:
             try:
                 self.options.set_rlimits_or_exit()
@@ -331,12 +330,10 @@ class Supervisor(object):
                 self.options.mood = SupervisorStates.SHUTDOWN
             elif sig == signal.SIGABRT:
                 if self.options.mood == SupervisorStates.SHUTDOWN:
-                    if self.options.mood == SupervisorStates.SHUTDOWN:
                     self.options.logger.warn(
                         'ignored %s indicating restart request (shutdown in progress)' % signame(sig))
-                else:self.options.logger.warn(
-                        'ignored %s indicating restart request (shutdown in progress)' % signame(sig))
-                else:self.options.logger.warn('received %s indicating restart request' % signame(sig))
+                else:
+                    self.options.logger.warn('received %s indicating restart request' % signame(sig))
                     self.options.mood = SupervisorStates.RESTARTING
             # elif sig == signal.SIGCHLD:
             #     self.options.logger.debug('received %s indicating a child quit' % signame(sig))
