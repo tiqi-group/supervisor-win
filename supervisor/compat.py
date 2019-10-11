@@ -16,7 +16,9 @@ class _Stream(object):
         return self.value if isinstance(self.value, self.obj) else \
             self.value.decode(encoding, 'ignore' if ignore else 'strict')
 
+
 PY2 = sys.version_info[0] == 2
+
 
 if PY2:  # pragma: no cover
     long = long
@@ -45,7 +47,7 @@ if PY2:  # pragma: no cover
             import io
             return isinstance(stream, io.TextIOWrapper)
 
-else: # pragma: no cover
+else:  # pragma: no cover
     long = int
     basestring = str
     raw_input = input
@@ -55,17 +57,11 @@ else: # pragma: no cover
         def __init__(self, string, encoding, errors):
             str.__init__(self, string)
 
-    def as_bytes(s, encoding='utf8'):
-        if isinstance(s, bytes):
-            return s
-        else:
-            return s.encode(encoding)
+    def as_bytes(s, encoding='utf-8', ignore=False):
+        return _Stream(s, bytes).encode(encoding=encoding, ignore=ignore)
 
-    def as_string(s, encoding='utf8'):
-        if isinstance(s, str):
-            return s
-        else:
-            return s.decode(encoding)
+    def as_string(s, encoding='utf-8', ignore=False):
+        return _Stream(s, str).decode(encoding=encoding, ignore=ignore)
 
     def is_text_stream(stream):
         import _io
