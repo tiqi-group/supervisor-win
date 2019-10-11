@@ -2,7 +2,7 @@ import warnings
 import errno
 from supervisor.medusa.asyncore_25 import compact_traceback
 
-from supervisor.compat import as_string
+from supervisor.compat import as_string, as_bytes
 from supervisor.events import notify
 from supervisor.events import EventRejectedEvent
 from supervisor.events import ProcessLogStderrEvent
@@ -298,7 +298,7 @@ class POutputDispatcher(PLogDispatcher):
     def handle_read_event(self):
         data = self.process.config.options.readfd(self.fd)
         if data is not None:  # empty queue
-            self.output_buffer += data
+            self.output_buffer += as_bytes(data, ignore=True)
             self.record_output()
             if not data:
                 # if we get no data back from the pipe, it means that the
@@ -543,7 +543,7 @@ class PInputDispatcher(PDispatcher):
             self.input_buffer = self.input_buffer[sent:]
         except OSError as why:
             if why.args[0] == errno.EPIPE:
-                self.input_buffer = ''
+                self.input_buffer = b''
                 self.close()
             else:
                 raise

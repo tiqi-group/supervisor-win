@@ -59,7 +59,7 @@ class StreamAsync(threading.Thread):
         while not self._event.is_set():
             try:
                 data = self.stream.readline()
-            except IOError:
+            except (IOError, ValueError):
                 # occurs when the supervisor is
                 # restarted with the reload command
                 break
