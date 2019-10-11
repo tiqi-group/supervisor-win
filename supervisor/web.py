@@ -6,7 +6,7 @@ import time
 import traceback
 import datetime
 
-import meld3
+from supervisor import templating
 
 from supervisor.compat import urllib
 from supervisor.compat import urlparse
@@ -171,7 +171,7 @@ class MeldView(object):
         if not os.path.isabs(template):
             here = os.path.abspath(os.path.dirname(__file__))
             template = os.path.join(here, template)
-        self.root = meld3.parse_xml(template)
+        self.root = templating.parse_xml(template)
         self.callback = None
 
     def __call__(self):

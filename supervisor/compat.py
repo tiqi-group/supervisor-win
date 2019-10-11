@@ -22,6 +22,7 @@ if PY2:  # pragma: no cover
     long = long
     raw_input = raw_input
     unicode = unicode
+    unichr = unichr
     basestring = basestring
 
     def as_bytes(s, encoding='utf-8', ignore=False):
@@ -43,15 +44,28 @@ if PY2:  # pragma: no cover
         except ImportError:
             import io
             return isinstance(stream, io.TextIOWrapper)
+
 else: # pragma: no cover
     long = int
     basestring = str
     raw_input = input
+    unichr = chr
+
     class unicode(str):
         def __init__(self, string, encoding, errors):
             str.__init__(self, string)
-    def as_bytes(s): return s if isinstance(s,bytes) else s.encode('utf8')
-    def as_string(s): return s if isinstance(s,str) else s.decode('utf8')
+
+    def as_bytes(s, encoding='utf8'):
+        if isinstance(s, bytes):
+            return s
+        else:
+            return s.encode(encoding)
+
+    def as_string(s, encoding='utf8'):
+        if isinstance(s, str):
+            return s
+        else:
+            return s.decode(encoding)
 
     def is_text_stream(stream):
         import _io
@@ -108,8 +122,6 @@ try:  # pragma: no cover
 except ImportError:  # pragma: no cover
     from base64 import decodestring, encodestring
 
-
-
 try:  # pragma: no cover
     from xmlrpc.client import Fault
 except ImportError:  # pragma: no cover
@@ -131,6 +143,11 @@ except ImportError:  # pragma: no cover
     import _thread as thread
 
 try: # pragma: no cover
+    from types import StringTypes
+except ImportError: # pragma: no cover
+    StringTypes = (str,)
+
+try: # pragma: no cover
     from html import escape
 except ImportError: # pragma: no cover
     from cgi import escape
@@ -140,3 +157,12 @@ try: # pragma: no cover
 except ImportError:
     class SubprocessError(Exception):
         pass
+try: # pragma: no cover
+    import html.entities as htmlentitydefs
+except ImportError: # pragma: no cover
+    import htmlentitydefs
+
+try: # pragma: no cover
+    from html.parser import HTMLParser
+except ImportError: # pragma: no cover
+    from HTMLParser import HTMLParser
