@@ -552,7 +552,7 @@ class StatusView(MeldView):
         copyright_year = str(datetime.date.today().year)
         root.findmeld('copyright_date').content(copyright_year)
 
-        return as_bytes(root.write_xhtmlstring())
+        return as_string(root.write_xhtmlstring())
 
 
 class OKView(object):

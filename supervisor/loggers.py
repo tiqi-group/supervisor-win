@@ -309,7 +309,7 @@ class LogRecord(object):
                 msg = self.msg % self.kw
             else:
                 msg = self.msg
-            self.dictrepr = {'message': msg, 'levelname': levelname,
+            self.dictrepr = {'message': as_string(msg, ignore=True), 'levelname': levelname,
                              'asctime': asctime}
         return self.dictrepr
 

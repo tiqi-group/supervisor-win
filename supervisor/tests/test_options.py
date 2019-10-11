@@ -10,7 +10,7 @@ import shutil
 import errno
 import platform
 
-from supervisor.compat import StringIO
+from supervisor.compat import StringIO, PY2
 from supervisor.compat import as_bytes
 
 from supervisor.tests.base import Mock, sentinel, patch
@@ -897,7 +897,8 @@ class ServerOptionsTests(unittest.TestCase):
                 self.fail("nothing raised")
             except ValueError as exc:
                 self.assertTrue('contains parsing errors:' in exc.args[0])
-                self.assertTrue(f.name in exc.args[0])
+                fmt = "%s" if PY2 else '%r'
+                self.assertTrue(fmt % f.name in exc.args[0])
 
     def test_read_config_no_supervisord_section_raises_valueerror(self):
         instance = self._makeOne()
@@ -1031,7 +1032,8 @@ class ServerOptionsTests(unittest.TestCase):
             self.fail("nothing raised")
         except ValueError as exc:
             self.assertTrue('contains parsing errors:' in exc.args[0])
-            self.assertTrue(malformed_file in exc.args[0])
+            fmt = "%s" if PY2 else '%r'
+            self.assertTrue(fmt % malformed_file in exc.args[0])
             msg = 'Included extra file "%s" during parsing' % malformed_file
             self.assertTrue(msg in instance.parse_infos)
         finally:

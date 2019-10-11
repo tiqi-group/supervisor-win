@@ -29,9 +29,9 @@ except ImportError:  # pragma: no cover
 class TempFileOpen(object):
     """File that can be opened more one time"""
 
-    def __init__(self, mode='w'):
+    def __init__(self, mode='wb'):
         fd, self.name = tempfile.mkstemp()
-        self.tmpfile = os.fdopen(fd, mode, 0)
+        self.tmpfile = os.fdopen(fd, mode)
 
     def __getattr__(self, item):
         return getattr(self.tmpfile, item)
