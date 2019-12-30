@@ -136,6 +136,8 @@ class SupervisorService(win32serviceutil.ServiceFramework):
             supervisorctl.main(("-c", self.config_filepath, "shutdown"),
                                stdout=stdout)
             self.logger.info(stdout.getvalue().strip("\n "))
+        except SystemExit:
+            pass  # normal exit
         except:
             self.logger.exception("supervisorctl shutdown execution failed")
         finally:
