@@ -13,6 +13,12 @@ Supervisor has been tested (Python 2.7/3.7 [32 bit]) and is known to run on Wind
 * Some specific features of OS Linux have been disabled and others were adapted to the Windows OS.
 * The process control (supervisorctl) works and management processes correctly, as well as control via web!
 
+Install as Windows service
+--------------------------
+To install supervisor as a windows service run the command
+
+`python -m supervisor.services install -c supervisord.conf`
+
 Supervisor for Unix-Like System
 -------------------------------
 `Original project for unix-like system <https://github.com/Supervisor/supervisor>`_
