@@ -378,7 +378,7 @@ class PEventListenerDispatcher(PLogDispatcher):
     def handle_read_event(self):
         data = self.process.config.options.readfd(self.fd)
         if data:
-            self.state_buffer += data
+            self.state_buffer += as_bytes(data)
             procname = self.process.config.name
             msg = '%r %s output:\n%s' % (procname, self.channel, data)
             self.process.config.options.logger.debug(msg)
