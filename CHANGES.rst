@@ -1,3 +1,8 @@
+4.2.0
+-----------------------------
+- Merge supervisor unix changes from 4.2.0.dev0 (master)
+- Fixed data output via eventlisterner
+
 4.1.0
 -----------------------------
 - Merge supervisor unix changes from v4.1.0.dev0 (master)
