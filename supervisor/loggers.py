@@ -14,10 +14,11 @@ import sys
 import time
 import traceback
 
+from supervisor.compat import as_bytes
 from supervisor.compat import syslog
 from supervisor.compat import long
+from supervisor.compat import is_text_stream
 from supervisor.compat import as_string
-from supervisor.compat import as_bytes
 
 
 class LevelsByName(object):
@@ -305,10 +306,9 @@ class LogRecord(object):
             part1 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now))
             asctime = '%s,%03d' % (part1, msecs)
             levelname = LOG_LEVELS_BY_NUM[self.level]
+            msg = as_string(self.msg)
             if self.kw:
-                msg = self.msg % self.kw
-            else:
-                msg = self.msg
+                msg = msg % self.kw
             self.dictrepr = {'message': as_string(msg, ignore=True), 'levelname': levelname,
                              'asctime': asctime}
         return self.dictrepr

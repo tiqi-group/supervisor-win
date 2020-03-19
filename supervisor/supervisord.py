@@ -7,6 +7,7 @@ Usage: %s [options]
 Options:
 -c/--configuration FILENAME -- configuration file path (searches if not given)
 -n/--nodaemon -- run in the foreground (same as 'nodaemon=true' in config file)
+-s/--silent -- no logs to stdout (maps to 'silent=true' in config file)
 -h/--help -- print this usage message and exit
 -v/--version -- print supervisord version number and exit
 -u/--user USER -- run supervisord as this user (or numeric uid)
@@ -37,6 +38,7 @@ import time
 from supervisor.compat import as_string
 from supervisor.medusa import asyncore_25 as asyncore
 from supervisor.options import ServerOptions
+from supervisor.options import decode_wait_status
 from supervisor.options import signame
 from supervisor import events
 from supervisor.states import SupervisorStates
@@ -317,7 +319,8 @@ class Supervisor(object):
             try:
                 subprocess = self.options.get_pid_history(pid)
             except KeyError:
-                self.options.logger.info('reaped unknown pid %s' % pid)
+                _, msg = decode_wait_status(sts)
+                self.options.logger.info('reaped unknown pid %s (%s)' % (pid, msg))
             else:
                 subprocess.finish(pid, sts)
                 self.options.remove_pid_history(pid)

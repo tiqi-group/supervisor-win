@@ -127,6 +127,7 @@ class DummyOptions:
         self.chdir_error = None
         self.umaskset = None
         self.poller = DummyPoller(self)
+        self.silent = False
 
     def register_pid(self, pid, process):
         self.pidhistory[pid] = process

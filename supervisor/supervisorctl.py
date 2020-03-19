@@ -452,8 +452,8 @@ class ControllerPluginBase(object):
 
 
 def not_all_langs():
-    enc = getattr(sys.stdout, 'encoding', '').lower()
-    return None if enc.startswith('utf') else sys.stdout.encoding
+    enc = getattr(sys.stdout, 'encoding', None) or ''
+    return None if enc.lower().startswith('utf') else sys.stdout.encoding
 
 def check_encoding(ctl):
     problematic_enc = not_all_langs()

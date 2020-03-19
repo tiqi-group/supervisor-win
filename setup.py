@@ -25,7 +25,7 @@ elif (3, 0) < py_version < (3, 4):
 requires = ['pywin32']
 tests_require = []
 if py_version < (3, 3):
-    tests_require.append('mock')
+    tests_require.append('mock<4.0.0.dev0')
 
 testing_extras = tests_require + [
     'pytest',
@@ -60,6 +60,7 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
 ]
 
 version_txt = os.path.join(here, 'supervisor/version.txt')

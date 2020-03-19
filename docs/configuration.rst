@@ -10,6 +10,10 @@ will look for a file named :file:`supervisord.conf` within the
 following locations, in the specified order.  It will use the first
 file it finds.
 
+#. :file:`../etc/supervisord.conf` (Relative to the executable)
+
+#. :file:`../supervisord.conf` (Relative to the executable)
+
 #. :file:`$CWD/supervisord.conf`
 
 #. :file:`$CWD/etc/supervisord.conf`
@@ -17,10 +21,6 @@ file it finds.
 #. :file:`/etc/supervisord.conf`
 
 #. :file:`/etc/supervisor/supervisord.conf` (since Supervisor 3.3.0)
-
-#. :file:`../etc/supervisord.conf` (Relative to the executable)
-
-#. :file:`../supervisord.conf` (Relative to the executable)
 
 .. note::
 
@@ -363,6 +363,16 @@ follows.
   *Required*:  No.
 
   *Introduced*: 3.0
+
+``silent``
+
+  If true and not daemonized, logs will not be directed to stdout.
+
+  *Default*:  false
+
+  *Required*: No.
+
+  *Introduced*: 4.2.0
 
 ``minfds``
 

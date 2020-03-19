@@ -406,6 +406,7 @@ class ServerOptions(Options):
     pidfile = None
     passwdfile = None
     nodaemon = None
+    silent = None
     environment = None
     serverurl = None
     httpservers = ()
@@ -453,6 +454,8 @@ class ServerOptions(Options):
                  "t", "strip_ansi", flag=1, default=0)
         self.add("profile_options", "supervisord.profile_options",
                  "", "profile_options=", profile_options, default=None)
+        self.add("silent", "supervisord.silent",
+                 "s", "silent", flag=1, default=0)
         # subprocess history by pid
         self.pidhistory = {}
         self.process_group_configs = []
@@ -625,6 +628,7 @@ class ServerOptions(Options):
         section.identifier = get('identifier', 'supervisor')
         section.nodaemon = boolean(get('nodaemon', 'false'))
         section.delaysecs = float(get("delaysecs", 0.2))
+        section.silent = boolean(get('silent', 'false'))
 
         tempdir = tempfile.gettempdir()
         section.childlogdir = existing_directory(get('childlogdir', tempdir))
@@ -1200,6 +1204,8 @@ class ServerOptions(Options):
         # must be called after realize() and after supervisor does setuid()
         format = '%(asctime)s %(levelname)s %(message)s\n'
         self.logger = loggers.getLogger(self.loglevel)
+        if self.nodaemon and not self.silent:
+            loggers.handle_stdout(self.logger, format)
         loggers.handle_file(
             self.logger,
             self.logfile,
@@ -1208,8 +1214,6 @@ class ServerOptions(Options):
             maxbytes=self.logfile_maxbytes,
             backups=self.logfile_backups,
         )
-        if self.nodaemon:
-            loggers.handle_stdout(self.logger, format)
         for msg in self.parse_criticals:
             self.logger.critical(msg)
         for msg in self.parse_warnings:
@@ -1767,7 +1771,6 @@ class ProcessGroupConfig(Config):
 
     def make_group(self):
         from supervisor.process import ProcessGroup
-
         return ProcessGroup(self)
 
 
@@ -1802,7 +1805,6 @@ class EventListenerPoolConfig(Config):
 
     def make_group(self):
         from supervisor.process import EventListenerPool
-
         return EventListenerPool(self)
 
 
@@ -1828,7 +1830,6 @@ class FastCGIGroupConfig(ProcessGroupConfig):
 
     def make_group(self):
         from supervisor.process import FastCGIProcessGroup
-
         return FastCGIProcessGroup(self)
 
 
