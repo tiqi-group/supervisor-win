@@ -27,13 +27,14 @@ class Popen(subprocess.Popen):
 
     @property
     def message(self):
-        msg = "termination unknown"
         if self.returncode is None:
-            return msg
+            return 'still running'
         if self.returncode == 0:
             msg = "termination normal"
         elif self.returncode < 0:
             msg = "termination by signal"
+        else:
+            msg = "exit status %s" % (self.returncode,)
         return msg
 
 

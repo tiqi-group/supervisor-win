@@ -1920,7 +1920,7 @@ def decode_wait_status(sts):
     try:
         es, msg = sts
     except TypeError:
-        es, msg = sts, "unknown termination cause(%s)" % sts
+        es, msg = sts, "exit status %s" % sts
     return es, msg
 
 
