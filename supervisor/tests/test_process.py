@@ -881,7 +881,7 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(instance.pipes, {})
         self.assertEqual(instance.dispatchers, {})
         self.assertEqual(options.logger.data[0], 'stopped: notthere '
-                                                 '(unknown termination cause(1))')
+                                                 '(exit status 1)')
         self.assertEqual(instance.exitstatus, 1)
         self.assertEqual(len(L), 1)
         event = L[0]
@@ -911,7 +911,7 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(instance.pipes, {})
         self.assertEqual(instance.dispatchers, {})
         self.assertEqual(options.logger.data[0],
-                         'exited: notthere (unknown termination cause(-1); expected)')
+                         'exited: notthere (exit status -1; expected)')
         self.assertEqual(instance.exitstatus, -1)
         self.assertEqual(len(L), 1)
         event = L[0]
@@ -948,7 +948,7 @@ class SubprocessTests(unittest.TestCase):
                          "future, don't know how long process was running so "
                          "assuming it did not exit too quickly")
         self.assertEqual(options.logger.data[1],
-                         'exited: notthere (unknown termination cause(1); expected)')
+                         'exited: notthere (exit status 1; expected)')
         self.assertEqual(instance.exitstatus, 1)
         self.assertEqual(len(L), 1)
         event = L[0]
@@ -1015,7 +1015,7 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(instance.pipes, {})
         self.assertEqual(instance.dispatchers, {})
         self.assertEqual(options.logger.data[0],
-                         'exited: notthere (unknown termination cause(1); not expected)')
+                         'exited: notthere (exit status 1; not expected)')
         self.assertEqual(instance.exitstatus, 1)
         self.assertEqual(len(L), 1)
         event = L[0]
