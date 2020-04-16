@@ -3,8 +3,12 @@ Extension of existing classes by changing or adding behaviors.
 """
 
 import random
+import sys
+
 import subprocess
 import threading
+
+from supervisor.compat import as_string
 
 __author__ = 'alex'
 
@@ -36,6 +40,19 @@ class Popen(subprocess.Popen):
         else:
             msg = "exit status %s" % (self.returncode,)
         return msg
+
+    def kill2(self, pid, sig):
+        if pid > 0:
+            self.send_signal(sig)
+        else:
+            return self.taskkill()
+
+    def taskkill(self):
+        """Kill process group"""
+        output = subprocess.check_output(['taskkill',
+                                          '/PID',  str(self.pid),
+                                          '/F', '/T'])
+        return as_string(output, encoding=sys.getfilesystemencoding(), ignore=True).strip()
 
 
 class StreamAsync(threading.Thread):

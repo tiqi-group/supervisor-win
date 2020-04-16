@@ -1156,7 +1156,10 @@ class ServerOptions(Options):
         pass
 
     def kill(self, pid, sig):
-        self.pidhistory[pid].process.send_signal(sig)
+        output = self.pidhistory[abs(pid)].process.kill2(pid, sig)
+        if output:
+            for loutput in output.split('\n'):
+                self.logger.info(loutput)
 
     def set_uid_or_exit(self):
         if self.uid is None:
