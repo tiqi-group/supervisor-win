@@ -382,7 +382,8 @@ def profile(cmd, globals, locals, sort_order, callers):  # pragma: no cover
 
 
 # Main program
-def main(args=None, test=False):
+def main(args=None, test=False,
+         stdout=None, stderr=None):
     # assert os.name == "posix", "This code makes Unix-specific assumptions"
     # if we hup, restart by making a new Supervisor()
     first = True
@@ -391,6 +392,11 @@ def main(args=None, test=False):
         options.realize(args, doc=__doc__)
         options.first = first
         options.test = test
+        # output config
+        if stdout is not None:
+            options.stdout = stdout
+        if stderr is not None:
+            options.stderr = stderr
         try:
             if options.profile_options:
                 sort_order, callers = options.profile_options

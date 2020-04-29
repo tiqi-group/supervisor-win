@@ -125,17 +125,22 @@ class SupervisorService(win32serviceutil.ServiceFramework):
             logging.shutdown()
             exit(-1)
 
+    @staticmethod
+    def _get_fp_value(fp):
+        """Return value of stream"""
+        return fp.getvalue().strip("\n ")
+
     # noinspection PyBroadException
     def SvcStop(self):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         # Supervisor process stop event
+        stdout = StringIO()
         try:
             self.logger.info("supervisorctl shutdown")
             from supervisor import supervisorctl
-            stdout = StringIO()
             supervisorctl.main(("-c", self.config_filepath, "shutdown"),
                                stdout=stdout)
-            self.logger.info(stdout.getvalue().strip("\n "))
+            self.logger.info(self._get_fp_value(stdout))
         except SystemExit:
             pass  # normal exit
         except:
@@ -143,6 +148,7 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         finally:
             logging.shutdown()
             win32event.SetEvent(self.hWaitStop)
+            stdout.close()
 
     def SvcDoRun(self):
         servicemanager.LogMsg(
@@ -155,12 +161,19 @@ class SupervisorService(win32serviceutil.ServiceFramework):
     # noinspection PyBroadException
     def main(self):
         """Starts running the supervisor"""
+        stdout, stderr = StringIO(), StringIO()
         try:
             from supervisor import supervisord
             self.logger.info("supervisor starting...")
-            supervisord.main(("-c", self.config_filepath))
+            supervisord.main(("-c", self.config_filepath),
+                             stdout=stdout, stderr=stderr)
+            self.logger.info(self._get_fp_value(stdout))
+            self.logger.error(self._get_fp_value(stderr))
         except:
             self.logger.exception("supervisor starting failed")
+        finally:
+            stdout.close()
+            stderr.close()
 
 
 def parse_args_config(options, argv):
