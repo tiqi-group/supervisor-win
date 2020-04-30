@@ -211,8 +211,6 @@ class Supervisor(object):
     def runforever(self):
         events.notify(events.SupervisorRunningEvent())
         socket_map = self.options.get_socket_map()
-        # this cannot be fewer than the smallest TickEvent (5)
-        poller_timeout = 1.0
 
         while True:
             combined_map = {}
@@ -248,7 +246,7 @@ class Supervisor(object):
                     else:
                         self.dispatcher_handle_event(dispatcher, "handle_write_event")
 
-            readables, writables = self.options.poller.poll(poller_timeout)
+            readables, writables = self.options.poller.poll(self.options.delaysecs)
 
             for fd in readables:
                 if fd in combined_map:
