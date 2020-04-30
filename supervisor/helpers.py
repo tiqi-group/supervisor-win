@@ -41,11 +41,11 @@ class Popen(subprocess.Popen):
             msg = "exit status %s" % (self.returncode,)
         return msg
 
-    def kill2(self, pid, sig):
-        if pid > 0:
-            self.send_signal(sig)
-        else:
+    def kill2(self, sig, as_group=False):
+        if as_group:
             return self.taskkill()
+        else:
+            return self.send_signal(sig)
 
     def taskkill(self):
         """Kill process group"""

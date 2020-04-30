@@ -1156,7 +1156,11 @@ class ServerOptions(Options):
         pass
 
     def kill(self, pid, sig):
-        output = self.pidhistory[abs(pid)].process.kill2(pid, sig)
+        try:
+            subprocess = self.pidhistory[pid]
+        except KeyError:
+            subprocess = self.pidhistory[abs(pid)]
+        output = subprocess.process.kill2(sig, pid < 0)
         if output:
             for loutput in output.split('\n'):
                 self.logger.info(loutput)
