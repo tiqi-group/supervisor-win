@@ -1,3 +1,9 @@
+4.3.0
+-----------------------------
+- Merge supervisor unix changes from 4.2.0.dev0 (master)
+- Stop process group with task taskkill
+- Fixing service data output issues
+
 4.2.0
 -----------------------------
 - Merge supervisor unix changes from 4.2.0.dev0 (master)
