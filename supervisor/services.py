@@ -158,6 +158,12 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         """Return value of stream"""
         return fp.getvalue().strip("\n ")
 
+    @classmethod
+    def log(cls, fp, callback):
+        fp_value = cls._get_fp_value(fp)
+        if fp_value:
+            return callback(fp_value)
+
     # noinspection PyBroadException
     def SvcStop(self):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
@@ -168,7 +174,7 @@ class SupervisorService(win32serviceutil.ServiceFramework):
             from supervisor import supervisorctl
             supervisorctl.main(("-c", self.supervisor_conf, "shutdown"),
                                stdout=stdout)
-            self.logger.info(self._get_fp_value(stdout))
+            self.log(stdout, self.logger.info)
         except SystemExit:
             pass  # normal exit
         except:
@@ -195,8 +201,8 @@ class SupervisorService(win32serviceutil.ServiceFramework):
             self.logger.info("supervisor starting...")
             supervisord.main(("-c", self.supervisor_conf),
                              stdout=stdout, stderr=stderr)
-            self.logger.info(self._get_fp_value(stdout))
-            self.logger.error(self._get_fp_value(stderr))
+            self.log(stdout, self.logger.info)
+            self.log(stderr, self.logger.error)
         except:
             self.logger.exception("supervisor starting failed")
         finally:
