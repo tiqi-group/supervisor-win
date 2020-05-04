@@ -297,6 +297,9 @@ if __name__ == '__main__':
         main()
     except (SystemExit, KeyboardInterrupt):
         raise
-    except:
+    except Exception as exc:
         print(" command execution failed ".center(35, '='))
+        if isinstance(exc, WindowsError):
+            print("Administrator permission required!",
+                  file=sys.stderr)
         traceback.print_exc(limit=3)
