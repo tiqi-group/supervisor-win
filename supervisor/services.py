@@ -145,6 +145,14 @@ class SupervisorService(win32serviceutil.ServiceFramework):
             logging.shutdown()
             exit(-1)
 
+    @classmethod
+    def set_service_name(cls, name):
+        cls._svc_name_ = name
+
+    @classmethod
+    def set_service_display_name(cls, name):
+        cls._svc_display_name_ = name
+
     @staticmethod
     def _get_fp_value(fp):
         """Return value of stream"""
@@ -201,27 +209,21 @@ def parse_args_config(options, argv):
     index = 0
     while True:
         try:
-            item = argv[index]
+            varg = argv[index]
+            last_index = index
+            index += 1
         except IndexError:
             break
         for opts in options:
-            if any(filter(item.startswith, opts['args'])):
+            if any([bool(re.match(re.escape(varg), n)) for n in opts['args']]):
+                index -= 1
                 name = argv.pop(index)
                 if name.find('=') > -1:
-                    args.extend(item.split('='))
-                    index -= 1
-                    continue
-                args.append(name)
-                kwargs = opts.setdefault('kwargs', {})
-                if kwargs.get('required', False):
-                    try:
-                        args.append(argv.pop(index))
-                        index -= 1
-                    except IndexError:
-                        continue
+                    args.extend(varg.split('='))
                 else:
-                    index -= 1
-        index += 1
+                    args.append(name)
+                    args.append(argv.pop(index))
+                index = last_index
     return args
 
 
@@ -229,12 +231,15 @@ def get_config_args(argv=None):
     argv = list(sys.argv) if argv is None else list(argv)
     options = [
         {'args': ('-h', '--help'),
-         'kwargs': {'required': False,
-                    'action': 'store_true'}},
+         'kwargs': {'required': False, 'action': 'store_true'}},
         {'args': ('-c', '--config'),
          'kwargs': {'type': argparse.FileType('r'),
                     'help': 'full filepath to supervisor.conf',
-                    'required': 'install' in argv}}
+                    'required': 'install' in argv}},
+        {'args': ('-sn', '--service-name'),
+         'kwargs': {'required': False, 'type': str}},
+        {'args': ('-sdn', '--service-display-name'),
+         'kwargs': {'required': False, 'type': str}},
     ]
     args = parse_args_config(options, argv)
     return options, args, argv
@@ -272,8 +277,17 @@ def main():
             parser.print_help(file=sys.stdout)
             print()
             srv_argv.append('-h')
+        # supervisor conf
         elif options.config:
             config_reg.filepath = options.config.name
+        # custom service name
+        if options.service_name:
+            config_reg[config_reg.service_name_key] = options.service_name
+            SupervisorService.set_service_name(options.service_name)  # runtime only
+            SupervisorService.set_service_display_name(options.service_name + " process monitor")
+        # custom service display name
+        if options.service_display_name:
+            SupervisorService.set_service_display_name(options.service_display_name)
         srv_argv.insert(0, sys.argv[0])
         win32serviceutil.HandleCommandLine(SupervisorService, argv=srv_argv)
 
