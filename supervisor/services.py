@@ -45,28 +45,46 @@ try:
 except ImportError:
     sys.path.append(os.path.abspath(os.path.join(LOCAL_DIR, '..')))
 
-SUPERVISOR_PREFIX = "Supervisor Pyv{0.winver}".format(sys)
-
 
 class ConfigReg(object):
     """Saves the path to the supervisor.conf in the system registry"""
-    prefix = SUPERVISOR_PREFIX
+    service_name = "Supervisor Pyv{0.winver}".format(sys)
 
-    def __init__(self, prefix=None):
+    def __init__(self, service_name=None):
         self.software_key = winreg.OpenKey(winreg.HKEY_CURRENT_CONFIG, "Software")
-        if prefix is not None:
-            self.prefix = prefix
-        self.service_name_key = self.prefix + " Service"
+        if service_name is not None:
+            self.service_name = service_name
+        self.service_config_dir_key = self.service_name + " Service"
+        self.service_name_key = "Name"
         self.config_name_key = "Config"
 
-    def set(self, filepath):
-        with winreg.CreateKey(self.software_key, self.service_name_key) as srv_key:
-            winreg.SetValue(srv_key, self.config_name_key, winreg.REG_SZ, filepath)
-
-    def get(self):
-        with winreg.OpenKey(self.software_key, self.service_name_key) as srv_key:
-            value = winreg.QueryValue(srv_key, self.config_name_key)
+    def __getitem__(self, item):
+        """Get value from registry"""
+        with winreg.OpenKey(self.software_key, self.service_config_dir_key) as srv_key:
+            value = winreg.QueryValue(srv_key, item)
         return value
+
+    def __setitem__(self, key, value):
+        """Set value to registry"""
+        with winreg.CreateKey(self.software_key, self.service_config_dir_key) as srv_key:
+            winreg.SetValue(srv_key, key, winreg.REG_SZ, value)
+
+    @property
+    def filepath(self):
+        """get supervisor config path"""
+        return self[self.config_name_key]
+
+    @filepath.setter
+    def filepath(self, value):
+        """set supervisor config path"""
+        self[self.config_name_key] = value
+
+    def get(self, name, *args):
+        try:
+            return self[name]
+        except WindowsError:
+            if args:
+                return args[0]
 
     def close(self):
         """cleanup"""
@@ -79,9 +97,13 @@ class ConfigReg(object):
         self.close()
 
 
+config_reg = ConfigReg()
+
+
 class SupervisorService(win32serviceutil.ServiceFramework):
-    _svc_name_ = SUPERVISOR_PREFIX
-    _svc_display_name_ = "{0} process monitor".format(SUPERVISOR_PREFIX)
+    _svc_name_ = config_reg.get(config_reg.service_name_key,
+                                config_reg.service_name)
+    _svc_display_name_ = _svc_name_ + " process monitor"
     _svc_description_ = "A process control system"
     _svc_deps_ = []
 
@@ -95,29 +117,27 @@ class SupervisorService(win32serviceutil.ServiceFramework):
 
         # Gets the path of the registry configuration file
         try:
-            with ConfigReg() as reg:
-                self.config_filepath = reg.get()
+            config_reg_exc = None
+            self.supervisor_conf = config_reg.filepath
         except WindowsError:
             config_reg_exc = traceback.format_exc()
-            self.config_filepath = None
-        else:
-            config_reg_exc = None
+            self.supervisor_conf = None
 
         # The log goes to the location of the configuration file
-        if self.config_filepath is not None:
-            config_dir = os.path.dirname(self.config_filepath)
+        if self.supervisor_conf is not None:
+            config_dir = os.path.dirname(self.supervisor_conf)
         else:  # or to python home
             config_dir = os.getcwd()
 
         self.logger = logging.getLogger(__name__)
-        log_path = os.path.join(config_dir, SUPERVISOR_PREFIX.lower() + "-service.log")
+        log_path = os.path.join(config_dir, self._svc_name_.lower() + "-service.log")
         hdl = logging.handlers.RotatingFileHandler(log_path,
                                                    maxBytes=1024 ** 2,
                                                    backupCount=3)
         hdl.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
         self.logger.setLevel(logging.INFO)
         self.logger.addHandler(hdl)
-        self.logger.info("supervisor config path: {0!s}".format(self.config_filepath))
+        self.logger.info("supervisor config path: {0!s}".format(self.supervisor_conf))
 
         if config_reg_exc is not None:
             self.logger.error("* The service needs to be reinstalled")
@@ -138,7 +158,7 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         try:
             self.logger.info("supervisorctl shutdown")
             from supervisor import supervisorctl
-            supervisorctl.main(("-c", self.config_filepath, "shutdown"),
+            supervisorctl.main(("-c", self.supervisor_conf, "shutdown"),
                                stdout=stdout)
             self.logger.info(self._get_fp_value(stdout))
         except SystemExit:
@@ -165,7 +185,7 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         try:
             from supervisor import supervisord
             self.logger.info("supervisor starting...")
-            supervisord.main(("-c", self.config_filepath),
+            supervisord.main(("-c", self.supervisor_conf),
                              stdout=stdout, stderr=stderr)
             self.logger.info(self._get_fp_value(stdout))
             self.logger.error(self._get_fp_value(stderr))
@@ -253,8 +273,7 @@ def main():
             print()
             srv_argv.append('-h')
         elif options.config:
-            with ConfigReg() as reg:
-                reg.set(options.config.name)
+            config_reg.filepath = options.config.name
         srv_argv.insert(0, sys.argv[0])
         win32serviceutil.HandleCommandLine(SupervisorService, argv=srv_argv)
 
