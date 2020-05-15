@@ -70,6 +70,7 @@ class DummyOptions:
         tempdir = tempfile.gettempdir()
         self.identifier = 'supervisor'
         self.childlogdir = tempdir
+        self.delaysecs = 0.2
         self.uid = 999
         self.logger = self.getLogger()
         self.backofflimit = 10
