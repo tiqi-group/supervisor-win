@@ -1,4 +1,5 @@
 import os
+import re
 import shlex
 import signal
 import socket
@@ -338,8 +339,10 @@ def url(value):
         return value
     raise ValueError("value %r is not a URL" % value)
 
+
 # all valid signal numbers
-SIGNUMS = [getattr(signal, k) for k in dir(signal) if k.startswith('SIG')]
+sig_pattern = re.compile("CTRL|SIG[^_]")
+SIGNUMS = [getattr(signal, k) for k in dir(signal) if sig_pattern.match(k)]
 
 
 def signal_number(value):
@@ -347,7 +350,7 @@ def signal_number(value):
         num = int(value)
     except (ValueError, TypeError):
         name = value.strip().upper()
-        if not name.startswith('SIG'):
+        if not sig_pattern.match(name):
             name = 'SIG' + name
         num = getattr(signal, name, None)
         if num is None:

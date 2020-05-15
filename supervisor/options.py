@@ -45,6 +45,7 @@ from supervisor.datatypes import url
 from supervisor.datatypes import Automatic
 from supervisor.datatypes import auto_restart
 from supervisor.datatypes import profile_options
+from supervisor.datatypes import sig_pattern
 
 from supervisor import loggers
 from supervisor import states
@@ -1949,12 +1950,9 @@ def signame(sig):
 def _init_signames():
     global _signames
     d = {}
-    for k, v in signal.__dict__.items():
-        k_startswith = getattr(k, "startswith", None)
-        if k_startswith is None:
-            continue
-        if k_startswith("SIG") and not k_startswith("SIG_"):
-            d[v] = k
+    for k in dir(signal):
+        if sig_pattern.match(k):
+            d[getattr(signal, k)] = k
     _signames = d
 
 
