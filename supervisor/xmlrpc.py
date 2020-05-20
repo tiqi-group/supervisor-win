@@ -23,6 +23,11 @@ from supervisor.medusa import producers
 
 from supervisor.http import NOT_DONE_YET
 
+# force a long int (if that's a good thing only time will tell)
+if sys.maxsize < 2**32:
+    xmlrpclib.MAXINT = 2**63-1
+    xmlrpclib.MININT = -2**63
+
 
 class Faults(object):
     UNKNOWN_METHOD = 1
