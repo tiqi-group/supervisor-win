@@ -847,6 +847,9 @@ class ServerOptions(Options):
         # system settings
         systemjob = boolean(get(section, 'systemjob', 'true'))
 
+        # The name of the shared socket file descriptor parameter (uvicorn --fd).
+        socket_fd_param = get(section, 'socket_fd_param', None)
+
         # default settings
         priority = integer(get(section, 'priority', 999))
         autostart = boolean(get(section, 'autostart', 'true'))
@@ -960,6 +963,7 @@ class ServerOptions(Options):
                 cpupriority=cpupriority,
                 cpuaffinity=cpuaffinity,
                 systemjob=systemjob,
+                socket_fd_param=socket_fd_param,
                 stdout_logfile=logfiles['stdout_logfile'],
                 stdout_capture_maxbytes=stdout_cmaxbytes,
                 stdout_events_enabled=stdout_events,
@@ -1733,6 +1737,8 @@ class EventListenerConfig(ProcessConfig):
 
 
 class FastCGIProcessConfig(ProcessConfig):
+    optional_param_names = ['socket_fd_param'] + ProcessConfig.optional_param_names
+
     def make_process(self, group=None):
         if group is None:
             raise NotImplementedError('FastCGI programs require a group')

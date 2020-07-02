@@ -856,6 +856,27 @@ class FastCGISubprocess(Subprocess):
                                       '%s:%s' % (self.group, dir(self.group)))
         self.fcgi_sock = self.group.socket_manager.get_socket()
 
+    @property
+    def has_shared_socket(self):
+        """Whether socket sharing is possible"""
+        return self.fcgi_sock and self.config.socket_fd_param
+
+    def get_execv_args(self):
+        filename, commandargs = super(FastCGISubprocess, self).get_execv_args()
+        if self.has_shared_socket:
+            # passes the fd from the shared socket to the socket
+            socket_fd = self.fcgi_sock.fileno()
+            commandargs.extend([self.config.socket_fd_param, str(socket_fd)])
+        return filename, commandargs
+
+    def execute(self, filename, argv, **kwargs):
+        if self.has_shared_socket:
+            # shares the fd with the fastcgi process
+            kwargs['startupinfo'] = subprocess.STARTUPINFO(lpAttributeList={
+                'handle_list': [self.fcgi_sock.fileno()]
+            })
+        return super(FastCGISubprocess, self).execute(filename, argv, **kwargs)
+
     def spawn(self):
         """
         Overrides Subprocess.spawn() so we can hook in before it happens

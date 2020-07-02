@@ -230,6 +230,7 @@ class InetStreamSocketConfig(SocketConfig):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, self.so_reuse_addr)
+            sock.set_inheritable(True)
             sock.bind(self.addr())
         except:
             sock.close()
