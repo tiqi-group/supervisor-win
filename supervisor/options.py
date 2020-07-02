@@ -1245,7 +1245,8 @@ class ServerOptions(Options):
             pass
 
     def fork(self):
-        return 0  # os.fork()
+        """0 indicating spawn as child"""
+        return 0
 
     def dup2(self, frm, to):
         return os.dup2(frm, to)

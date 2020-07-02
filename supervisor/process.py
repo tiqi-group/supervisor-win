@@ -330,7 +330,15 @@ class Subprocess(object):
             self.change_state(ProcessStates.BACKOFF)
             return
 
+        # for compatibility with the original api
+        forkpid = options.fork()
+
         self._spawn_as_child(filename, argv)
+
+        # under tests
+        if forkpid != 0 and not self.process:
+            self.process = DummyPopen()
+            self.pid = self.process.pid
 
         try:
             self.dispatchers, self.pipes = self.config.make_dispatchers(self)
