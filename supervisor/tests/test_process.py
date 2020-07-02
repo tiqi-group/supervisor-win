@@ -351,7 +351,8 @@ class SubprocessTests(unittest.TestCase):
         # if the real execve() succeeds, the code that writes the
         # "was not spawned" message won't be reached.  this assertion
         # is to test that no other errors were written.
-        self.assertIsInstance(instance.process, DummyPopen)
+        self.assertEqual(options.written,
+                         {2: "supervisor: child process was not spawned\n"})
 
     def test_spawn_as_child_execv_fail_oserror(self):
         options = DummyOptions()

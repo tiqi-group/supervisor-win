@@ -4,8 +4,6 @@ _TIMEFORMAT = '%b %d %I:%M %p'
 import os
 import sys
 import tempfile
-
-from supervisor.helpers import DummyPopen
 from functools import total_ordering
 
 from supervisor.compat import Fault
@@ -274,7 +272,6 @@ class DummyOptions:
                 raise RuntimeError(self.execv_error)
         self.execv_args = (filename, argv)
         self.execv_environment = environment
-        return DummyPopen(filename, argv, environment)
 
     def drop_privileges(self, uid):
         if self.setuid_msg:
