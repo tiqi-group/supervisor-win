@@ -121,7 +121,7 @@ class ListOfExitcodesTests(unittest.TestCase):
 
     def test_raises_for_invalid_exitcode_values(self):
         self.assertRaises(ValueError, self._callFUT, 'a,b,c')
-        self.assertRaises(ValueError, self._callFUT, '1024')
+        self.assertRaises(ValueError, self._callFUT, '4000000001')
         self.assertRaises(ValueError, self._callFUT, '-1,1')
 
 
