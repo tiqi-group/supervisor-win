@@ -1,6 +1,7 @@
 import datetime
 import errno
 import os
+import sys
 import time
 import types
 
@@ -644,16 +645,21 @@ class SupervisorNamespaceRPCInterface(object):
         configinfo.sort(key=lambda r: r['name'])
         return configinfo
 
+    @staticmethod
+    def limit_max_size(value):
+        """limits value to the maximum integer size"""
+        return value if value < sys.maxsize else sys.maxsize
+
     def _interpretProcessInfo(self, info):
         state = info['state']
 
         if state == ProcessStates.RUNNING:
-            start = info['start']
-            now = info['now']
+            start = self.limit_max_size(info['start'])
+            now = self.limit_max_size(info['now'])
             start_dt = datetime.datetime(*time.gmtime(start)[:6])
             now_dt = datetime.datetime(*time.gmtime(now)[:6])
             uptime = now_dt - start_dt
-            if _total_seconds(uptime) < 0: # system time set back
+            if _total_seconds(uptime) < 0:  # system time set back
                 uptime = datetime.timedelta(0)
             desc = 'pid %s, uptime %s' % (info['pid'], uptime)
 
