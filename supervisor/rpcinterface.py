@@ -646,7 +646,7 @@ class SupervisorNamespaceRPCInterface(object):
         return configinfo
 
     @staticmethod
-    def limit_max_size(value):
+    def _limit_max_size(value):
         """limits value to the maximum integer size"""
         return value if value < sys.maxsize else sys.maxsize
 
@@ -654,8 +654,8 @@ class SupervisorNamespaceRPCInterface(object):
         state = info['state']
 
         if state == ProcessStates.RUNNING:
-            start = self.limit_max_size(info['start'])
-            now = self.limit_max_size(info['now'])
+            start = self._limit_max_size(info['start'])
+            now = self._limit_max_size(info['now'])
             start_dt = datetime.datetime(*time.gmtime(start)[:6])
             now_dt = datetime.datetime(*time.gmtime(now)[:6])
             uptime = now_dt - start_dt
