@@ -589,7 +589,9 @@ class DummyPConfig:
                  redirect_stderr=False,
                  stopsignal=None, stopwaitsecs=10, stopasgroup=False, killasgroup=False,
                  exitcodes=(0, ), environment=None, serverurl=None,
-                 systemjob=None):
+                 systemjob=None,
+                 socket_fd_param=None):
+        self.socket_fd_param = socket_fd_param
         self.options = options
         self.name = name
         self.command = command
