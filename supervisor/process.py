@@ -345,6 +345,10 @@ class Subprocess(object):
             self.record_spawnerr(msg)
             self._assertInState(ProcessStates.STARTING)
             self.change_state(ProcessStates.BACKOFF)
+            return
+
+        # returns the process pid. None if failed
+        return self.process.pid if self.process else None
 
     def _setup_system_resource(self):
         # Adds the process to the job
