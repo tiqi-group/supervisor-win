@@ -15,7 +15,7 @@ class Proxy(object):
             self.on_delete()
 
     def __getattr__(self, name):
-        return getattr(self.object, name)
+        return getattr(object.__getattribute__(self, "object"), name)
 
     def _get(self):
         return self.object
