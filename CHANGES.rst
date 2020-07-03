@@ -1,3 +1,10 @@
+4.4.0
+-----------------------------
+- Merge supervisor unix changes from 4.2.0.dev0 (master)
+- Support for web servers that supports shared socket (fastcgi).
+- Support for sending Windows signals. (signal CTRL_C_EVENT|CTRL_BREAK_EVENT)
+- Possibility to configure a custom service name (options: '--service-name' or '--service-display-name').
+
 4.3.0
 -----------------------------
 - Merge supervisor unix changes from 4.2.0.dev0 (master)
