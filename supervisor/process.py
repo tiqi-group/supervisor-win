@@ -882,7 +882,7 @@ class FastCGISubprocess(Subprocess):
         return filename, commandargs
 
     def execute(self, filename, argv, **kwargs):
-        if self.has_shared_socket:
+        if self.has_shared_socket and not PY2:
             # shares the fd with the fastcgi process
             kwargs['startupinfo'] = subprocess.STARTUPINFO(lpAttributeList={
                 'handle_list': [self.fcgi_sock.fileno()]
