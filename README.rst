@@ -7,7 +7,7 @@ control a number of processes on Windows operating system.
 Supported Platforms
 -------------------
 
-Supervisor has been tested (Python 2.7/3.7 [32 bit]) and is known to run on Windows `10` / `Server 2012`.
+Supervisor has been tested (Python 2.7/3.7 [32/64 bit]) and is known to run on Windows `10` / `Server 2012`.
 
 * New processes are created by the subprocess standard lib.
 * Some specific features of OS Linux have been disabled and others were adapted to the Windows OS.
