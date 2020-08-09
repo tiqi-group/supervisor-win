@@ -50,15 +50,15 @@ matrix:
             - TOXENV=py37
             - END_TO_END=1
 
-		- name: "Python 3.7.5 on Windows"
-		  os: windows           # Windows 10.0.17134 N/A Build 17134
-		  language: shell       # 'language: python' is an error on Travis CI Windows
-		  # python: 3.7         # 'python:' is ignored on Travis CI Windows
-		  before_install:
-			# https://travis-ci.community/t/windows-python-pip-module-not-found/5480/4
-			- choco install python  --version 3.7.5
-			- python -m pip install --upgrade pip
-		  env:
+        - name: "Python 3.7.5 on Windows"
+          os: windows           # Windows 10.0.17134 N/A Build 17134
+          language: shell       # 'language: python' is an error on Travis CI Windows
+          # python: 3.7         # 'python:' is ignored on Travis CI Windows
+          before_install:
+            # https://travis-ci.community/t/windows-python-pip-module-not-found/5480/4
+            - choco install python  --version 3.7.5
+            - python -m pip install --upgrade pip
+          env:
             - TOXENV=py37
             - END_TO_END=1
 
