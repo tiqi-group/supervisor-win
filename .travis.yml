@@ -60,14 +60,15 @@ matrix:
             - python -m pip install --upgrade pip
             - python -m pip install pywin32
             # According to Supervisor/supervisor, pexpect is installed on Linux by tox.			
-            - python -m pip install pexpect==4.7.0
+            # pexpect==4.7.0
+            - python -m pip install pexpect
           env:
             - PATH=/c/Python37:/c/Python37/Scripts:$PATH
             - TOXENV=py37
             - END_TO_END=1
 
 install:
-    - travis_retry pip install virtualenv tox
+    - travis_retry pip install virtualenv tox pexpect
 
 script:
     - travis_retry tox
