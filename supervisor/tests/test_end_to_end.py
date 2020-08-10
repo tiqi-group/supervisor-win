@@ -14,16 +14,6 @@ from supervisor.xmlrpc import SupervisorTransport
 if 'END_TO_END' in os.environ:
     import pexpect
     BaseTestCase = unittest.TestCase
-
-    # https://pexpect.readthedocs.io/en/stable/overview.html#windows
-    # pexpect.spawn and pexpect.run() are not available on Windows,
-    # as they rely on Unix pseudoterminals (ptys)...
-    # PopenSpawn is not a direct replacement for spawn.
-    # Many programs only offer interactive behaviour if they detect that they are running in a terminal.
-    # When run by PopenSpawn, they may behave differently.
-    is_windows = sys.platform.startswith('win')
-    if is_windows:
-        pexpect.spawn = pexpect.PopenSpawn
 else:
     BaseTestCase = object
 
