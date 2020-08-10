@@ -63,7 +63,7 @@ matrix:
             - END_TO_END=1
 
 install:
-    - travis_retry pip install virtualenv tox
+    - travis_retry pip install virtualenv tox pywin32
 
 script:
     - travis_retry tox
