@@ -60,6 +60,7 @@ matrix:
             - python -m pip install --upgrade pip
             - python -m pip install pywin32
           env:
+            - PATH=/c/Python37:/c/Python37/Scripts:$PATH
             - TOXENV=py37
             - END_TO_END=1
 
