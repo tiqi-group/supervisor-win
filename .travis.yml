@@ -65,7 +65,7 @@ matrix:
           env:
             - PATH=/c/Python37:/c/Python37/Scripts:$PATH
             - TOXENV=py37
-            - END_TO_END=0
+
 
 install:
     - travis_retry pip install virtualenv tox pexpect
