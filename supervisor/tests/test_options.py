@@ -1112,7 +1112,7 @@ class ServerOptionsTests(unittest.TestCase):
     def test_check_execv_args_notexecutable(self):
         instance = self._makeOne()
         from supervisor.options import NotExecutable
-        windir = os.environ.get('windir')
+        windir = os.environ.get('WINDIR')
         self.assertRaises(NotExecutable,
                           instance.check_execv_args, windir,
                           [windir], os.stat(windir))
