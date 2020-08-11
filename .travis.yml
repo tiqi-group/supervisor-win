@@ -59,14 +59,13 @@ matrix:
             - choco install python  --version 3.7.5
             - python -m pip install --upgrade pip
             - python -m pip install pywin32
-            #- python -m pip install pexpect
           env:
             - PATH=/c/Python37:/c/Python37/Scripts:$PATH
             - TOXENV=py37
-
+            - windir=C:\windows
 
 install:
-    - travis_retry pip install virtualenv tox # pexpect
+    - travis_retry pip install virtualenv tox
 
 script:
     - travis_retry tox
