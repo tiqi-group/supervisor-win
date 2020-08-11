@@ -59,16 +59,14 @@ matrix:
             - choco install python  --version 3.7.5
             - python -m pip install --upgrade pip
             - python -m pip install pywin32
-            # According to Supervisor/supervisor, pexpect is installed on Linux by tox.			
-            # pexpect==4.7.0
-            - python -m pip install pexpect
+            #- python -m pip install pexpect
           env:
             - PATH=/c/Python37:/c/Python37/Scripts:$PATH
             - TOXENV=py37
 
 
 install:
-    - travis_retry pip install virtualenv tox pexpect
+    - travis_retry pip install virtualenv tox # pexpect
 
 script:
     - travis_retry tox
