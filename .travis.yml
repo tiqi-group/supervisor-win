@@ -62,7 +62,7 @@ matrix:
           env:
             - PATH=/c/Python37:/c/Python37/Scripts:$PATH
             - TOXENV=py37
-            - windir=C:\windows
+            # - windir=C:\windows
 
 install:
     - travis_retry pip install virtualenv tox
