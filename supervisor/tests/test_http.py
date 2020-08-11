@@ -164,6 +164,7 @@ class TailFProducerTests(unittest.TestCase):
             result = producer.more()
             self.assertEqual(result, NOT_DONE_YET)
 
+    @unittest.skipIf(sys.platform.startswith("win"), "Very different behaviour on Windows")
     def test_handle_more_follow_file_recreated(self):
         request = DummyRequest('/logtail/foo', None, None, None)
         tmpfile = TempFileOpen()
@@ -191,6 +192,7 @@ class TailFProducerTests(unittest.TestCase):
             tmpfile.close()
         self.assertEqual(result, b'b' * 80)
 
+    @unittest.skipIf(sys.platform.startswith("win"), "Very different behaviour on Windows")
     def test_handle_more_follow_file_gone(self):
         request = DummyRequest('/logtail/foo', None, None, None)
         with TempFileOpen(mode='wb') as tmpfile:
