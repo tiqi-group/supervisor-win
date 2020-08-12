@@ -494,14 +494,14 @@ class SupervisorTransport(xmlrpclib.Transport):
     """
     connection = None
 
-    def __init__(self, username=None, password=None, serverurl=None):
+    def __init__(self, username=None, password=None, serverurl=None, xmlrpc_timeout=None):
         xmlrpclib.Transport.__init__(self)
         self.username = username
         self.password = password
         self.verbose = False
         self.serverurl = serverurl
         if serverurl.startswith('http://'):
-            type, uri = urllib.splittype(serverurl)
+            _type, uri = urllib.splittype(serverurl)
             host, path = urllib.splithost(uri)
             host, port = urllib.splitport(host)
             if port is None:
@@ -510,7 +510,7 @@ class SupervisorTransport(xmlrpclib.Transport):
                 port = int(port)
 
             def get_connection(host=host, port=port):
-                return httplib.HTTPConnection(host, port)
+                return httplib.HTTPConnection(host, port, timeout=xmlrpc_timeout)
 
             self._get_connection = get_connection
         elif serverurl.startswith('unix://'):

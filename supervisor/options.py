@@ -1385,6 +1385,7 @@ class ClientOptions(Options):
     username = None
     password = None
     history_file = None
+    xmlrpc_timeout = None
 
     def __init__(self):
         Options.__init__(self, require_configfile=False)
@@ -1396,6 +1397,7 @@ class ClientOptions(Options):
         self.configroot.supervisorctl.username = None
         self.configroot.supervisorctl.password = None
         self.configroot.supervisorctl.history_file = None
+        self.configroot.supervisorctl.xmlrpc_timeout = None
 
         from supervisor.supervisorctl import DefaultControllerPlugin
 
@@ -1412,6 +1414,8 @@ class ClientOptions(Options):
         self.add("username", "supervisorctl.username", "u:", "username=")
         self.add("password", "supervisorctl.password", "p:", "password=")
         self.add("history", "supervisorctl.history_file", "r:", "history_file=")
+        self.add("xmlrpc_timeout", "supervisorctl.xmlrpc_timeout", "x:", "xmlrpc_timeout=",
+                 handler=float, default=socket.getdefaulttimeout())
 
     def realize(self, *arg, **kw):
         Options.realize(self, *arg, **kw)
@@ -1458,6 +1462,11 @@ class ClientOptions(Options):
         history_file = parser.getdefault('history_file', section.history_file,
             expansions={'here': self.here})
 
+        # connection timeout
+        section.xmlrpc_timeout = parser.getdefault('xmlrpc_timeout', section.xmlrpc_timeout)
+        if section.xmlrpc_timeout is not None:
+            section.xmlrpc_timeout = float(section.xmlrpc_timeout)
+
         if history_file:
             history_file = normalize_path(history_file)
             section.history_file = history_file
@@ -1483,7 +1492,8 @@ class ClientOptions(Options):
             'http://127.0.0.1',
             transport=xmlrpc.SupervisorTransport(self.username,
                                                  self.password,
-                                                 self.serverurl)
+                                                 self.serverurl,
+                                                 self.xmlrpc_timeout)
         )
 
 
