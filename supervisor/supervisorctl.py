@@ -186,14 +186,6 @@ class Controller(cmd.Cmd):
         else:
             self.exitstatus = LSBInitExitStatuses.GENERIC
 
-    def set_exitstatus_from_xmlrpc_fault(self, faultcode, ignored_faultcode=None):
-        if faultcode in (ignored_faultcode, xmlrpc.Faults.SUCCESS):
-            pass
-        elif faultcode in DEAD_PROGRAM_FAULTS:
-            self.exitstatus = LSBInitExitStatuses.NOT_RUNNING
-        else:
-            self.exitstatus = LSBInitExitStatuses.GENERIC
-
     def onecmd(self, line):
         """ Override the onecmd method to:
           - catch and print all exceptions
