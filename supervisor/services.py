@@ -71,6 +71,13 @@ class ConfigReg(object):
         with winreg.CreateKey(self.software_key, self.service_config_dir_key) as srv_key:
             winreg.SetValue(srv_key, key, winreg.REG_SZ, value)
 
+    def delete(self, key):
+        with winreg.CreateKey(self.software_key, self.service_config_dir_key) as srv_key:
+            try:
+                winreg.DeleteKey(srv_key, key)
+            except WindowsError:
+                pass
+
     @property
     def filepath(self):
         """get supervisor config path"""
@@ -311,12 +318,15 @@ def runner(argv):
         filepath = os.path.dirname(argv[0])
         filename = os.path.basename(argv[0])
         name, extension = os.path.splitext(filename)
-        if not re.match(r"\.pyc[cod]*$", extension, re.I):
+        if not re.match(r"\.py[cod]*$", extension, re.I):
             executable = os.path.join(filepath, name + '.exe')
             SupervisorService.set_config("exe_name", executable)
             SupervisorService.set_config("exe_args", '')
             config_reg[config_reg.service_executable_key] = executable
             config_reg[config_reg.service_executable_args_key] = ''
+        else:
+            config_reg.delete(config_reg.service_executable_key)
+            config_reg.delete(config_reg.service_executable_args_key)
         win32serviceutil.HandleCommandLine(SupervisorService, argv=srv_argv)
 
 
