@@ -387,14 +387,14 @@ def main(args=None, test=False,
     first = True
     while 1:
         options = ServerOptions()
+        # output config
+        if stdout != options.stdout:
+            options.stdout = stdout
+        if stderr != options.stderr:
+            options.stderr = stderr
         options.realize(args, doc=__doc__)
         options.first = first
         options.test = test
-        # output config
-        if stdout is not None:
-            options.stdout = stdout
-        if stderr is not None:
-            options.stderr = stderr
         try:
             if options.profile_options:
                 sort_order, callers = options.profile_options
