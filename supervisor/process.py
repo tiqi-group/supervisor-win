@@ -613,6 +613,7 @@ class Subprocess(object):
             options.kill(pid, sig)
         except:
             tb = traceback.format_exc()
+            tb = as_string(tb, ignore=True)
             msg = 'unknown problem killing %s (%s):%s' % (processname,
                                                           self.pid, tb)
             options.logger.critical(msg)
@@ -655,10 +656,12 @@ class Subprocess(object):
             msg = 'problem sending sig %s (%s): %s' % (
                 self.config.name, self.pid, str(e))
             tb = traceback.format_exc()
+            tb = as_string(tb, ignore=True)
             options.logger.error(tb)
             return msg
         except:
             tb = traceback.format_exc()
+            tb = as_string(tb, ignore=True)
             msg = 'unknown problem sending sig %s (%s):%s' % (
                 processname, self.pid, tb)
             options.logger.critical(msg)
