@@ -96,6 +96,7 @@ dist = setup(
     entry_points={
         'console_scripts': [
             'supervisord = supervisor.supervisord:main',
+            'supervisor_service = supervisor.services:main',
             'supervisorctl = supervisor.supervisorctl:main',
             'echo_supervisord_conf = supervisor.confecho:main',
             'pidproxy = supervisor.pidproxy:main',
