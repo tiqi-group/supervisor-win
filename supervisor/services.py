@@ -221,20 +221,23 @@ def parse_args_config(options, argv):
         except IndexError:
             break
         for opts in options:
-            if any([bool(re.match(re.escape(varg), n)) for n in opts['args']]):
+            if any([varg == n for n in opts['args']]):
                 index -= 1
                 name = argv.pop(index)
                 if name.find('=') > -1:
                     args.extend(varg.split('='))
                 else:
                     args.append(name)
-                    args.append(argv.pop(index))
+                    try:
+                        args.append(argv.pop(index))
+                    except IndexError:
+                        break
                 index = last_index
     return args
 
 
-def get_config_args(argv=None):
-    argv = list(sys.argv) if argv is None else list(argv)
+def get_config_args(argv):
+    argv = list(argv)
     options = [
         {'args': ('-h', '--help'),
          'kwargs': {'required': False, 'action': 'store_true'}},
@@ -251,16 +254,13 @@ def get_config_args(argv=None):
     return options, args, argv
 
 
-def main():
-    # starts in the main python directory.
-    os.chdir(os.path.dirname(sys.executable))
-
-    if len(sys.argv) == 1:
+def runner(argv):
+    if len(argv) == 1:
         # service must be starting...
         # for the sake of debugging etc, we use win32traceutil to see
         # any unhandled exceptions and print statements.
         print("supervisor service is starting...")
-        print("(execute this script with '--help' if that isn't what you want)")
+        print("(execute this script with '-h' or '--help' if that isn't what you want)")
         servicemanager.Initialize()
         servicemanager.PrepareToHostSingle(SupervisorService)
         # Now ask the service manager to fire things up for us...
@@ -268,7 +268,7 @@ def main():
         print("supervisor service done!")
     else:
         # file configuration supervisord.conf
-        options, args, srv_argv = get_config_args(sys.argv[1:])
+        options, args, srv_argv = get_config_args(argv[1:])
         # print(args, srv_argv, sep='\n')
         parser = argparse.ArgumentParser(add_help=False)
         for opts in options:
@@ -282,7 +282,6 @@ def main():
         if options.help:
             parser.print_help(file=sys.stdout)
             print()
-            srv_argv.append('-h')
         # supervisor conf
         elif options.config:
             config_reg.filepath = options.config.name
@@ -294,13 +293,17 @@ def main():
         # custom service display name
         if options.service_display_name:
             SupervisorService.set_service_display_name(options.service_display_name)
-        srv_argv.insert(0, sys.argv[0])
+        srv_argv.insert(0, argv[0])
         win32serviceutil.HandleCommandLine(SupervisorService, argv=srv_argv)
 
 
-if __name__ == '__main__':
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    # starts in the main python directory.
+    os.chdir(os.path.dirname(sys.executable))
     try:
-        main()
+        runner(argv)
     except (SystemExit, KeyboardInterrupt):
         raise
     except Exception as exc:
@@ -309,3 +312,7 @@ if __name__ == '__main__':
             print("Administrator permission required!",
                   file=sys.stderr)
         traceback.print_exc(limit=3)
+
+
+if __name__ == '__main__':
+    main(sys.argv)
