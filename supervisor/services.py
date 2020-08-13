@@ -100,6 +100,24 @@ class ConfigReg(object):
 config_reg = ConfigReg()
 
 
+class StreamHandler(StringIO):
+    """Limited io"""
+    max_bytes = 1024 ** 2
+
+    def __init__(self, writer):
+        StringIO.__init__(self)
+        self.writer = writer
+
+    def write(self, s):
+        s = s.rstrip('\n')
+        if not s:
+            return 0
+        if self.tell() > self.max_bytes:
+            self.truncate(0)
+        self.writer(s)
+        return StringIO.write(self, s)
+
+
 class SupervisorService(win32serviceutil.ServiceFramework):
     _svc_name_ = config_reg.get(config_reg.service_name_key,
                                 config_reg.service_name)
@@ -153,36 +171,24 @@ class SupervisorService(win32serviceutil.ServiceFramework):
     def set_service_display_name(cls, name):
         cls._svc_display_name_ = name
 
-    @staticmethod
-    def _get_fp_value(fp):
-        """Return value of stream"""
-        return fp.getvalue().strip("\n ")
-
-    @classmethod
-    def log(cls, fp, callback):
-        fp_value = cls._get_fp_value(fp)
-        if fp_value:
-            return callback(fp_value)
-
     # noinspection PyBroadException
     def SvcStop(self):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         # Supervisor process stop event
-        stdout = StringIO()
+        stdout = StreamHandler(self.logger.info)
         try:
             self.logger.info("supervisorctl shutdown")
             from supervisor import supervisorctl
             supervisorctl.main(("-c", self.supervisor_conf, "shutdown"),
                                stdout=stdout)
-            self.log(stdout, self.logger.info)
         except SystemExit:
             pass  # normal exit
         except:
             self.logger.exception("supervisorctl shutdown execution failed")
         finally:
             logging.shutdown()
-            win32event.SetEvent(self.hWaitStop)
             stdout.close()
+            win32event.SetEvent(self.hWaitStop)
 
     def SvcDoRun(self):
         servicemanager.LogMsg(
@@ -195,14 +201,13 @@ class SupervisorService(win32serviceutil.ServiceFramework):
     # noinspection PyBroadException
     def main(self):
         """Starts running the supervisor"""
-        stdout, stderr = StringIO(), StringIO()
+        stdout = StreamHandler(self.logger.info)
+        stderr = StreamHandler(self.logger.error)
         try:
             from supervisor import supervisord
             self.logger.info("supervisor starting...")
             supervisord.main(("-c", self.supervisor_conf),
                              stdout=stdout, stderr=stderr)
-            self.log(stdout, self.logger.info)
-            self.log(stderr, self.logger.error)
         except:
             self.logger.exception("supervisor starting failed")
         finally:
