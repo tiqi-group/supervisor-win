@@ -1413,8 +1413,8 @@ class ClientOptions(Options):
                  url, default="http://localhost:9001")
         self.add("username", "supervisorctl.username", "u:", "username=")
         self.add("password", "supervisorctl.password", "p:", "password=")
-        self.add("history", "supervisorctl.history_file", "r:", "history_file=")
-        self.add("xmlrpc_timeout", "supervisorctl.xmlrpc_timeout", "x:", "xmlrpc_timeout=",
+        self.add("history_file", "supervisorctl.history_file", "r:", "history-file=")
+        self.add("xmlrpc_timeout", "supervisorctl.xmlrpc_timeout", "x:", "xmlrpc-timeout=",
                  handler=float, default=socket.getdefaulttimeout())
 
     def realize(self, *arg, **kw):

@@ -13,7 +13,7 @@ Options:
 -u/--username USERNAME -- username to use for authentication with server
 -p/--password PASSWORD -- password to use for authentication with server
 -r/--history-file -- keep a readline history (if readline is available)
--x/--xmlrpc_timeout -- timeout of client connection to server (def. socket.default)
+-x/--xmlrpc-timeout -- timeout of client connection to server (def. socket.default)
 
 action [arguments] -- see below
 
