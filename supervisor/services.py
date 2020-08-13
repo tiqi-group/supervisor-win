@@ -55,6 +55,8 @@ class ConfigReg(object):
         if service_name is not None:
             self.service_name = service_name
         self.service_config_dir_key = self.service_name + " Service"
+        self.service_executable_key = "Executable"
+        self.service_executable_args_key = "ExecutableArgs"
         self.service_name_key = "Name"
         self.config_name_key = "Config"
 
@@ -125,8 +127,10 @@ class SupervisorService(win32serviceutil.ServiceFramework):
     _svc_description_ = "A process control system"
     _svc_deps_ = []
 
-    _exe_name_ = sys.executable
-    _exe_args_ = '"' + os.path.abspath(sys.argv[0]) + '"'
+    _exe_name_ = config_reg.get(config_reg.service_executable_key,
+                                sys.executable)
+    _exe_args_ = config_reg.get(config_reg.service_executable_args_key,
+                                '"' + os.path.abspath(sys.argv[0]) + '"')
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
@@ -170,6 +174,10 @@ class SupervisorService(win32serviceutil.ServiceFramework):
     @classmethod
     def set_service_display_name(cls, name):
         cls._svc_display_name_ = name
+
+    @classmethod
+    def set_config(cls, name, value):
+        setattr(cls, "_%s_" % name, value)
 
     # noinspection PyBroadException
     def SvcStop(self):
@@ -299,6 +307,16 @@ def runner(argv):
         if options.service_display_name:
             SupervisorService.set_service_display_name(options.service_display_name)
         srv_argv.insert(0, argv[0])
+        # self executable (Scripts)
+        filepath = os.path.dirname(argv[0])
+        filename = os.path.basename(argv[0])
+        name, extension = os.path.splitext(filename)
+        if not re.match(r"\.pyc[cod]*$", extension, re.I):
+            executable = os.path.join(filepath, name + '.exe')
+            SupervisorService.set_config("exe_name", executable)
+            SupervisorService.set_config("exe_args", '')
+            config_reg[config_reg.service_executable_key] = executable
+            config_reg[config_reg.service_executable_args_key] = ''
         win32serviceutil.HandleCommandLine(SupervisorService, argv=srv_argv)
 
 
