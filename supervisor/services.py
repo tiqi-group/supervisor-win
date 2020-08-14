@@ -55,8 +55,6 @@ class ConfigReg(object):
         if service_name is not None:
             self.service_name = service_name
         self.service_config_dir_key = self.service_name + " Service"
-        self.service_executable_key = "Executable"
-        self.service_executable_args_key = "ExecutableArgs"
         self.service_name_key = "Name"
         self.config_name_key = "Config"
 
@@ -134,10 +132,8 @@ class SupervisorService(win32serviceutil.ServiceFramework):
     _svc_description_ = "A process control system"
     _svc_deps_ = []
 
-    _exe_name_ = config_reg.get(config_reg.service_executable_key,
-                                sys.executable)
-    _exe_args_ = config_reg.get(config_reg.service_executable_args_key,
-                                '"' + os.path.abspath(sys.argv[0]) + '"')
+    _exe_name_ = config_reg.get("exe_name", sys.executable)
+    _exe_args_ = config_reg.get("exe_args", '"' + os.path.abspath(sys.argv[0]) + '"')
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
@@ -184,7 +180,11 @@ class SupervisorService(win32serviceutil.ServiceFramework):
 
     @classmethod
     def set_config(cls, name, value):
+        """Settings used by the service"""
+        # temporary configuration that is used only during installation.
         setattr(cls, "_%s_" % name, value)
+        # saves the new configuration to the system registry.
+        config_reg[name] = value
 
     # noinspection PyBroadException
     def SvcStop(self):
@@ -274,6 +274,14 @@ def get_config_args(argv):
     return options, args, argv
 
 
+def check_existing_cmd(argv, *args):
+    """Checks for cmd in argv"""
+    for cmd in args:
+        if cmd in argv:
+            return True
+    return False
+
+
 def runner(argv):
     if len(argv) == 1:
         # service must be starting...
@@ -318,15 +326,14 @@ def runner(argv):
         filepath = os.path.dirname(argv[0])
         filename = os.path.basename(argv[0])
         name, extension = os.path.splitext(filename)
-        if not re.match(r"\.py[cod]*$", extension, re.I):
+        if not re.match(r"\.py[cod]*$", extension, re.I) and \
+                check_existing_cmd(srv_argv, 'install', 'update'):
             executable = os.path.join(filepath, name + '.exe')
             SupervisorService.set_config("exe_name", executable)
             SupervisorService.set_config("exe_args", '')
-            config_reg[config_reg.service_executable_key] = executable
-            config_reg[config_reg.service_executable_args_key] = ''
-        else:
-            config_reg.delete(config_reg.service_executable_key)
-            config_reg.delete(config_reg.service_executable_args_key)
+        elif check_existing_cmd(srv_argv, 'remove'):
+            config_reg.delete('exe_name')
+            config_reg.delete('exe_args')
         win32serviceutil.HandleCommandLine(SupervisorService, argv=srv_argv)
 
 
