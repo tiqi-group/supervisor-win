@@ -2,6 +2,19 @@ language: python
 
 matrix:
     include:
+        - name: "Python 2.7.18 on Windows"
+          os: windows           # Windows 10.0.17134 N/A Build 17134
+          language: shell       # 'language: python' is an error on Travis CI Windows
+          # python: 2.7.18         # 'python:' is ignored on Travis CI Windows
+          before_install:
+            # https://travis-ci.community/t/windows-python-pip-module-not-found/5480/4
+            - choco install python  --version 2.7.18
+            - python -m pip install --upgrade pip
+            - python -m pip install pywin32
+          env:
+            - PATH=/c/Python27:/c/Python27/Scripts:$PATH
+            - TOXENV=py27
+
         - name: "Python 3.7.5 on Windows"
           os: windows           # Windows 10.0.17134 N/A Build 17134
           language: shell       # 'language: python' is an error on Travis CI Windows
