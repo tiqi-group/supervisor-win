@@ -1,6 +1,9 @@
 Supervisor for Windows
 =========================
 
+.. image:: https://travis-ci.org/alexsilva/supervisor.svg?branch=windows
+    :target: https://travis-ci.org/alexsilva/supervisor
+
 Supervisor is a client/server system that allows its users to
 control a number of processes on Windows operating system.
 
