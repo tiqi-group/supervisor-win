@@ -272,7 +272,7 @@ def get_config_args(argv):
         {'args': ('-c', '--config'),
          'kwargs': {'type': argparse.FileType('r'),
                     'help': 'full filepath to supervisor.conf',
-                    'required': 'install' in argv}},
+                    'required': check_existing_cmd(argv, 'install', 'update')}},
         {'args': ('-sn', '--service-name'),
          'kwargs': {'required': False, 'type': str}},
         {'args': ('-sdn', '--service-display-name'),
