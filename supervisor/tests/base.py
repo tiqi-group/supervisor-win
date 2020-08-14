@@ -93,7 +93,7 @@ class DummyOptions:
         self.cleaned_up = False
         self.pidfile_written = False
         self.directory = None
-        self.waitpid_return = [(None, None)]
+        self.waitpid_return = (None, None)
         self.kills = {}
         self._signal = None
         self.parent_pipes_closed = None
