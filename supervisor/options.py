@@ -1197,15 +1197,12 @@ class ServerOptions(Options):
         del self.pidhistory[pid]
 
     def waitpid(self):
-        stopped = []
         for pid in self.pidhistory:
             subprocess = self.pidhistory[pid]
             process = subprocess.process
             if process.poll() is not None:
-                stopped.append((pid, (process.poll(), process.message)))
-        if not stopped:
-            stopped.append((None, None))
-        return stopped
+                return (pid, (process.poll(), process.message))
+        return None, None
 
     @raise_not_implemented
     def set_rlimits_or_exit(self):
