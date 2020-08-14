@@ -8,7 +8,7 @@ matrix:
           # python: 2.7.18         # 'python:' is ignored on Travis CI Windows
           before_install:
             # https://travis-ci.community/t/windows-python-pip-module-not-found/5480/4
-            - choco install python  --version 2.7.18
+            - choco install python2
             - python -m pip install --upgrade pip
             - python -m pip install pywin32
           env:
