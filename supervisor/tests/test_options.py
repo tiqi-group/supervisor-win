@@ -347,7 +347,7 @@ class ClientOptionsTests(unittest.TestCase):
         # should not raise configparser.DuplicateSectionError on py3
 
     def test_options_with_environment_expansions(self):
-        s = lstrip("""[supervisorctl]
+        s = lstrip(r"""[supervisorctl]
         serverurl=http://localhost:%(ENV_SERVER_PORT)s
         username=%(ENV_CLIENT_USER)s
         password=%(ENV_CLIENT_PASS)s
