@@ -2,7 +2,7 @@ language: python
 
 matrix:
     include:
-        - name: "Python 2.7.18 on Windows"
+        - name: "Python 2.7 on Windows"
           os: windows           # Windows 10.0.17134 N/A Build 17134
           language: shell       # 'language: python' is an error on Travis CI Windows
           # python: 2.7.18         # 'python:' is ignored on Travis CI Windows
