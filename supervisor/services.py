@@ -256,6 +256,14 @@ def parse_args_config(options, argv):
     return args
 
 
+def check_existing_cmd(argv, *args):
+    """Checks for cmd in argv"""
+    for cmd in args:
+        if cmd in argv:
+            return True
+    return False
+
+
 def get_config_args(argv):
     argv = list(argv)
     options = [
@@ -272,14 +280,6 @@ def get_config_args(argv):
     ]
     args = parse_args_config(options, argv)
     return options, args, argv
-
-
-def check_existing_cmd(argv, *args):
-    """Checks for cmd in argv"""
-    for cmd in args:
-        if cmd in argv:
-            return True
-    return False
 
 
 def runner(argv):
