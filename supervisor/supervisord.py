@@ -392,9 +392,9 @@ def main(args=None, test=False,
     while 1:
         options = ServerOptions()
         # output config
-        if stdout != options.stdout:
+        if stdout is not None:
             options.stdout = stdout
-        if stderr != options.stderr:
+        if stderr is not None:
             options.stderr = stderr
         options.realize(args, doc=__doc__)
         options.first = first
