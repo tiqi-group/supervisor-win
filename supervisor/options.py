@@ -1324,9 +1324,9 @@ class ServerOptions(Options):
         try:
             return os.write(fd if type(fd) is int else fd.fileno(), as_bytes(data))
         except OSError:
-            if fd == 1 and not sys.stdout.isatty():
+            if fd == 1 and self.stdout is None or not self.stdout.isatty():
                 self.logger.info(data.rstrip())
-            elif fd == 2 and not sys.stderr.isatty():
+            elif fd == 2 and self.stderr is None or self.stderr.isatty():
                 self.logger.error(data.rstrip())
             return 0
 
