@@ -906,6 +906,8 @@ class ServerOptions(Options):
                 expand(environment_str, expansions, 'environment'))
 
             directory = get(section, 'directory', None)
+            if directory is not None:
+                directory = directory.strip("\"'")
 
             logfiles = {}
 
