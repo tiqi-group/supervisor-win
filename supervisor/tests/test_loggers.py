@@ -300,6 +300,7 @@ class RotatingFileHandlerTests(FileHandlerTests):
         # handler.close()
         # self.assertTrue(os.path.exists(self.filename))
         # self.assertFalse(os.path.exists(self.filename + '.1'))
+        handler.close()
 
     def test_removeAndRename_destination_does_not_exist(self):
         inst = self._makeOne(self.filename)
