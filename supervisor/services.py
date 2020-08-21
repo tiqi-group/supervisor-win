@@ -225,6 +225,7 @@ class SupervisorService(win32serviceutil.ServiceFramework):
             self.logger.info("supervisor starting...")
             supervisord.main(("-c", self.supervisor_conf),
                              stdout=stdout, stderr=stderr)
+            self.logger.info("supervisor shutdown")
         except:
             self.logger.exception("supervisor starting failed")
         finally:
