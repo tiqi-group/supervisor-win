@@ -1411,10 +1411,16 @@ class DefaultControllerPlugin(ControllerPluginBase):
 def main(args=None,
          options=None,
          stdin=None,
-         stdout=None):
+         stdout=None,
+         stderr=None):
 
     if options is None:
         options = ClientOptions()
+        # output config
+        if stdout is not None:
+            options.stdout = stdout
+        if stderr is not None:
+            options.stderr = stderr
 
     options.realize(args, doc=__doc__)
     c = Controller(options,

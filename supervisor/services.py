@@ -191,17 +191,19 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         # Supervisor process stop event
         stdout = StreamHandler(self.logger.info)
+        stderr = StreamHandler(self.logger.error)
         try:
             self.logger.info("supervisorctl shutdown")
             from supervisor import supervisorctl
             supervisorctl.main(("-c", self.supervisor_conf, "shutdown"),
-                               stdout=stdout)
+                               stdout=stdout, stderr=stderr)
         except SystemExit:
             pass  # normal exit
         except:
             self.logger.exception("supervisorctl shutdown execution failed")
         finally:
             logging.shutdown()
+            stderr.close()
             stdout.close()
             win32event.SetEvent(self.hWaitStop)
 
