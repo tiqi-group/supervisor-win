@@ -994,6 +994,9 @@ class DefaultControllerPlugin(ControllerPluginBase):
             really = 1
 
         if really:
+            # checks whether the supervisor (client) can respond to commands.
+            if not self.ctl.upcheck():
+                return
             supervisor = self.ctl.get_supervisor()
             try:
                 supervisor.shutdown()
