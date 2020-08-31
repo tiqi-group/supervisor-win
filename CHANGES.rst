@@ -1,3 +1,11 @@
+4.5.0
+-----------------------------
+- Merge supervisor unix changes from 4.2.2.dev0 (master).
+- Improvements in the installation of the windows service.
+- Corrections in writing to the windows service log.
+- Bug fix when the 'directory' option of a process has quotes.
+- Adding xmlrpc_timeout configuration to supervisorctl.
+
 4.4.0
 -----------------------------
 - Merge supervisor unix changes from 4.2.0.dev0 (master)
