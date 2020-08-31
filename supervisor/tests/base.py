@@ -404,8 +404,9 @@ class DummySocket:
 
 
 class DummySocketConfig:
-    def __init__(self, fd):
+    def __init__(self, fd, backlog=128):
         self.fd = fd
+        self.backlog = backlog
         self.url = 'unix:///sock'
 
     def addr(self):
@@ -418,7 +419,7 @@ class DummySocketConfig:
         return not self.__eq__(other)
 
     def get_backlog(self):
-        return 128
+        return self.backlog
 
     def create_and_bind(self):
         return DummySocket(self.fd)
