@@ -7,8 +7,8 @@ import sys
 
 import subprocess
 import threading
-import queue
 
+from supervisor.compat import queue
 from supervisor.compat import as_string
 from supervisor.compat import StringIO
 

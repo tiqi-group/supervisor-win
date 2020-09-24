@@ -162,3 +162,8 @@ try: # pragma: no cover
     from html.parser import HTMLParser
 except ImportError: # pragma: no cover
     from HTMLParser import HTMLParser
+
+try: # pragma: no cover
+    import queue
+except ImportError: # pragma: no cover
+    import Queue as queue
