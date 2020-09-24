@@ -300,11 +300,11 @@ class POutputDispatcher(PLogDispatcher):
         if data:
             self.output_buffer += as_bytes(data, ignore=True)
             self.record_output()
-            if not data:
-                # if we get no data back from the pipe, it means that the
-                # child process has ended.  See
-                # mail.python.org/pipermail/python-dev/2004-August/046850.html
-                self.close()
+        elif data is not None:
+            # if we get no data back from the pipe, it means that the
+            # child process has ended.  See
+            # mail.python.org/pipermail/python-dev/2004-August/046850.html
+            self.close()
 
 
 class PStreamOutputDispatcher(POutputDispatcher):
