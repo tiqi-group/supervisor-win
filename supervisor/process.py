@@ -291,7 +291,10 @@ class Subprocess(object):
     def close_all_dispatchers(self):
         """Ends the execution of the data reading threads"""
         for fd in self.dispatchers:
-            self.dispatchers[fd].close()
+            dispatcher = self.dispatchers[fd]
+            if dispatcher.readable():  # final read output
+                dispatcher.handle_read_event()
+            dispatcher.close()
 
     def spawn(self):
         """Start the subprocess.  It must not be running already.

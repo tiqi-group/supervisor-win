@@ -297,7 +297,7 @@ class POutputDispatcher(PLogDispatcher):
 
     def handle_read_event(self):
         data = self.process.config.options.readfd(self.fd)
-        if data is not None:  # empty queue
+        if data:
             self.output_buffer += as_bytes(data, ignore=True)
             self.record_output()
             if not data:
@@ -387,7 +387,7 @@ class PEventListenerDispatcher(PLogDispatcher):
                 if self.process.config.options.strip_ansi:
                     data = stripEscapes(data)
                 self.childlog.info(data)
-        elif data is not None and not data:
+        elif data is not None:
             # if we get no data back from the pipe, it means that the
             # child process has ended.  See
             # mail.python.org/pipermail/python-dev/2004-August/046850.html

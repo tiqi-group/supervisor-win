@@ -1318,7 +1318,7 @@ class ServerOptions(Options):
         the work of the supervisor. A buffer of data is being read in a thread and when the total
         data is reached is given in return for one of the Dispatcher objects responsible.
         """
-        return stream.readline()
+        return stream.read()
 
     def write(self, fd, data):
         try:

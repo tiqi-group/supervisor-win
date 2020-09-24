@@ -7,8 +7,10 @@ import sys
 
 import subprocess
 import threading
+import queue
 
 from supervisor.compat import as_string
+from supervisor.compat import StringIO
 
 __author__ = 'alex'
 
@@ -60,15 +62,15 @@ class StreamAsync(threading.Thread):
     Class of asynchronous reading of stdout data, stderr of a process
     """
 
+    read_bufsize = 1024 * 5  # 5Kb
+    fifo_size = 100
+
     def __init__(self, stream, *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
         self.setDaemon(True)
         self.stream = stream
-        self.queue = set()
+        self.queue = queue.Queue(self.fifo_size)
         self._event = threading.Event()
-        self.mutex = threading.Lock()
-        self.res_put = threading.Condition(self.mutex)
-        self.res_get = threading.Condition(self.mutex)
 
     def __getattr__(self, item):
         return getattr(self.stream, item)
@@ -76,32 +78,35 @@ class StreamAsync(threading.Thread):
     def run(self):
         while not self._event.is_set():
             try:
-                data = self.stream.readline()
+                output = self.stream.readline()
+                if not output:
+                    break
             except (IOError, ValueError):
                 # occurs when the supervisor is
                 # restarted with the reload command
                 break
-            if not data:
-                break
-            self.res_put.acquire()
-            try:
-                self.queue.add(data)
-                self.res_put.wait()
-            finally:
-                self.res_put.release()
+            else:
+                self.queue.put(output, block=not self._event.is_set())
 
     def close(self):
         """Stops thread execution"""
         self._event.set()
-        self.readline()
 
-    def readline(self):
-        """read one line from queue"""
-        self.res_get.acquire()
+    def read(self, bufsize=None):
+        """Reads a data buffer"""
+        buffer = StringIO()
+        bufsize = bufsize or self.read_bufsize
         try:
-            return self.queue.pop()
-        except KeyError:
-            return None
-        finally:
-            self.res_put.notify()
-            self.res_get.release()
+            while True:
+                # read until empty
+                buffer.write(self.queue.get_nowait())
+                if buffer.tell() > bufsize:
+                    break
+        except queue.Empty:
+            pass
+        if buffer.tell() > 0:
+            value = buffer.getvalue()
+            del buffer
+        else:
+            value = None
+        return value
