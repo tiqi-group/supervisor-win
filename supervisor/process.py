@@ -396,7 +396,6 @@ class Subprocess(object):
         kwargs.update(dict(
             # Prevents the supervisor from inheriting the signal when expected by the process.
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-            universal_newlines=True,
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE
         ))

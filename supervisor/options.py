@@ -1312,13 +1312,25 @@ class ServerOptions(Options):
             if hasattr(handler, 'reopen'):
                 handler.reopen()
 
-    def readfd(self, stream):
+    def read_stream(self, stream):
         """
         The work of this method is to read the data stream of a process, but without blocking
         the work of the supervisor. A buffer of data is being read in a thread and when the total
         data is reached is given in return for one of the Dispatcher objects responsible.
         """
         return stream.read()
+
+    def write_stream(self, stream, buffer):
+        return stream.write(buffer)
+
+    def readfd(self, fd):
+        try:
+            data = os.read(fd, 2 << 16) # 128K
+        except OSError as why:
+            if why.args[0] not in (errno.EWOULDBLOCK, errno.EBADF, errno.EINTR):
+                raise
+            data = b''
+        return data
 
     def write(self, fd, data):
         try:
@@ -1347,17 +1359,11 @@ class ServerOptions(Options):
         except KeyError:
             raise IOError('pid (%s)' % pid)
         pipes = {
-            'stdin': process.stdin,
-            'stdout': helpers.OutputStream(
-                process.stdout,
-                text_mode=process.universal_newlines
-            )
+            'stdin': helpers.InputStream(process.stdin),
+            'stdout': helpers.OutputStream(process.stdout)
         }
         if stderr:
-            pipes['stderr'] = helpers.OutputStream(
-                process.stderr,
-                text_mode=process.universal_newlines
-            )
+            pipes['stderr'] = helpers.OutputStream(process.stderr)
         else:
             pipes['stderr'] = None
         return pipes
@@ -1687,25 +1693,18 @@ class ProcessConfig(Config):
         from supervisor import events
         from supervisor.dispatchers import (
             PStreamOutputDispatcher,
-            POutputDispatcher,
-            PInputDispatcher
+            PStreamInputDispatcher
         )
         if stdout_fd is not None:
-            if isinstance(stdout_fd, helpers.StreamAsync):
-                dispatcher = PStreamOutputDispatcher
-            else:
-                dispatcher = POutputDispatcher
+            dispatcher = PStreamOutputDispatcher
             etype = events.ProcessCommunicationStdoutEvent
             dispatchers[stdout_fd] = dispatcher(proc, etype, stdout_fd)
         if stderr_fd is not None:
             etype = events.ProcessCommunicationStderrEvent
-            if isinstance(stdout_fd, helpers.StreamAsync):
-                dispatcher = PStreamOutputDispatcher
-            else:
-                dispatcher = POutputDispatcher
+            dispatcher = PStreamOutputDispatcher
             dispatchers[stderr_fd] = dispatcher(proc, etype, stderr_fd)
         if stdin_fd is not None:
-            dispatchers[stdin_fd] = PInputDispatcher(proc, 'stdin', stdin_fd)
+            dispatchers[stdin_fd] = PStreamInputDispatcher(proc, 'stdin', stdin_fd)
         return dispatchers, pipes
 
 
@@ -1721,25 +1720,16 @@ class EventListenerConfig(ProcessConfig):
         dispatchers = {}
         from supervisor import events
         from supervisor.dispatchers import (
-            PStreamEventListenerDispatcher,
-            PStreamOutputDispatcher,
             PEventListenerDispatcher,
             POutputDispatcher,
             PInputDispatcher
         )
-        from supervisor import helpers
         if stdout_fd is not None:
-            if isinstance(stdout_fd, helpers.StreamAsync):
-                dispatcher = PStreamEventListenerDispatcher
-            else:
-                dispatcher = PEventListenerDispatcher
+            dispatcher = PEventListenerDispatcher
             dispatchers[stdout_fd] = dispatcher(proc, 'stdout', stdout_fd)
         if stderr_fd is not None:
             etype = events.ProcessCommunicationStderrEvent
-            if isinstance(stdout_fd, helpers.StreamAsync):
-                dispatcher = PStreamOutputDispatcher
-            else:
-                dispatcher = POutputDispatcher
+            dispatcher = POutputDispatcher
             dispatchers[stderr_fd] = dispatcher(proc, etype, stderr_fd)
         if stdin_fd is not None:
             dispatchers[stdin_fd] = PInputDispatcher(proc, 'stdin', stdin_fd)

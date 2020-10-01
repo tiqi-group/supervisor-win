@@ -1,16 +1,17 @@
-import warnings
 import errno
-from supervisor.medusa.asyncore_25 import compact_traceback
 
+import warnings
+
+from supervisor import loggers
 from supervisor.compat import as_string, as_bytes
-from supervisor.events import notify
 from supervisor.events import EventRejectedEvent
 from supervisor.events import ProcessLogStderrEvent
 from supervisor.events import ProcessLogStdoutEvent
+from supervisor.events import notify
+from supervisor.medusa.asyncore_25 import compact_traceback
 from supervisor.states import EventListenerStates
 from supervisor.states import getEventListenerStateDescription
-from supervisor.states import getEventListenerStateDescription
-from supervisor import loggers
+
 
 def find_prefix_at_end(haystack, needle):
     l = len(needle) - 1
@@ -295,8 +296,11 @@ class POutputDispatcher(PLogDispatcher):
             return False
         return True
 
+    def read_fd_buffer(self):
+        return self.process.config.options.readfd(self.fd)
+
     def handle_read_event(self):
-        data = self.process.config.options.readfd(self.fd)
+        data = self.read_fd_buffer()
         if data:
             self.output_buffer += as_bytes(data, errors='ignore')
             self.record_output()
@@ -305,25 +309,6 @@ class POutputDispatcher(PLogDispatcher):
             # child process has ended.  See
             # mail.python.org/pipermail/python-dev/2004-August/046850.html
             self.close()
-
-
-class PStreamOutputDispatcher(POutputDispatcher):
-    """
-    Dispatcher that works with asynchronous streams
-    """
-
-    def __init__(self, process, event_type, stream):
-        super(PStreamOutputDispatcher, self).__init__(process, event_type, stream)
-        # starts the corresponding thread
-        self.fd.start()
-
-    def close(self):
-        # fd in this case is a threading daemon
-        try:
-            return super(PStreamOutputDispatcher, self).close()
-        finally:
-            if self.fd.is_alive():
-                self.fd.close()
 
 
 class PEventListenerDispatcher(PLogDispatcher):
@@ -457,7 +442,7 @@ class PEventListenerDispatcher(PLogDispatcher):
                         result_line = 'Undecodable: %r' % result_line
                     process.config.options.logger.warn(
                         '%s: bad result line: \'%s\'' % (procname, result_line)
-                        )
+                    )
                     self._change_listener_state(EventListenerStates.UNKNOWN)
                     self.state_buffer = b''
                     notify(EventRejectedEvent(process, process.event))
@@ -509,7 +494,7 @@ class PEventListenerDispatcher(PLogDispatcher):
             procname,
             getEventListenerStateDescription(old_state),
             getEventListenerStateDescription(new_state)
-            )
+        )
         process.config.options.logger.debug(msg)
 
         process.listener_state = new_state
@@ -535,11 +520,13 @@ class PInputDispatcher(PDispatcher):
     def readable(self):
         return False
 
+    def write_fd_buffer(self):
+        return self.process.config.options.write(self.fd, self.input_buffer)
+
     def flush(self):
         # other code depends on this raising EPIPE if the pipe is closed
         try:
-            sent = self.process.config.options.write(self.fd,
-                                                     self.input_buffer)
+            sent = self.write_fd_buffer()
             self.input_buffer = self.input_buffer[sent:]
         except OSError as why:
             if why.args[0] == errno.EPIPE:
@@ -560,24 +547,28 @@ class PInputDispatcher(PDispatcher):
                     raise
 
 
+class PStreamOutputDispatcher(POutputDispatcher):
+    """
+    Dispatcher that works with OutputStream
+    """
 
-class PStreamEventListenerDispatcher(PEventListenerDispatcher):
+    def read_fd_buffer(self):
+        return self.process.config.options.read_stream(self.fd)
 
-    def __init__(self, process, channel, fd):
-        super(PStreamEventListenerDispatcher, self).__init__(process, channel, fd)
-        self.fd.start()
 
-    def close(self):
-        try:
-            super(PStreamEventListenerDispatcher, self).close()
-        finally:
-            if self.fd.is_alive():
-                self.fd.close()
+class PStreamInputDispatcher(PInputDispatcher):
+    """
+    Dispatcher that works with InputStream
+    """
+
+    def write_fd_buffer(self):
+        return self.process.config.options.write_stream(self.fd, self.input_buffer)
 
 
 ANSI_ESCAPE_BEGIN = b'\x1b['
 ANSI_TERMINATORS = (b'H', b'f', b'A', b'B', b'C', b'D', b'R', b's', b'u', b'J',
                     b'K', b'h', b'l', b'p', b'm')
+
 
 def stripEscapes(s):
     """
