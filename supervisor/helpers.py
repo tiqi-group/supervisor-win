@@ -9,13 +9,10 @@ import pywintypes
 import random
 import subprocess
 import sys
-import threading
-from win32file import ReadFile
+from win32file import ReadFile, WriteFile
 from win32pipe import PeekNamedPipe
 
-from supervisor.compat import StringIO
 from supervisor.compat import as_string
-from supervisor.compat import queue
 
 __author__ = 'alex'
 
@@ -75,10 +72,6 @@ class OutputStream(object):
     def __str__(self):
         return str(self.stream)
 
-    @staticmethod
-    def _translate_newlines(data):
-        return data.replace("\r\n", "\n").replace("\r", "\n")
-
     def read(self, bufsize=None):
         """Reads a data buffer the size of 'bufsize'"""
         if bufsize is None:
@@ -97,65 +90,36 @@ class OutputStream(object):
             if why.winerror in (109, errno.ESHUTDOWN):
                 return ''
             raise
-
-        if self.text_mode:
-            # Conversion of the line and decoding to unicode.
-            output = self._translate_newlines(output)
-            # it can sometimes be empty but does not mean that the channel has been closed.
-            output = output or None
-        return output
+        return output or None
 
 
-class StreamAsync(threading.Thread):
-    """
-    Class of asynchronous reading of stdout data, stderr of a process
-    """
+class InputStream(object):
+    """Input stream nonblocking"""
+    encoding = sys.getfilesystemencoding()
 
-    read_bufsize = 1024 * 5  # 5Kb
-    fifo_size = 100
-
-    def __init__(self, stream, *args, **kwargs):
-        threading.Thread.__init__(self, *args, **kwargs)
-        self.setDaemon(True)
+    def __init__(self, stream):
         self.stream = stream
-        self.queue = queue.Queue(self.fifo_size)
-        self._event = threading.Event()
-
-    def __getattr__(self, item):
-        return getattr(self.stream, item)
-
-    def run(self):
-        while not self._event.is_set():
-            try:
-                output = self.stream.readline()
-                if not output:
-                    break
-            except (IOError, ValueError):
-                # occurs when the supervisor is
-                # restarted with the reload command
-                break
-            else:
-                self.queue.put(output, block=not self._event.is_set())
 
     def close(self):
-        """Stops thread execution"""
-        self._event.set()
-
-    def read(self, bufsize=None):
-        """Reads a data buffer"""
-        buffer = StringIO()
-        bufsize = bufsize or self.read_bufsize
         try:
-            while True:
-                # read until empty
-                buffer.write(self.queue.get_nowait())
-                if buffer.tell() > bufsize:
-                    break
-        except queue.Empty:
+            self.stream.close()
+        except(IOError, ValueError):
             pass
-        if buffer.tell() > 0:
-            value = buffer.getvalue()
-            del buffer
-        else:
-            value = None
-        return value
+        return 0
+
+    def write(self, input_buffer):
+        """Write *data* to the subprocess's standard input."""
+        if not self.stream:
+            return None
+        try:
+            encoding = self.stream.encoding or self.encoding
+            handle = msvcrt.get_osfhandle(self.stream.fileno())
+            result, written = WriteFile(handle, bytearray(input_buffer, encoding))
+        except (IOError, ValueError):
+            return self.close()
+        except pywintypes.error:
+            why = sys.exc_info()[1]
+            if why.winerror in (109, errno.ESHUTDOWN):
+                return self.close()
+            raise
+        return written
