@@ -112,9 +112,8 @@ class InputStream(object):
         if not self.stream:
             return None
         try:
-            encoding = self.stream.encoding or self.encoding
             handle = msvcrt.get_osfhandle(self.stream.fileno())
-            result, written = WriteFile(handle, bytearray(input_buffer, encoding))
+            result, written = WriteFile(handle, bytearray(input_buffer))
         except (IOError, ValueError):
             return self.close()
         except pywintypes.error:
