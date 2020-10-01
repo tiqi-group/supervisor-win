@@ -360,8 +360,11 @@ class PEventListenerDispatcher(PLogDispatcher):
             return False
         return True
 
+    def read_fd_buffer(self):
+        return self.process.config.options.readfd(self.fd)
+
     def handle_read_event(self):
-        data = self.process.config.options.readfd(self.fd)
+        data = self.read_fd_buffer()
         if data:
             self.state_buffer += as_bytes(data)
             procname = self.process.config.name
@@ -545,6 +548,15 @@ class PInputDispatcher(PDispatcher):
                     self.close()
                 else:
                     raise
+
+
+class PStreamEventListenerDispatcher(PEventListenerDispatcher):
+    """
+    Dispatcher that works with OutputStream
+    """
+
+    def read_fd_buffer(self):
+        return self.process.config.options.read_stream(self.fd)
 
 
 class PStreamOutputDispatcher(POutputDispatcher):
