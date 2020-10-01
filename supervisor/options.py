@@ -1348,15 +1348,15 @@ class ServerOptions(Options):
             raise IOError('pid (%s)' % pid)
         pipes = {
             'stdin': process.stdin,
-            'stdout': helpers.StreamAsync(
+            'stdout': helpers.OutputStream(
                 process.stdout,
-                name='stdout-pid-{0:d}'.format(pid)
+                text_mode=process.universal_newlines
             )
         }
         if stderr:
-            pipes['stderr'] = helpers.StreamAsync(
+            pipes['stderr'] = helpers.OutputStream(
                 process.stderr,
-                name='stderr-pid-{0:d}'.format(pid)
+                text_mode=process.universal_newlines
             )
         else:
             pipes['stderr'] = None

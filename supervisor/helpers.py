@@ -2,15 +2,20 @@
 Extension of existing classes by changing or adding behaviors.
 """
 
+import errno
+import msvcrt
+
+import pywintypes
 import random
-import sys
-
 import subprocess
+import sys
 import threading
+from win32file import ReadFile
+from win32pipe import PeekNamedPipe
 
-from supervisor.compat import queue
-from supervisor.compat import as_string
 from supervisor.compat import StringIO
+from supervisor.compat import as_string
+from supervisor.compat import queue
 
 __author__ = 'alex'
 
@@ -52,9 +57,53 @@ class Popen(subprocess.Popen):
     def taskkill(self):
         """Kill process group"""
         output = subprocess.check_output(['taskkill',
-                                          '/PID',  str(self.pid),
+                                          '/PID', str(self.pid),
                                           '/F', '/T'])
-        return as_string(output, encoding=sys.getfilesystemencoding(), ignore=True).strip()
+        return as_string(output, encoding=sys.getfilesystemencoding(), errors='ignore').strip()
+
+
+class OutputStream(object):
+    """
+    Class of asynchronous reading of stdout, stderr data of a process
+    """
+    read_bufsize = 1024 * 5  # 5Kb
+
+    def __init__(self, stream, text_mode=False):
+        self.text_mode = text_mode
+        self.stream = stream
+
+    def __str__(self):
+        return str(self.stream)
+
+    @staticmethod
+    def _translate_newlines(data):
+        return data.replace("\r\n", "\n").replace("\r", "\n")
+
+    def read(self, bufsize=None):
+        """Reads a data buffer the size of 'bufsize'"""
+        if bufsize is None:
+            bufsize = self.read_bufsize
+        try:
+            handle = msvcrt.get_osfhandle(self.stream.fileno())
+            output, n_avail, n_message = PeekNamedPipe(handle, 0)
+            if bufsize < n_avail:
+                n_avail = bufsize
+            if n_avail > 0:
+                result, output = ReadFile(handle, n_avail, None)
+        except (IOError, ValueError):
+            return ''
+        except pywintypes.error:
+            why = sys.exc_info()[1]
+            if why.winerror in (109, errno.ESHUTDOWN):
+                return ''
+            raise
+
+        if self.text_mode:
+            # Conversion of the line and decoding to unicode.
+            output = self._translate_newlines(output)
+            # it can sometimes be empty but does not mean that the channel has been closed.
+            output = output or None
+        return output
 
 
 class StreamAsync(threading.Thread):
