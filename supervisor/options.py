@@ -1720,19 +1720,19 @@ class EventListenerConfig(ProcessConfig):
         dispatchers = {}
         from supervisor import events
         from supervisor.dispatchers import (
-            PEventListenerDispatcher,
-            POutputDispatcher,
-            PInputDispatcher
+            PStreamEventListenerDispatcher,
+            PStreamOutputDispatcher,
+            PStreamInputDispatcher
         )
         if stdout_fd is not None:
-            dispatcher = PEventListenerDispatcher
+            dispatcher = PStreamEventListenerDispatcher
             dispatchers[stdout_fd] = dispatcher(proc, 'stdout', stdout_fd)
         if stderr_fd is not None:
             etype = events.ProcessCommunicationStderrEvent
-            dispatcher = POutputDispatcher
+            dispatcher = PStreamOutputDispatcher
             dispatchers[stderr_fd] = dispatcher(proc, etype, stderr_fd)
         if stdin_fd is not None:
-            dispatchers[stdin_fd] = PInputDispatcher(proc, 'stdin', stdin_fd)
+            dispatchers[stdin_fd] = PStreamInputDispatcher(proc, 'stdin', stdin_fd)
         return dispatchers, pipes
 
 
