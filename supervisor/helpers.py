@@ -102,7 +102,6 @@ class OutputStream(object):
 
 class InputStream(object):
     """Input stream nonblocking"""
-    encoding = sys.getfilesystemencoding()
 
     def __init__(self, stream):
         self.stream = stream
