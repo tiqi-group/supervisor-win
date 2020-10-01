@@ -8,13 +8,13 @@ class _Stream(object):
         self.value = value
         self.obj = obj
 
-    def encode(self, encoding='utf8', ignore=False):
+    def encode(self, encoding='utf8', errors=None):
         return self.value if isinstance(self.value, self.obj) else \
-            self.value.encode(encoding,  'ignore' if ignore else 'strict')
+            self.value.encode(encoding, errors)
 
-    def decode(self, encoding='utf8', ignore=False):
+    def decode(self, encoding='utf8', errors=None):
         return self.value if isinstance(self.value, self.obj) else \
-            self.value.decode(encoding, 'ignore' if ignore else 'strict')
+            self.value.decode(encoding, errors)
 
 
 PY2 = sys.version_info[0] == 2
@@ -27,11 +27,11 @@ if PY2:  # pragma: no cover
     unichr = unichr
     basestring = basestring
 
-    def as_bytes(s, encoding='utf-8', ignore=False):
-        return _Stream(s, str).encode(encoding=encoding, ignore=ignore)
+    def as_bytes(s, encoding='utf-8', errors='strict'):
+        return _Stream(s, str).encode(encoding=encoding, errors=errors)
 
-    def as_string(s, encoding='utf-8', ignore=False):
-        return _Stream(s, unicode).decode(encoding=encoding, ignore=ignore)
+    def as_string(s, encoding='utf-8', errors='strict'):
+        return _Stream(s, unicode).decode(encoding=encoding, errors=errors)
 
     def is_text_stream(stream):
         try:
@@ -57,11 +57,11 @@ else:  # pragma: no cover
         def __init__(self, string, encoding, errors):
             str.__init__(self, string)
 
-    def as_bytes(s, encoding='utf-8', ignore=False):
-        return _Stream(s, bytes).encode(encoding=encoding, ignore=ignore)
+    def as_bytes(s, encoding='utf-8', errors='strict'):
+        return _Stream(s, bytes).encode(encoding=encoding, errors=errors)
 
-    def as_string(s, encoding='utf-8', ignore=False):
-        return _Stream(s, str).decode(encoding=encoding, ignore=ignore)
+    def as_string(s, encoding='utf-8', errors='strict'):
+        return _Stream(s, str).decode(encoding=encoding, errors=errors)
 
     def is_text_stream(stream):
         import _io

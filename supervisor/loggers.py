@@ -101,11 +101,11 @@ class Handler(object):
             if hasattr(self.stream, 'encoding'):
                 self.stream.write(as_string(msg,
                                             encoding=self.encoding,
-                                            ignore=True))
+                                            errors='ignore'))
             else:
                 self.stream.write(as_bytes(msg,
                                            encoding=self.encoding,
-                                           ignore=True))
+                                           errors='ignore'))
             self.flush()
         except:
             self.handleError()
@@ -306,10 +306,10 @@ class LogRecord(object):
             part1 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now))
             asctime = '%s,%03d' % (part1, msecs)
             levelname = LOG_LEVELS_BY_NUM[self.level]
-            msg = as_string(self.msg, ignore=True)
+            msg = as_string(self.msg, errors='ignore')
             if self.kw:
                 msg = msg % self.kw
-            self.dictrepr = {'message': as_string(msg, ignore=True), 'levelname': levelname,
+            self.dictrepr = {'message': as_string(msg, errors='ignore'), 'levelname': levelname,
                              'asctime': asctime}
         return self.dictrepr
 

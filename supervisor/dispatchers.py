@@ -298,7 +298,7 @@ class POutputDispatcher(PLogDispatcher):
     def handle_read_event(self):
         data = self.process.config.options.readfd(self.fd)
         if data:
-            self.output_buffer += as_bytes(data, ignore=True)
+            self.output_buffer += as_bytes(data, errors='ignore')
             self.record_output()
         elif data is not None:
             # if we get no data back from the pipe, it means that the
