@@ -12,7 +12,7 @@ import sys
 from win32file import ReadFile, WriteFile
 from win32pipe import PeekNamedPipe
 
-from supervisor.compat import as_string
+from supervisor.compat import as_string, as_bytes
 
 __author__ = 'alex'
 
@@ -64,6 +64,8 @@ class OutputStream(object):
     Class of asynchronous reading of stdout, stderr data of a process
     """
     read_bufsize = 1024 * 5  # 5Kb
+    CR, LF = as_bytes("\r"), as_bytes("\n")
+    CRLF = CR + LF
 
     def __init__(self, stream, text_mode=False):
         self.text_mode = text_mode
@@ -71,6 +73,10 @@ class OutputStream(object):
 
     def __str__(self):
         return str(self.stream)
+
+    @classmethod
+    def _translate_newlines(cls, data):
+        return data.replace(cls.CRLF, cls.LF).replace(cls.CR, cls.LF)
 
     def read(self, bufsize=None):
         """Reads a data buffer the size of 'bufsize'"""
@@ -90,6 +96,7 @@ class OutputStream(object):
             if why.winerror in (109, errno.ESHUTDOWN):
                 return ''
             raise
+        output = self._translate_newlines(output)
         return output or None
 
 
