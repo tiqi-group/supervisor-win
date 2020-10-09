@@ -1,9 +1,10 @@
 """
 Extension of existing classes by changing or adding behaviors.
 """
-
+import ctypes
 import errno
 import msvcrt
+import signal
 
 import pywintypes
 import random
@@ -48,6 +49,8 @@ class Popen(subprocess.Popen):
     def kill2(self, sig, as_group=False):
         if as_group:
             return self.taskkill()
+        elif sig in [signal.CTRL_BREAK_EVENT, signal.CTRL_C_EVENT]:
+            return ctypes.windll.kernel32.GenerateConsoleCtrlEvent(sig, self.pid)
         else:
             return self.send_signal(sig)
 
