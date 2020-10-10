@@ -50,7 +50,8 @@ class Popen(subprocess.Popen):
         if as_group:
             return self.taskkill()
         elif sig in [signal.CTRL_BREAK_EVENT, signal.CTRL_C_EVENT]:
-            return ctypes.windll.kernel32.GenerateConsoleCtrlEvent(sig, self.pid)
+            status = ctypes.windll.kernel32.GenerateConsoleCtrlEvent(sig, self.pid)
+            return "signal: stop status %d" % status
         else:
             return self.send_signal(sig)
 
