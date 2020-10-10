@@ -67,6 +67,7 @@ class OutputStream(object):
     """
     Class of asynchronous reading of stdout, stderr data of a process
     """
+    _os_file_handle = None
     read_bufsize = 1024 * 2  # 2Kb
     CR, LF = as_bytes("\r"), as_bytes("\n")
     CRLF = CR + LF
@@ -78,6 +79,12 @@ class OutputStream(object):
     def __str__(self):
         return str(self.stream)
 
+    @property
+    def os_file_handle(self):
+        if self._os_file_handle is None:
+            self._os_file_handle = msvcrt.get_osfhandle(self.stream.fileno())
+        return self._os_file_handle
+
     @classmethod
     def _translate_newlines(cls, data):
         return data.replace(cls.CRLF, cls.LF).replace(cls.CR, cls.LF)
@@ -87,12 +94,11 @@ class OutputStream(object):
         if bufsize is None:
             bufsize = self.read_bufsize
         try:
-            handle = msvcrt.get_osfhandle(self.stream.fileno())
-            output, n_avail, n_message = PeekNamedPipe(handle, bufsize)
+            output, n_avail, n_message = PeekNamedPipe(self.os_file_handle, bufsize)
             if bufsize < n_avail:
                 n_avail = bufsize
             if n_avail > 0:
-                result, output = ReadFile(handle, n_avail, None)
+                result, output = ReadFile(self.os_file_handle, n_avail, None)
         except (IOError, ValueError):
             return ''
         except pywintypes.error:
@@ -106,12 +112,19 @@ class OutputStream(object):
 
 class InputStream(object):
     """Input stream nonblocking"""
+    _os_file_handle = None
 
     def __init__(self, stream):
         self.stream = stream
 
     def __str__(self):
         return str(self.stream)
+
+    @property
+    def os_file_handle(self):
+        if self._os_file_handle is None:
+            self._os_file_handle = msvcrt.get_osfhandle(self.stream.fileno())
+        return self._os_file_handle
 
     def close(self):
         try:
@@ -125,8 +138,7 @@ class InputStream(object):
         if not self.stream:
             return None
         try:
-            handle = msvcrt.get_osfhandle(self.stream.fileno())
-            result, written = WriteFile(handle, bytearray(input_buffer))
+            result, written = WriteFile(self.os_file_handle, bytearray(input_buffer))
         except (IOError, ValueError):
             return self.close()
         except pywintypes.error:
