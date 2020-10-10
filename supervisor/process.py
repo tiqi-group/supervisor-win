@@ -398,7 +398,8 @@ class Subprocess(object):
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE,
-            bufsize=1024 * 2  # 2Kb
+            bufsize=1024 * 2,  # 2Kb
+            close_fds=False
         ))
         # stderr goes to stdout
         if redirect_stderr:
