@@ -10,6 +10,7 @@ import pywintypes
 import random
 import subprocess
 import sys
+import win32api
 from win32file import ReadFile, WriteFile
 from win32pipe import PeekNamedPipe
 
@@ -51,7 +52,10 @@ class Popen(subprocess.Popen):
             return self.taskkill()
         elif sig in [signal.CTRL_BREAK_EVENT, signal.CTRL_C_EVENT]:
             status = ctypes.windll.kernel32.GenerateConsoleCtrlEvent(sig, self.pid)
-            return "signal: stop status %d" % status
+            if status == 0:
+                status = win32api.FormatMessage(win32api.GetLastError())
+                status = as_string(status, errors='ignore').strip('\r\n')
+            return "signal: status (%s)" % status
         else:
             return self.send_signal(sig)
 
