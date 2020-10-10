@@ -110,6 +110,9 @@ class InputStream(object):
     def __init__(self, stream):
         self.stream = stream
 
+    def __str__(self):
+        return str(self.stream)
+
     def close(self):
         try:
             self.stream.close()
