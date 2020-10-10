@@ -294,7 +294,8 @@ def runner(argv):
         # any unhandled exceptions and print statements.
         print("supervisor service is starting...")
         print("(execute this script with '-h' or '--help' if that isn't what you want)")
-        win32console.AllocConsole()
+        if not sys.stdout.isatty():
+            win32console.AllocConsole()
         servicemanager.Initialize()
         servicemanager.PrepareToHostSingle(SupervisorService)
         # Now ask the service manager to fire things up for us...
