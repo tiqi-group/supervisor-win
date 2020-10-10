@@ -6,7 +6,9 @@ idiosyncratic and a bit slow for our purposes (we don't use threads).
 
 # This module must not depend on any non-stdlib modules to
 # avoid circular import problems
-
+import win32api
+import win32con
+import msvcrt
 import codecs
 import errno
 import os
@@ -216,13 +218,6 @@ class RotatingFileHandler(FileHandler):
 
     def _disable_inheritance_filehandler(self):
         """Disable file handlers inheritance by child processes"""
-        try:
-            import win32api
-            import win32con
-        except ImportError:
-            raise ImportWarning("log rotation requires the installation of the \"pywin32\" library.\n"
-                                "Download and install from https://github.com/mhammond/pywin32/releases")
-        import msvcrt
         win32api.SetHandleInformation(
             msvcrt.get_osfhandle(self.stream.fileno()),
             win32con.HANDLE_FLAG_INHERIT,
