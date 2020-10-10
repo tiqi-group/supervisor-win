@@ -295,6 +295,9 @@ def runner(argv):
         print("supervisor service is starting...")
         print("(execute this script with '-h' or '--help' if that isn't what you want)")
         if not sys.stdout.isatty():
+            # By default, the service does not start a console and this
+            # causes side effects in sending signals to the subprocess.
+            # Manually starts when an output terminal is not detected.
             win32console.AllocConsole()
         servicemanager.Initialize()
         servicemanager.PrepareToHostSingle(SupervisorService)
