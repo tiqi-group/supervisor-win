@@ -168,7 +168,7 @@ class FileHandler(Handler):
         """
         return codecs.open(filename, mode,
                            encoding=self.encoding,
-                           buffering=0)
+                           buffering=1024 * 2)
 
     def reopen(self):
         self.close()
