@@ -67,7 +67,7 @@ class OutputStream(object):
     """
     Class of asynchronous reading of stdout, stderr data of a process
     """
-    read_bufsize = 1024 * 5  # 5Kb
+    read_bufsize = 1024 * 2  # 2Kb
     CR, LF = as_bytes("\r"), as_bytes("\n")
     CRLF = CR + LF
 
@@ -88,7 +88,7 @@ class OutputStream(object):
             bufsize = self.read_bufsize
         try:
             handle = msvcrt.get_osfhandle(self.stream.fileno())
-            output, n_avail, n_message = PeekNamedPipe(handle, 0)
+            output, n_avail, n_message = PeekNamedPipe(handle, bufsize)
             if bufsize < n_avail:
                 n_avail = bufsize
             if n_avail > 0:
