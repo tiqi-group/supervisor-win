@@ -68,7 +68,7 @@ class OutputStream(object):
     Class of asynchronous reading of stdout, stderr data of a process
     """
     _os_file_handle = None
-    read_bufsize = 1024 * 2  # 2Kb
+    bufsize = 1024 * 2  # 2Kb
     CR, LF = as_bytes("\r"), as_bytes("\n")
     CRLF = CR + LF
 
@@ -92,7 +92,7 @@ class OutputStream(object):
     def read(self, bufsize=None):
         """Reads a data buffer the size of 'bufsize'"""
         if bufsize is None:
-            bufsize = self.read_bufsize
+            bufsize = self.bufsize
         try:
             output, n_avail, n_message = PeekNamedPipe(self.os_file_handle, bufsize)
             if bufsize < n_avail:
