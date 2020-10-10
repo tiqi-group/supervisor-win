@@ -397,7 +397,8 @@ class Subprocess(object):
             # Prevents the supervisor from inheriting the signal when expected by the process.
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
             stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE
+            stdin=subprocess.PIPE,
+            bufsize=1024 * 2  # 2Kb
         ))
         # stderr goes to stdout
         if redirect_stderr:
