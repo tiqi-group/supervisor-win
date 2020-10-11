@@ -47,20 +47,20 @@ class Popen(subprocess.Popen):
             msg = "exit status %s" % (self.returncode,)
         return msg
 
-    def send_os_signal(self, sig):
+    def send_os_signal(self, sig, proc_name):
         """Send signal by GenerateConsoleCtrlEvent"""
         status = ctypes.windll.kernel32.GenerateConsoleCtrlEvent(sig, self.pid)
         if status == 0:
             status = win32api.FormatMessage(win32api.GetLastError())
             status = as_string(status, errors='ignore')
             status = status.strip('\r\n')
-        return "signal: status (%s)" % status
+        return "signal: %s (status %s)" % (proc_name, status)
 
-    def kill2(self, sig, as_group=False):
+    def kill2(self, sig, as_group=False, proc_name=None):
         if as_group:
             return self.taskkill()
         elif sig in [signal.CTRL_BREAK_EVENT, signal.CTRL_C_EVENT]:
-            return self.send_os_signal(sig)
+            return self.send_os_signal(sig, proc_name)
         else:
             return self.send_signal(sig)
 

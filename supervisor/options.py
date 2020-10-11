@@ -1167,7 +1167,8 @@ class ServerOptions(Options):
             subprocess = self.pidhistory[pid]
         except KeyError:
             subprocess = self.pidhistory[abs(pid)]
-        output = subprocess.process.kill2(sig, pid < 0)
+        proc_name = as_string(subprocess.config.name)
+        output = subprocess.process.kill2(sig, pid < 0, proc_name=proc_name)
         if output:
             for loutput in output.split('\n'):
                 self.logger.info(loutput)
