@@ -20,11 +20,11 @@ Install as Windows service
 --------------------------
 To install supervisor as a windows service run the command
 
-`python -m supervisor.services install -c {system-path}\\supervisord.conf`
+``python -m supervisor.services install -c {system-path}\\supervisord.conf``
 
-Or install from the utility script ({PythonHome}\\Scripts directory must be in the system path)
+Or install from the utility script (``{PythonHome}\\Scripts`` directory must be in the system path)
 
-`supervisor_service.exe install -c {system-path}\\supervisord.conf`
+``supervisor_service.exe install -c {system-path}\\supervisord.conf``
 
 Supervisor for Unix-Like System
 -------------------------------
@@ -36,6 +36,8 @@ Documentation
 You can view the current Supervisor documentation online `in HTML format
 <http://supervisord.org/>`_ .  This is where you should go for detailed
 installation and configuration documentation.
+
+Windows specific documentation can be found `here <https://github.com/alexsilva/supervisor/blob/windows/docs/windows.rst>`_.
 
 Mailing list, Reporting Bugs, and Viewing the Source Repository
 ---------------------------------------------------------------
