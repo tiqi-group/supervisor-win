@@ -32,7 +32,7 @@ Supervisor for windows also supports sending Window events to graphical applicat
 These include events such as ``WM_CLOSE``.
 
 The ``stopsignal`` configuration option thus supports strings such as ``WM_CLOSE`` or negative integers that correspond to the negative of the window event.
-For example, ``WM_CLOSE`` event is documented as ``16`` (see `here <https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-close>`_), so ``stopsignal=-16`` is equivalent to ``stopsignal=WM_CLOSE. 
+For example, ``WM_CLOSE`` event is documented as ``16`` (see `here <https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-close>`_), so ``stopsignal=-16`` is equivalent to ``stopsignal=WM_CLOSE``. 
 This allows private window events (with values in the range documented `here <https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-user>`_) to also be sent should your application support them.
 Remember, ``stopsignal`` must be specified as the negative of the event id.
 
