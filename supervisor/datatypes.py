@@ -3,6 +3,7 @@ import re
 import shlex
 import signal
 import socket
+import win32con
 
 from supervisor.utils import raise_not_implemented
 from supervisor.compat import urlparse
@@ -344,17 +345,23 @@ def url(value):
 
 # all valid signal numbers
 sig_pattern = re.compile("CTRL|SIG[^_]")
+win_sig_pattern = re.compile("WM_(?!NULL)")
 SIGNUMS = [getattr(signal, k) for k in dir(signal) if sig_pattern.match(k)]
-
+SIGNUMS += [-getattr(win32con, k) for k in dir(win32con) if win_sig_pattern.match(k)]
 
 def signal_number(value):
     try:
         num = int(value)
     except (ValueError, TypeError):
         name = value.strip().upper()
-        if not sig_pattern.match(name):
-            name = 'SIG' + name
-        num = getattr(signal, name, None)
+        if win_sig_pattern.match(name):
+            num = getattr(win32con, name, None)
+            if num is not None:
+                num = -num
+        else:
+            if not sig_pattern.match(name):
+                name = 'SIG' + name
+            num = getattr(signal, name, None)
         if num is None:
             raise ValueError('value %r is not a valid signal name' % value)
     if num not in SIGNUMS:

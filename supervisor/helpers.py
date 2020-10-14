@@ -12,7 +12,9 @@ import subprocess
 import sys
 import win32api
 from win32file import ReadFile, WriteFile
+import win32gui
 from win32pipe import PeekNamedPipe
+import win32process
 
 from supervisor.compat import as_string, as_bytes
 
@@ -47,20 +49,52 @@ class Popen(subprocess.Popen):
             msg = "exit status %s" % (self.returncode,)
         return msg
 
-    def send_os_signal(self, sig, proc_name):
-        """Send signal by GenerateConsoleCtrlEvent"""
-        status = ctypes.windll.kernel32.GenerateConsoleCtrlEvent(sig, self.pid)
+    def check_win32api_status(self, status):
         if status == 0:
             status = win32api.FormatMessage(win32api.GetLastError())
             status = as_string(status, errors='ignore')
             status = status.strip('\r\n')
+        return status
+
+    def send_os_signal(self, sig, proc_name):
+        """Send signal by GenerateConsoleCtrlEvent"""
+        status = ctypes.windll.kernel32.GenerateConsoleCtrlEvent(sig, self.pid)
+        status = self.check_win32api_status(status)
         return "signal: %s (status %s)" % (proc_name, status)
+
+    def send_win_signal(self, sig, proc_name):
+        window = []
+
+        # callback for handling window search
+        def check_window(hwnd, window):
+            _, pid = win32process.GetWindowThreadProcessId(hwnd)
+            if pid == self.pid:
+                window.append(hwnd)
+                return False
+            return True
+
+        # find window
+        try:
+            win32gui.EnumWindows(check_window, window)
+        except pywintypes.error:
+            # Exception is raised by terminating search early (if a window is found)
+            # Ignore it!
+            pass
+
+        if window:
+            status = win32api.PostMessage(window[0], sig, None, None)
+            status = self.check_win32api_status(status)
+        else:
+            status = "failed to find window to send signal"
+        return "win signal: %s (status %s)" % (proc_name, status)
 
     def kill2(self, sig, as_group=False, proc_name=None):
         if as_group:
             return self.taskkill()
         elif sig in [signal.CTRL_BREAK_EVENT, signal.CTRL_C_EVENT]:
             return self.send_os_signal(sig, proc_name)
+        elif sig < 0:
+            return self.send_win_signal(-sig, proc_name)
         else:
             return self.send_signal(sig)
 
