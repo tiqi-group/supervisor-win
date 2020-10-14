@@ -84,9 +84,9 @@ class Popen(subprocess.Popen):
         if window:
             status = win32api.PostMessage(window[0], sig, None, None)
             status = self.check_win32api_status(status)
-            return "win signal: %s (status %s)" % (proc_name, status)
         else:
-            return "Failed to find window to send signal to."
+            status = "failed to find window to send signal"
+        return "win signal: %s (status %s)" % (proc_name, status)
 
     def kill2(self, sig, as_group=False, proc_name=None):
         if as_group:
