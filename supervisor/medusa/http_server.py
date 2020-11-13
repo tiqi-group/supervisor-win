@@ -535,6 +535,9 @@ class http_channel(asynchat.async_chat):
         t, v = sys.exc_info()[:2]
         if t is SystemExit:
             raise t(v)
+        elif t in (OSError, ConnectionAbortedError):
+            # close after peer disconnection
+            self.close()
         else:
             asynchat.async_chat.handle_error(self)
 
