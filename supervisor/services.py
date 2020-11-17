@@ -308,74 +308,78 @@ def get_config_args(argv):
     return options, args, argv
 
 
-def runner(argv):
-    if len(argv) == 1:
-        # service must be starting...
-        # for the sake of debugging etc, we use win32traceutil to see
-        # any unhandled exceptions and print statements.
-        print("supervisor service is starting...")
-        print("(execute this script with '-h' or '--help' if that isn't what you want)")
-        if sys.stdout is None or not sys.stdout.isatty():
-            # By default, the service does not start a console and this
-            # causes side effects in sending signals to the subprocess.
-            # Manually starts when an output terminal is not detected.
-            win32console.AllocConsole()
-        servicemanager.Initialize()
-        servicemanager.PrepareToHostSingle(SupervisorService)
-        # Now ask the service manager to fire things up for us...
-        servicemanager.StartServiceCtrlDispatcher()
-        print("supervisor service done!")
-    else:
-        # file configuration supervisord.conf
-        options, args, srv_argv = get_config_args(argv[1:])
-        # print(args, srv_argv, sep='\n')
-        parser = argparse.ArgumentParser(add_help=False)
-        for opts in options:
-            parser.add_argument(*opts['args'], **opts.get('kwargs', {}))
-        options = parser.parse_args(args=args)
-        if options.config:
-            try:
-                options.config.close()
-            except OSError:
-                pass
-        settings = SupervisorService.settings
-        if options.help:
-            parser.print_help(file=sys.stdout)
-            print()
-        # supervisor conf
-        elif options.config:
-            settings.filepath = options.config.name
-        # custom service name
-        if options.service_name:
-            settings[settings.service_name_key] = options.service_name
-            SupervisorService.set_service_name(options.service_name)  # runtime only
-            SupervisorService.set_service_display_name(options.service_name + " process monitor")
-        # custom service display name
-        if options.service_display_name:
-            SupervisorService.set_service_display_name(options.service_display_name)
-        srv_argv.insert(0, argv[0])
-        # self executable (Scripts)
-        filepath = os.path.dirname(argv[0])
-        filename = os.path.basename(argv[0])
-        name, extension = os.path.splitext(filename)
-        if not re.match(r"\.py[cod]*$", extension, re.I) and \
-                check_existing_cmd(srv_argv, 'install', 'update'):
-            executable = os.path.join(filepath, name + '.exe')
-            SupervisorService.set_setting("exe_name", executable)
-            SupervisorService.set_setting("exe_args", '')
-        elif check_existing_cmd(srv_argv, 'remove'):
-            settings.delete('exe_name')
-            settings.delete('exe_args')
-        win32serviceutil.HandleCommandLine(SupervisorService, argv=srv_argv)
+def run(cls=SupervisorService):
+    """Run the configured service"""
+    # service must be starting...
+    # for the sake of debugging etc, we use win32traceutil to see
+    # any unhandled exceptions and print statements.
+    print("supervisor service is starting...")
+    print("(execute this script with '-h' or '--help' if that isn't what you want)")
+    if sys.stdout is None or not sys.stdout.isatty():
+        # By default, the service does not start a console and this
+        # causes side effects in sending signals to the subprocess.
+        # Manually starts when an output terminal is not detected.
+        win32console.AllocConsole()
+    servicemanager.Initialize()
+    servicemanager.PrepareToHostSingle(cls)
+    # Now ask the service manager to fire things up for us...
+    servicemanager.StartServiceCtrlDispatcher()
+    print("supervisor service done!")
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
+def installer(argv):
+    """Install, remove, update the service"""
+    # file configuration supervisord.conf
+    options, args, srv_argv = get_config_args(argv[1:])
+    # print(args, srv_argv, sep='\n')
+    parser = argparse.ArgumentParser(add_help=False)
+    for opts in options:
+        parser.add_argument(*opts['args'], **opts.get('kwargs', {}))
+    options = parser.parse_args(args=args)
+    if options.config:
+        try:
+            options.config.close()
+        except OSError:
+            pass
+    settings = SupervisorService.settings
+    if options.help:
+        parser.print_help(file=sys.stdout)
+        print()
+    # supervisor conf
+    elif options.config:
+        settings.filepath = options.config.name
+    # custom service name
+    if options.service_name:
+        settings[settings.service_name_key] = options.service_name
+        SupervisorService.set_service_name(options.service_name)  # runtime only
+        SupervisorService.set_service_display_name(options.service_name + " process monitor")
+    # custom service display name
+    if options.service_display_name:
+        SupervisorService.set_service_display_name(options.service_display_name)
+    srv_argv.insert(0, argv[0])
+    # self executable (Scripts)
+    filepath = os.path.dirname(argv[0])
+    filename = os.path.basename(argv[0])
+    name, extension = os.path.splitext(filename)
+    if not re.match(r"\.py[cod]*$", extension, re.I) and \
+            check_existing_cmd(srv_argv, 'install', 'update'):
+        executable = os.path.join(filepath, name + '.exe')
+        SupervisorService.set_setting("exe_name", executable)
+        SupervisorService.set_setting("exe_args", '')
+    elif check_existing_cmd(srv_argv, 'remove'):
+        settings.delete('exe_name')
+        settings.delete('exe_args')
+    win32serviceutil.HandleCommandLine(SupervisorService, argv=srv_argv)
+
+
+def main(argv):
     # starts in the main python directory.
     os.chdir(os.path.dirname(sys.executable))
     try:
-        runner(argv)
+        if len(argv) == 1:
+            run()
+        else:
+            installer(argv)
     except (SystemExit, KeyboardInterrupt):
         raise
     except Exception as exc:
