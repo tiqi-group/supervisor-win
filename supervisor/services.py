@@ -33,13 +33,19 @@ import win32serviceutil
 
 class ConfigReg(object):
     """Saves the path to the supervisor.conf in the system registry"""
+    _software_key = None
 
     def __init__(self, service_name):
         self.service_name = service_name
-        self.software_key = winreg.OpenKey(winreg.HKEY_CURRENT_CONFIG, "Software")
         self.service_config_dir_key = self.service_name + " Service"
         self.service_name_key = "Name"
         self.config_name_key = "Config"
+
+    @property
+    def software_key(self):
+        if self._software_key is None:
+            self._software_key = winreg.OpenKey(winreg.HKEY_CURRENT_CONFIG, "Software")
+        return self._software_key
 
     def __getitem__(self, item):
         """Get value from registry"""
