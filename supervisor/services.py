@@ -30,32 +30,13 @@ except ImportError:
 
 import win32serviceutil
 
-# supervisor{dir}/supervisor{package}
-LOCAL_DIR = os.path.dirname(__file__)
-
-# removes supervisor package directory from path
-local_path_index = None
-for index, path in enumerate(sys.path):
-    if re.match(re.escape(path), LOCAL_DIR, re.U | re.I):
-        local_path_index = index
-        break
-if local_path_index is not None:
-    sys.path.pop(local_path_index)
-
-try:
-    import supervisor
-except ImportError:
-    sys.path.append(os.path.abspath(os.path.join(LOCAL_DIR, '..')))
-
 
 class ConfigReg(object):
     """Saves the path to the supervisor.conf in the system registry"""
-    service_name = "Supervisor Pyv{0.winver}".format(sys)
 
-    def __init__(self, service_name=None):
+    def __init__(self, service_name):
+        self.service_name = service_name
         self.software_key = winreg.OpenKey(winreg.HKEY_CURRENT_CONFIG, "Software")
-        if service_name is not None:
-            self.service_name = service_name
         self.service_config_dir_key = self.service_name + " Service"
         self.service_name_key = "Name"
         self.config_name_key = "Config"
@@ -106,9 +87,6 @@ class ConfigReg(object):
         self.close()
 
 
-config_reg = ConfigReg()
-
-
 class StreamHandler(StringIO):
     """Limited io"""
     max_bytes = 1024 ** 2
@@ -127,36 +105,52 @@ class StreamHandler(StringIO):
         return StringIO.write(self, s)
 
 
-class SupervisorService(win32serviceutil.ServiceFramework):
-    _svc_name_ = config_reg.get(config_reg.service_name_key,
-                                config_reg.service_name)
+class SupervisorServiceFramework(win32serviceutil.ServiceFramework):
+    """Service base"""
+    settings = ConfigReg("Supervisor Pyv{0.winver}".format(sys))
+
+    _svc_name_ = settings.get(settings.service_name_key,
+                              settings.service_name)
     _svc_display_name_ = _svc_name_ + " process monitor"
     _svc_description_ = "A process control system"
     _svc_deps_ = []
 
-    _exe_name_ = config_reg.get("exe_name", sys.executable)
-    _exe_args_ = config_reg.get("exe_args", '"' + os.path.abspath(sys.argv[0]) + '"')
+    _exe_name_ = settings.get("exe_name", sys.executable)
+    _exe_args_ = settings.get("exe_args", '"' + os.path.abspath(sys.argv[0]) + '"')
+
+
+class SupervisorService(SupervisorServiceFramework):
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
         self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
         socket.setdefaulttimeout(60)
+        self.logger = self.get_logger()
+        self.supervisor_conf = self.get_config()
 
+    @staticmethod
+    def get_logger():
+        """interface to create logger"""
+        return logging.getLogger(__name__)
+
+    def get_config(self):
+        """Get supervisor config path
+        :rtype: str
+        """
         # Gets the path of the registry configuration file
         try:
-            config_reg_exc = None
-            self.supervisor_conf = config_reg.filepath
+            supervisor_conf_exc = None
+            supervisor_conf = self.settings.filepath
         except WindowsError:
-            config_reg_exc = traceback.format_exc()
-            self.supervisor_conf = None
+            supervisor_conf_exc = traceback.format_exc()
+            supervisor_conf = None
 
         # The log goes to the location of the configuration file
-        if self.supervisor_conf is not None:
-            config_dir = os.path.dirname(self.supervisor_conf)
+        if supervisor_conf is not None:
+            config_dir = os.path.dirname(supervisor_conf)
         else:  # or to python home
             config_dir = os.getcwd()
 
-        self.logger = logging.getLogger(__name__)
         log_path = os.path.join(config_dir, self._svc_name_.lower() + "-service.log")
         hdl = logging.handlers.RotatingFileHandler(log_path,
                                                    maxBytes=1024 ** 2,
@@ -166,11 +160,12 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         self.logger.addHandler(hdl)
         self.logger.info("supervisor config path: {0!s}".format(self.supervisor_conf))
 
-        if config_reg_exc is not None:
+        if supervisor_conf_exc is not None:
             self.logger.error("* The service needs to be reinstalled")
-            self.logger.error(config_reg_exc)
+            self.logger.error(supervisor_conf_exc)
             logging.shutdown()
             exit(-1)
+        return supervisor_conf
 
     @classmethod
     def set_service_name(cls, name):
@@ -181,12 +176,24 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         cls._svc_display_name_ = name
 
     @classmethod
-    def set_config(cls, name, value):
+    def set_setting(cls, name, value):
         """Settings used by the service"""
         # temporary configuration that is used only during installation.
         setattr(cls, "_%s_" % name, value)
         # saves the new configuration to the system registry.
-        config_reg[name] = value
+        cls.settings[name] = value
+
+    def starting(self, stdout, stderr):
+        pass
+
+    def starting_failed(self, exc):
+        pass
+
+    def stopping(self, stdout, stderr):
+        pass
+
+    def stopping_failed(self, exc):
+        pass
 
     # noinspection PyBroadException
     def SvcStop(self):
@@ -195,13 +202,15 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         stdout = StreamHandler(self.logger.info)
         stderr = StreamHandler(self.logger.error)
         try:
+            self.stopping(stdout, stderr)
             self.logger.info("supervisorctl shutdown")
             from supervisor import supervisorctl
             supervisorctl.main(("-c", self.supervisor_conf, "shutdown"),
                                stdout=stdout, stderr=stderr)
         except SystemExit:
             pass  # normal exit
-        except:
+        except Exception as exc:
+            self.stopping_failed(exc)
             self.logger.exception("supervisorctl shutdown execution failed")
         finally:
             logging.shutdown()
@@ -223,12 +232,14 @@ class SupervisorService(win32serviceutil.ServiceFramework):
         stdout = StreamHandler(self.logger.info)
         stderr = StreamHandler(self.logger.error)
         try:
+            self.starting(stdout, stderr)
             from supervisor import supervisord
             self.logger.info("supervisor starting...")
             supervisord.main(("-c", self.supervisor_conf),
                              stdout=stdout, stderr=stderr)
             self.logger.info("supervisor shutdown")
-        except:
+        except Exception as exc:
+            self.starting_failed(exc)
             self.logger.exception("supervisor starting failed")
         finally:
             stdout.close()
@@ -317,15 +328,16 @@ def runner(argv):
                 options.config.close()
             except OSError:
                 pass
+        settings = SupervisorService.settings
         if options.help:
             parser.print_help(file=sys.stdout)
             print()
         # supervisor conf
         elif options.config:
-            config_reg.filepath = options.config.name
+            settings.filepath = options.config.name
         # custom service name
         if options.service_name:
-            config_reg[config_reg.service_name_key] = options.service_name
+            settings[settings.service_name_key] = options.service_name
             SupervisorService.set_service_name(options.service_name)  # runtime only
             SupervisorService.set_service_display_name(options.service_name + " process monitor")
         # custom service display name
@@ -339,11 +351,11 @@ def runner(argv):
         if not re.match(r"\.py[cod]*$", extension, re.I) and \
                 check_existing_cmd(srv_argv, 'install', 'update'):
             executable = os.path.join(filepath, name + '.exe')
-            SupervisorService.set_config("exe_name", executable)
-            SupervisorService.set_config("exe_args", '')
+            SupervisorService.set_setting("exe_name", executable)
+            SupervisorService.set_setting("exe_args", '')
         elif check_existing_cmd(srv_argv, 'remove'):
-            config_reg.delete('exe_name')
-            config_reg.delete('exe_args')
+            settings.delete('exe_name')
+            settings.delete('exe_args')
         win32serviceutil.HandleCommandLine(SupervisorService, argv=srv_argv)
 
 
@@ -364,5 +376,25 @@ def main(argv=None):
         traceback.print_exc(limit=3)
 
 
+def patch_sys_path():
+    # supervisor{dir}/supervisor{package}
+    local_dir = os.path.dirname(__file__)
+
+    # removes supervisor package directory from path
+    local_path_index = None
+    for index, path in enumerate(sys.path):
+        if re.match(re.escape(path), local_dir, re.U | re.I):
+            local_path_index = index
+            break
+    if local_path_index is not None:
+        sys.path.pop(local_path_index)
+
+    try:
+        import supervisor
+    except ImportError:
+        sys.path.append(os.path.abspath(os.path.join(local_dir, '..')))
+
+
 if __name__ == '__main__':
+    patch_sys_path()
     main(sys.argv)
