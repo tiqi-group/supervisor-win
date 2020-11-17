@@ -126,11 +126,15 @@ class SupervisorServiceFramework(win32serviceutil.ServiceFramework):
 
 
 class SupervisorService(SupervisorServiceFramework):
+    logger = supervisor_conf = None
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
         self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
         socket.setdefaulttimeout(60)
+        self.initialize()
+
+    def initialize(self):
         self.logger = self.get_logger()
         self.supervisor_conf = self.get_config()
 
