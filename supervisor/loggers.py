@@ -411,9 +411,7 @@ def handle_boundIO(logger, fmt, maxbytes=_2MB):
     logger.getvalue = io.getvalue
 
 
-def handle_stdout(logger, fmt, stdout=None):
-    if stdout is None:
-        stdout = sys.stdout
+def handle_stdout(logger, fmt, stdout=sys.stdout):
     if stdout is None:
         # As a service, the process does not always have a stdout.
         return

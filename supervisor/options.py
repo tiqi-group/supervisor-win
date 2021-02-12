@@ -1232,7 +1232,8 @@ class ServerOptions(Options):
         format = '%(asctime)s %(levelname)s %(message)s\n'
         self.logger = loggers.getLogger(self.loglevel)
         if self.nodaemon and not self.silent:
-            loggers.handle_stdout(self.logger, format, stdout=self.stdout)
+            loggers.handle_stdout(self.logger, format,
+                                  stdout=sys.stdout or self.stdout)
         loggers.handle_file(
             self.logger,
             self.logfile,
