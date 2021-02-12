@@ -168,7 +168,7 @@ class SupervisorService(SupervisorServiceFramework):
         hdl.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
         self.logger.setLevel(logging.INFO)
         self.logger.addHandler(hdl)
-        self.logger.info("supervisor config path: {0!s}".format(self.supervisor_conf))
+        self.logger.info("supervisor config path: {0!s}".format(supervisor_conf))
 
         if supervisor_conf_exc is not None:
             self.logger.error("* The service needs to be reinstalled")
