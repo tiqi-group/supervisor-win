@@ -533,7 +533,7 @@ class POutputDispatcherTests(unittest.TestCase):
         options = ServerOptions() # need real options to get a real logger
         options.loglevel = LevelsByName.TRAC
         config = DummyPConfig(options, 'process1', '/bin/process1',
-                              stdout_logfile=logfile_name('/tmp/foo'),
+                              stdout_logfile=logfile_name(os.path.join(tempfile.gettempdir(), 'foo')),
                               stdout_syslog=boolean('false'))
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
@@ -551,7 +551,7 @@ class POutputDispatcherTests(unittest.TestCase):
         options = ServerOptions() # need real options to get a real logger
         options.loglevel = LevelsByName.TRAC
         config = DummyPConfig(options, 'process1', '/bin/process1',
-                              stdout_logfile=logfile_name('/tmp/foo'),
+                              stdout_logfile=logfile_name(os.path.join(tempfile.gettempdir(), 'foo')),
                               stdout_syslog=boolean('true'))
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
