@@ -157,8 +157,8 @@ class POutputDispatcherTests(unittest.TestCase):
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
         dispatcher.removelogs()
-        self.assertEqual(dispatcher.mainlog.handlers[0].reopened, True)
-        self.assertEqual(dispatcher.mainlog.handlers[0].removed, True)
+        self.assertEqual(dispatcher.normallog.handlers[0].reopened, True)
+        self.assertEqual(dispatcher.normallog.handlers[0].removed, True)
         self.assertEqual(dispatcher.childlog.handlers[0].reopened, True)
         self.assertEqual(dispatcher.childlog.handlers[0].removed, True)
 
@@ -170,7 +170,7 @@ class POutputDispatcherTests(unittest.TestCase):
         dispatcher = self._makeOne(process)
         dispatcher.reopenlogs()
         self.assertEqual(dispatcher.childlog.handlers[0].reopened, True)
-        self.assertEqual(dispatcher.mainlog.handlers[0].reopened, True)
+        self.assertEqual(dispatcher.normallog.handlers[0].reopened, True)
 
     def test_record_output_log_non_capturemode(self):
         # stdout/stderr goes to the process log and the main log,
@@ -445,7 +445,7 @@ class POutputDispatcherTests(unittest.TestCase):
         self.assertEqual(len(dispatcher.childlog.data), 2)
         self.assertEqual(dispatcher.childlog.data[1], ansi)
 
-    def test_ctor_nologfiles(self):
+    def test_ctor_no_logfiles(self):
         options = DummyOptions()
         config = DummyPConfig(options, 'process1', '/bin/process1')
         process = DummyProcess(config)
@@ -454,7 +454,7 @@ class POutputDispatcherTests(unittest.TestCase):
         self.assertEqual(dispatcher.channel, 'stdout')
         self.assertEqual(dispatcher.fd, 0)
         self.assertEqual(dispatcher.capturelog, None)
-        self.assertEqual(dispatcher.mainlog, None)
+        self.assertEqual(dispatcher.normallog, None)
         self.assertEqual(dispatcher.childlog, None)
 
     def test_ctor_logfile_only(self):
@@ -467,8 +467,8 @@ class POutputDispatcherTests(unittest.TestCase):
         self.assertEqual(dispatcher.channel, 'stdout')
         self.assertEqual(dispatcher.fd, 0)
         self.assertEqual(dispatcher.capturelog, None)
-        self.assertEqual(dispatcher.mainlog.__class__, DummyLogger)
-        self.assertEqual(dispatcher.childlog, dispatcher.mainlog)
+        self.assertEqual(dispatcher.normallog.__class__, DummyLogger)
+        self.assertEqual(dispatcher.childlog, dispatcher.normallog)
 
     def test_ctor_capturelog_only(self):
         options = DummyOptions()
@@ -480,20 +480,90 @@ class POutputDispatcherTests(unittest.TestCase):
         self.assertEqual(dispatcher.channel, 'stdout')
         self.assertEqual(dispatcher.fd, 0)
         self.assertEqual(dispatcher.capturelog.__class__, DummyLogger)
-        self.assertEqual(dispatcher.mainlog, None)
+        self.assertEqual(dispatcher.normallog, None)
         self.assertEqual(dispatcher.childlog, None)
 
-    def test_ctor_nologs(self):
+    def test_ctor_stdout_logfile_is_empty_string(self):
+        from supervisor.datatypes import logfile_name
         options = DummyOptions()
-        config = DummyPConfig(options, 'process1', '/bin/process1')
+        config = DummyPConfig(options, 'process1', '/bin/process1',
+                              stdout_logfile=logfile_name(''))
         process = DummyProcess(config)
         dispatcher = self._makeOne(process)
         self.assertEqual(dispatcher.process, process)
         self.assertEqual(dispatcher.channel, 'stdout')
         self.assertEqual(dispatcher.fd, 0)
-        self.assertEqual(dispatcher.capturelog, None)
-        self.assertEqual(dispatcher.mainlog, None)
-        self.assertEqual(dispatcher.childlog, None)
+        self.assertEqual(dispatcher.normallog, None)
+
+    def test_ctor_stdout_logfile_none_and_stdout_syslog_false(self):
+        from supervisor.datatypes import boolean, logfile_name
+        options = DummyOptions()
+        config = DummyPConfig(options, 'process1', '/bin/process1',
+                              stdout_logfile=logfile_name('NONE'),
+                              stdout_syslog=boolean('false'))
+        process = DummyProcess(config)
+        dispatcher = self._makeOne(process)
+        self.assertEqual(dispatcher.process, process)
+        self.assertEqual(dispatcher.channel, 'stdout')
+        self.assertEqual(dispatcher.fd, 0)
+        self.assertEqual(dispatcher.normallog, None)
+
+    def test_ctor_stdout_logfile_none_and_stdout_syslog_true(self):
+        from supervisor.datatypes import boolean, logfile_name
+        from supervisor.loggers import LevelsByName, SyslogHandler
+        from supervisor.options import ServerOptions
+        options = ServerOptions() # need real options to get a real logger
+        options.loglevel = LevelsByName.TRAC
+        config = DummyPConfig(options, 'process1', '/bin/process1',
+                              stdout_logfile=logfile_name('NONE'),
+                              stdout_syslog=boolean('true'))
+        process = DummyProcess(config)
+        dispatcher = self._makeOne(process)
+        self.assertEqual(dispatcher.process, process)
+        self.assertEqual(dispatcher.channel, 'stdout')
+        self.assertEqual(dispatcher.fd, 0)
+        self.assertEqual(len(dispatcher.normallog.handlers), 1)
+        self.assertEqual(dispatcher.normallog.handlers[0].__class__,
+            SyslogHandler)
+
+    def test_ctor_stdout_logfile_str_and_stdout_syslog_false(self):
+        from supervisor.datatypes import boolean, logfile_name
+        from supervisor.loggers import FileHandler, LevelsByName
+        from supervisor.options import ServerOptions
+        options = ServerOptions() # need real options to get a real logger
+        options.loglevel = LevelsByName.TRAC
+        config = DummyPConfig(options, 'process1', '/bin/process1',
+                              stdout_logfile=logfile_name('/tmp/foo'),
+                              stdout_syslog=boolean('false'))
+        process = DummyProcess(config)
+        dispatcher = self._makeOne(process)
+        self.assertEqual(dispatcher.process, process)
+        self.assertEqual(dispatcher.channel, 'stdout')
+        self.assertEqual(dispatcher.fd, 0)
+        self.assertEqual(len(dispatcher.normallog.handlers), 1)
+        self.assertEqual(dispatcher.normallog.handlers[0].__class__, FileHandler)
+        dispatcher.normallog.close()
+
+    def test_ctor_stdout_logfile_str_and_stdout_syslog_true(self):
+        from supervisor.datatypes import boolean, logfile_name
+        from supervisor.loggers import FileHandler, LevelsByName, SyslogHandler
+        from supervisor.options import ServerOptions
+        options = ServerOptions() # need real options to get a real logger
+        options.loglevel = LevelsByName.TRAC
+        config = DummyPConfig(options, 'process1', '/bin/process1',
+                              stdout_logfile=logfile_name('/tmp/foo'),
+                              stdout_syslog=boolean('true'))
+        process = DummyProcess(config)
+        dispatcher = self._makeOne(process)
+        self.assertEqual(dispatcher.process, process)
+        self.assertEqual(dispatcher.channel, 'stdout')
+        self.assertEqual(dispatcher.fd, 0)
+        self.assertEqual(len(dispatcher.normallog.handlers), 2)
+        self.assertTrue(any(isinstance(h, FileHandler) for h in
+            dispatcher.normallog.handlers))
+        self.assertTrue(any(isinstance(h, SyslogHandler) for h in
+            dispatcher.normallog.handlers))
+        dispatcher.normallog.close()
 
     def test_repr(self):
         options = DummyOptions()
@@ -517,16 +587,6 @@ class POutputDispatcherTests(unittest.TestCase):
         dispatcher.close()  # make sure we don't error if we try to close twice
         self.assertEqual(dispatcher.closed, True)
 
-    def test_syslog_logfile_deprecated(self):
-        import warnings
-        options = DummyOptions()
-        config = DummyPConfig(options, 'process1', '/bin/process1')
-        config.stdout_logfile = 'syslog'
-        process = DummyProcess(config)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always')
-            self._makeOne(process)
-            self.assertEqual(len(w), 1)
 
 
 class PInputDispatcherTests(unittest.TestCase):

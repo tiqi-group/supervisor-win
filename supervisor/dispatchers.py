@@ -106,7 +106,8 @@ class PLogDispatcher(PDispatcher):
 
 class POutputDispatcher(PLogDispatcher):
     """
-    A Process Output (stdout/stderr) dispatcher. Serves several purposes:
+    Dispatcher for one channel (stdout or stderr) of one process.
+    Serves several purposes:
 
     - capture output sent within <!--XSUPERVISOR:BEGIN--> and
       <!--XSUPERVISOR:END--> tags and signal a ProcessCommunicationEvent
@@ -115,10 +116,10 @@ class POutputDispatcher(PLogDispatcher):
       config.
     """
 
+    childlog = None  # the current logger (normallog or capturelog)
+    normallog = None  # the "normal" (non-capture)logger
+    capturelog = None  # the logger used while we're in capturemode
     capturemode = False  # are we capturing process event data
-    mainlog = None  # the process' "normal" logger
-    capturelog = None  # the logger while we're in capturemode
-    childlog = None  # the current logger (event or main)
     output_buffer = b''  # data waiting to be logged
 
     def __init__(self, process, event_type, fd):
@@ -128,23 +129,17 @@ class POutputDispatcher(PLogDispatcher):
         `event_type` should be one of ProcessLogStdoutEvent or
         ProcessLogStderrEvent
         """
+        self.process = process
         self.event_type = event_type
-        channel = self.event_type.channel
-        super(POutputDispatcher, self).__init__(process, channel, fd)
+        self.fd = fd
+        self.channel = self.event_type.channel
 
-        self._setup_logging(process.config, channel)
+        super(POutputDispatcher, self).__init__(process, self.channel, fd)
 
-        capture_maxbytes = getattr(process.config,
-                                   '%s_capture_maxbytes' % channel)
-        if capture_maxbytes:
-            self.capturelog = loggers.handle_boundIO(
-                self.process.config.options.getLogger(),
-                fmt='%(message)s',
-                maxbytes=capture_maxbytes,
-            )
-            self.logs.append(self.capturelog)
+        self._init_normallog()
+        self._init_capturelog()
 
-        self.childlog = self.mainlog
+        self.childlog = self.normallog
 
         # all code below is purely for minor speedups
         begintoken = self.event_type.BEGIN_TOKEN
@@ -157,36 +152,55 @@ class POutputDispatcher(PLogDispatcher):
         self.stdout_events_enabled = config.stdout_events_enabled
         self.stderr_events_enabled = config.stderr_events_enabled
 
-    def _setup_logging(self, config, channel):
+    def _init_normallog(self):
         """
-        Configure the main log according to the process' configuration and
-        channel. Sets `mainlog` on self. Returns nothing.
+        Configure the "normal" (non-capture) log for this channel of this
+        process.  Sets self.normallog if logging is enabled.
         """
+        config = self.process.config
+        channel = self.channel
 
         logfile = getattr(config, '%s_logfile' % channel)
-        if not logfile:
-            return
-
         maxbytes = getattr(config, '%s_logfile_maxbytes' % channel)
         backups = getattr(config, '%s_logfile_backups' % channel)
-        fmt = '%(message)s'
-        if logfile == 'syslog':
-            warnings.warn("Specifying 'syslog' for filename is deprecated. "
-                          "Use %s_syslog instead." % channel, DeprecationWarning)
-            fmt = ' '.join((config.name, fmt))
-        self.mainlog = loggers.handle_file(
-            config.options.getLogger(),
-            filename=logfile,
-            fmt=fmt,
-            rotating=not not maxbytes,  # optimization
-            maxbytes=maxbytes,
-            backups=backups)
+        to_syslog = getattr(config, '%s_syslog' % channel)
 
-        if getattr(config, '%s_syslog' % channel, False):
-            fmt = config.name + ' %(message)s'
-            loggers.handle_syslog(self.mainlog, fmt)
+        if logfile or to_syslog:
+            self.normallog = config.options.getLogger()
+            self.logs.append(self.normallog)
 
-        self.logs.append(self.mainlog)
+        if logfile:
+            loggers.handle_file(
+                self.normallog,
+                filename=logfile,
+                fmt='%(message)s',
+                rotating=not not maxbytes,  # optimization
+                maxbytes=maxbytes,
+                backups=backups
+            )
+
+        if to_syslog:
+            loggers.handle_syslog(
+                self.normallog,
+                fmt=config.name + ' %(message)s'
+            )
+
+    def _init_capturelog(self):
+        """
+        Configure the capture log for this process.  This log is used to
+        temporarily capture output when special output is detected.
+        Sets self.capturelog if capturing is enabled.
+        """
+        capture_maxbytes = getattr(self.process.config,
+                                   '%s_capture_maxbytes' % self.channel)
+        if capture_maxbytes:
+            self.capturelog = self.process.config.options.getLogger()
+            self.logs.append(self.capturelog)
+            loggers.handle_boundIO(
+                self.capturelog,
+                fmt='%(message)s',
+                maxbytes=capture_maxbytes,
+                )
 
     def removelogs(self):
         self._remove_logs(*self.logs)
@@ -286,7 +300,7 @@ class POutputDispatcher(PLogDispatcher):
                                                          procname=procname,
                                                          channel=channel)
                 self._remove_logs(self.capturelog)
-                self.childlog = self.mainlog
+                self.childlog = self.normallog
 
     def writable(self):
         return False
@@ -336,8 +350,9 @@ class PEventListenerDispatcher(PLogDispatcher):
         if logfile:
             maxbytes = getattr(process.config, '%s_logfile_maxbytes' % channel)
             backups = getattr(process.config, '%s_logfile_backups' % channel)
-            self.childlog = loggers.handle_file(
-                process.config.options.getLogger(),
+            self.childlog = process.config.options.getLogger()
+            loggers.handle_file(
+                self.childlog,
                 logfile,
                 '%(message)s',
                 rotating=not not maxbytes,  # optimization

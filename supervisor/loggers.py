@@ -402,14 +402,13 @@ _2MB = 1 << 21
 
 
 def handle_boundIO(logger, fmt, maxbytes=_2MB):
+    """Attach a new BoundIO handler to an existing Logger"""
     io = BoundIO(maxbytes)
     handler = StreamHandler(io)
     handler.setLevel(logger.level)
     handler.setFormat(fmt)
     logger.addHandler(handler)
     logger.getvalue = io.getvalue
-
-    return logger
 
 
 def handle_stdout(logger, fmt, stdout=None):
@@ -427,6 +426,7 @@ def handle_stdout(logger, fmt, stdout=None):
 
 
 def handle_syslog(logger, fmt):
+    """Attach a new Syslog handler to an existing Logger"""
     handler = SyslogHandler()
     handler.setFormat(fmt)
     handler.setLevel(logger.level)
@@ -434,17 +434,15 @@ def handle_syslog(logger, fmt):
 
 
 def handle_file(logger, filename, fmt, rotating=False, maxbytes=0, backups=0):
-    if filename == 'syslog':
+    """Attach a new file handler to an existing Logger. If the filename
+    is the magic name of 'syslog' then make it a syslog handler instead."""
+    if filename == 'syslog': # TODO remove this
         handler = SyslogHandler()
-
     else:
         if rotating is False:
             handler = FileHandler(filename)
         else:
             handler = RotatingFileHandler(filename, 'a', maxbytes, backups)
-
     handler.setFormat(fmt)
     handler.setLevel(logger.level)
     logger.addHandler(handler)
-
-    return logger

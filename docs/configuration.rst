@@ -426,7 +426,7 @@ follows.
   include the value ``%(here)s``, which expands to the directory in
   which the :program:`supervisord` configuration file was found.
 
-  *Default*: value of Python's :func:`tempfile.get_tempdir`
+  *Default*: value of Python's :func:`tempfile.gettempdir`
 
   *Required*:  No.
 
@@ -782,8 +782,15 @@ where specified.
 
   The number of serial failure attempts that :program:`supervisord`
   will allow when attempting to start the program before giving up and
-  putting the process into an ``FATAL`` state.  See
-  :ref:`process_states` for explanation of the ``FATAL`` state.
+  putting the process into an ``FATAL`` state.
+
+  .. note::
+
+      After each failed restart, process will be put in ``BACKOFF`` state
+      and each retry attempt will take increasingly more time.
+
+      See :ref:`process_states` for explanation of the ``FATAL`` and
+      ``BACKOFF`` states.
 
   *Default*: 3
 

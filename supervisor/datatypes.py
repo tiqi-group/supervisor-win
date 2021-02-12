@@ -1,3 +1,4 @@
+# coding: utf-8
 import os
 import re
 import shlex
@@ -103,9 +104,15 @@ class Automatic(object):
         return self.value
 
 
+class Syslog(object):
+    """TODO deprecated; remove this special 'syslog' filename in the future"""
+    pass
+
+
 Automatic = Automatic('auto')
 LOGFILE_NONES = ('none', 'off', None)
 LOGFILE_AUTOS = (Automatic, 'auto')
+LOGFILE_SYSLOGS = (Syslog, 'syslog')
 
 
 def logfile_name(val):
@@ -118,6 +125,8 @@ def logfile_name(val):
         return None
     elif coerced in LOGFILE_AUTOS:
         return Automatic
+    elif coerced in LOGFILE_SYSLOGS:
+        return Syslog
     else:
         return existing_dirpath(val)
 

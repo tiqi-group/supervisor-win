@@ -903,6 +903,25 @@ class ServerOptionsTests(unittest.TestCase):
                 fmt = "%s" if PY2 else '%r'
                 self.assertTrue(fmt % f.name in exc.args[0])
 
+    def test_read_config_logfile_with_nonexistent_dirpath(self):
+        instance = self._makeOne()
+        logfile_with_nonexistent_dir = os.path.join(
+            os.path.dirname(__file__), "nonexistent",
+            "supervisord.log"
+            )
+        text = lstrip("""\
+        [supervisord]
+        logfile=%s
+        """ % logfile_with_nonexistent_dir)
+        try:
+            instance.read_config(StringIO(text))
+            self.fail("nothing raised")
+        except ValueError as exc:
+            self.assertEqual(exc.args[0],
+                "The directory named as part of the path %s does not exist" %
+                logfile_with_nonexistent_dir
+            )
+
     def test_read_config_no_supervisord_section_raises_valueerror(self):
         instance = self._makeOne()
         try:
@@ -1585,6 +1604,42 @@ class ServerOptionsTests(unittest.TestCase):
             'For [program:foo], redirect_stderr=true but stderr_logfile has '
             'also been set to a filename, the filename has been ignored')
         self.assertEqual(pconfigs[0].stderr_logfile, None)
+
+    def test_processes_from_section_rewrites_stdout_logfile_of_syslog(self):
+        instance = self._makeOne()
+        text = lstrip("""\
+        [program:foo]
+        command = /bin/foo
+        stdout_logfile = syslog
+        """)
+        from supervisor.options import UnhosedConfigParser
+        config = UnhosedConfigParser()
+        config.read_string(text)
+        pconfigs = instance.processes_from_section(config, 'program:foo', 'bar')
+        self.assertEqual(instance.parse_warnings[0],
+            'For [program:foo], stdout_logfile=syslog but this is deprecated '
+            'and will be removed.  Use stdout_syslog=true to enable syslog '
+            'instead.')
+        self.assertEqual(pconfigs[0].stdout_logfile, None)
+        self.assertEqual(pconfigs[0].stdout_syslog, True)
+
+    def test_processes_from_section_rewrites_stderr_logfile_of_syslog(self):
+        instance = self._makeOne()
+        text = lstrip("""\
+        [program:foo]
+        command = /bin/foo
+        stderr_logfile = syslog
+        """)
+        from supervisor.options import UnhosedConfigParser
+        config = UnhosedConfigParser()
+        config.read_string(text)
+        pconfigs = instance.processes_from_section(config, 'program:foo', 'bar')
+        self.assertEqual(instance.parse_warnings[0],
+            'For [program:foo], stderr_logfile=syslog but this is deprecated '
+            'and will be removed.  Use stderr_syslog=true to enable syslog '
+            'instead.')
+        self.assertEqual(pconfigs[0].stderr_logfile, None)
+        self.assertEqual(pconfigs[0].stderr_syslog, True)
 
     def test_processes_from_section_redirect_stderr_with_auto(self):
         instance = self._makeOne()

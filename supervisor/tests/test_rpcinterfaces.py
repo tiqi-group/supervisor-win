@@ -906,6 +906,21 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
         p = supervisord.process_groups[supervisord.group_name].processes['foo']
         self.assertEqual(p.sent_signal, signum)
 
+    def test_signalProcess_stopping(self):
+        options = DummyOptions()
+        pconfig = DummyPConfig(options, 'foo', '/bin/foo')
+        from supervisor.process import ProcessStates
+        supervisord = PopulatedDummySupervisor(options, 'foo', pconfig)
+        supervisord.set_procattr('foo', 'state', ProcessStates.STOPPING)
+
+        interface = self._makeOne(supervisord)
+        result = interface.signalProcess('foo', 10)
+
+        self.assertEqual(interface.update_text, 'signalProcess')
+        self.assertEqual(result, True)
+        p = supervisord.process_groups[supervisord.group_name].processes['foo']
+        self.assertEqual(p.sent_signal, 10)
+
     def test_signalProcess_badsignal(self):
         options = DummyOptions()
         pconfig = DummyPConfig(options, 'foo', '/bin/foo')
@@ -929,6 +944,7 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
         self._assertRPCError(
             xmlrpc.Faults.NOT_RUNNING, interface.signalProcess, 'foo', signal.SIGTERM
         )
+
 
     def test_signalProcess_signal_returns_message(self):
         options = DummyOptions()
@@ -958,7 +974,7 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
         supervisord = PopulatedDummySupervisor(options, 'foo', pconfig1,
                                                pconfig2)
         supervisord.set_procattr('process1', 'state', ProcessStates.RUNNING)
-        supervisord.set_procattr('process2', 'state', ProcessStates.RUNNING)
+        supervisord.set_procattr('process2', 'state', ProcessStates.STOPPING)
         interface = self._makeOne(supervisord)
 
         sig = signal.CTRL_C_EVENT

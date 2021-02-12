@@ -14,9 +14,11 @@ messages about its own health, its subprocess' state changes, any
 messages that result from events, and debug and informational
 messages.  The path to the activity log is configured via the
 ``logfile`` parameter in the ``[supervisord]`` section of the
-configuration file, defaulting to :file:`$CWD/supervisord.log`.
-Sample activity log traffic is shown in the example below.  Some lines
-have been broken to better fit the screen.
+configuration file, defaulting to :file:`$CWD/supervisord.log`.  If
+the value of this option is the special string ``syslog``, the
+activity log will be routed to the syslog service instead of being
+written to a file.  Sample activity log traffic is shown in the
+example below.  Some lines have been broken to better fit the screen.
 
 Sample Activity Log Output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

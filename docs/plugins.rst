@@ -36,7 +36,8 @@ instances running on different servers.
     Web-based dashboard written in Python 3.  Requires Django 1.7 or later.
 
 `Supvisors <https://github.com/julien6387/supvisors>`_
-    Designed for distributed applications, written in Python 2.7. Includes an extended XML-RPC API and a Web-based dashboard.
+    Designed for distributed applications, written in Python 3.6. Includes an extended XML-RPC API,
+    a Web-based dashboard and special features such as staged start and stop.
 
 `multivisor <https://github.com/tiagocoutinho/multivisor>`_
     Centralized supervisor web-based dashboard. The frontend is based on
@@ -117,8 +118,6 @@ Libraries that integrate Third Party Applications with Supervisor
 These are libraries and plugins that makes it easier to use Supervisor
 with third party applications:
 
-`django-supervisor <https://pypi.org/pypi/django-supervisor/>`_
-    Easy integration between djangocl and supervisord.
 `collective.recipe.supervisor <https://pypi.org/pypi/collective.recipe.supervisor/>`_
     A buildout recipe to install supervisor.
 `puppet-module-supervisor <https://github.com/plathrop/puppet-module-supervisor>`_

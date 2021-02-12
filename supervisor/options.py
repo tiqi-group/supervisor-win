@@ -43,6 +43,7 @@ from supervisor.datatypes import inet_address
 from supervisor.datatypes import InetStreamSocketConfig
 from supervisor.datatypes import url
 from supervisor.datatypes import Automatic
+from supervisor.datatypes import Syslog
 from supervisor.datatypes import auto_restart
 from supervisor.datatypes import profile_options
 from supervisor.datatypes import sig_pattern
@@ -499,7 +500,11 @@ class ServerOptions(Options):
         else:
             logfile = section.logfile
 
-        self.logfile = normalize_path(logfile)
+        if logfile != 'syslog':
+            # if the value for logfile is "syslog", we don't want to
+            # normalize the path to something like $CWD/syslog.log, but
+            # instead use the syslog service.
+            self.logfile = normalize_path(logfile)
 
         if self.pidfile:
             pidfile = self.pidfile
@@ -912,12 +917,12 @@ class ServerOptions(Options):
             logfiles = {}
 
             for k in ('stdout', 'stderr'):
-                n = '%s_logfile' % k
-                lf_val = get(section, n, Automatic)
+                lf_key = '%s_logfile' % k
+                lf_val = get(section, lf_key, Automatic)
                 if isinstance(lf_val, basestring):
-                    lf_val = expand(lf_val, expansions, n)
+                    lf_val = expand(lf_val, expansions, lf_key)
                 lf_val = logfile_name(lf_val)
-                logfiles[n] = lf_val
+                logfiles[lf_key] = lf_val
 
                 bu_key = '%s_logfile_backups' % k
                 backups = integer(get(section, bu_key, 10))
@@ -931,11 +936,21 @@ class ServerOptions(Options):
                 syslog = boolean(get(section, sy_key, False))
                 logfiles[sy_key] = syslog
 
+                # rewrite deprecated "syslog" magic logfile into the equivalent
+                # TODO remove this in a future version
+                if lf_val is Syslog:
+                    self.parse_warnings.append(
+                        'For [%s], %s=syslog but this is deprecated and will '
+                        'be removed.  Use %s=true to enable syslog instead.' % (
+                        section, lf_key, sy_key))
+                    logfiles[lf_key] = lf_val = None
+                    logfiles[sy_key] = True
+
                 if lf_val is Automatic and not maxbytes:
                     self.parse_warnings.append(
                         'For [%s], AUTO logging used for %s without '
                         'rollover, set maxbytes > 0 to avoid filling up '
-                        'filesystem unintentionally' % (section, n))
+                        'filesystem unintentionally' % (section, lf_key))
 
             if redirect_stderr:
                 if logfiles['stderr_logfile'] not in (Automatic, None):
