@@ -914,12 +914,12 @@ class SupervisorNamespaceXMLRPCInterfaceTests(TestBase):
         supervisord.set_procattr('foo', 'state', ProcessStates.STOPPING)
 
         interface = self._makeOne(supervisord)
-        result = interface.signalProcess('foo', 10)
+        result = interface.signalProcess('foo', signal.SIGBREAK)
 
         self.assertEqual(interface.update_text, 'signalProcess')
         self.assertEqual(result, True)
         p = supervisord.process_groups[supervisord.group_name].processes['foo']
-        self.assertEqual(p.sent_signal, 10)
+        self.assertEqual(p.sent_signal, signal.SIGBREAK)
 
     def test_signalProcess_badsignal(self):
         options = DummyOptions()
