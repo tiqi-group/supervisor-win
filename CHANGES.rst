@@ -1,3 +1,10 @@
+4.6.0
+-----------------------------
+- Merge supervisor unix changes from 4.2.2.dev0 (master).
+- Improvements in the execution of the supervisor as a windows service.
+- Support for sending signals for windows application.
+- Improvements to service logs.
+
 4.5.0
 -----------------------------
 - Merge supervisor unix changes from 4.2.2.dev0 (master).
