@@ -415,10 +415,10 @@ def handle_boundIO(logger, fmt, maxbytes=_2MB):
 def handle_stdout(logger, fmt, stdout=None):
     if stdout is None:
         stdout = sys.stdout
-    if sys.stdout is None:
+    if stdout is None:
         # As a service, the process does not always have a stdout.
         return
-    if not sys.stdout.isatty():
+    if not stdout.isatty():
         logger.error("*** STDOUT is closed. Run as daemon! ***")
     handler = StreamHandler(stdout)
     handler.setFormat(fmt)
