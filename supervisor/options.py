@@ -29,6 +29,7 @@ from supervisor.medusa import asyncore_25 as asyncore
 from supervisor.datatypes import process_or_group_name
 from supervisor.datatypes import boolean
 from supervisor.datatypes import integer
+from supervisor.datatypes import name_to_uid
 from supervisor.datatypes import existing_dirpath
 from supervisor.datatypes import byte_size
 from supervisor.datatypes import signal_number
@@ -880,7 +881,12 @@ class ServerOptions(Options):
             serverurl = None
 
         # find uid from "user" option
-        # user = get(section, 'user', None)
+        user = get(section, 'user', None)
+        if user is not None:
+            raise NotImplementedError('user option not implemented!')
+        #   uid = None
+        #else:
+        #   uid = name_to_uid(user)
 
         umask = get(section, 'umask', None)
         if umask is not None:
@@ -1193,13 +1199,13 @@ class ServerOptions(Options):
             if False and os.getuid() == 0:
                 return 'Supervisor running as root (no user in config file)'
             return None
-        msg = self.dropPrivileges(self.uid)
+        msg = self.drop_privileges(self.uid)
         if msg is None:
             return 'Set uid to user %s' % self.uid
         return msg
 
     @raise_not_implemented
-    def dropPrivileges(self, user):
+    def drop_privileges(self, user):
         """dummy"""
         pass
 
