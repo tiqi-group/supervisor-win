@@ -3006,7 +3006,7 @@ class ServerOptionsTests(unittest.TestCase):
     def test_drop_privileges_user_none(self):
         instance = self._makeOne()
         self.assertRaises(NotImplementedError,
-                          instance.dropPrivileges,
+                          instance.drop_privileges,
                           None)
 
     def test_daemonize_notifies_poller_before_and_after_fork(self):
