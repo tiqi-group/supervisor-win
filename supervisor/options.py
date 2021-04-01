@@ -883,7 +883,7 @@ class ServerOptions(Options):
         # find uid from "user" option
         user = get(section, 'user', None)
         if user is not None:
-            raise NotImplementedError('user option not implemented!')
+            self.parse_warnings.append("%s: user option not implemented!" % program_name)
         #   uid = None
         #else:
         #   uid = name_to_uid(user)
