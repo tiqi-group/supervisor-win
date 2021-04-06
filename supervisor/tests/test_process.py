@@ -9,7 +9,7 @@ import unittest
 
 from supervisor.compat import as_bytes
 from supervisor.compat import maxint
-from supervisor.helpers import DummyPopen
+from supervisor.psutil import DummyPopen
 from supervisor.options import BadCommand
 from supervisor.process import Subprocess
 from supervisor.tests.base import DummyDispatcher

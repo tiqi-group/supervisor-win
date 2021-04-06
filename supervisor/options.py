@@ -15,7 +15,7 @@ import warnings
 
 import pkg_resources
 
-from supervisor import helpers
+from supervisor import psutil
 from supervisor.compat import PY2
 from supervisor.compat import ConfigParser
 from supervisor.compat import as_bytes, as_string
@@ -402,6 +402,7 @@ class Options(object):
 
 class ServerOptions(Options):
     user = None
+    pwd = None
     sockchown = None
     sockchmod = None
     logfile = None
@@ -428,6 +429,7 @@ class ServerOptions(Options):
         self.add("delaysecs", "supervisord.delaysecs", "p",
                  "delaysecs", default=0.5)
         self.add("user", "supervisord.user", "u:", "user=")
+        self.add("pwd", "supervisord.pwd", "w:", "pwd=")
         self.add("umask", "supervisord.umask", "m:", "umask=",
                  octal_type, default='022')
         self.add("directory", "supervisord.directory", "d:", "directory=",
@@ -626,6 +628,7 @@ class ServerOptions(Options):
             section.directory = existing_directory(directory)
 
         section.user = get('user', None)
+        section.pwd = get('pwd', None)
         section.umask = octal_type(get('umask', '022'))
         section.logfile = existing_dirpath(get('logfile', 'supervisord.log'))
         section.logfile_maxbytes = byte_size(get('logfile_maxbytes', '50MB'))
@@ -880,13 +883,9 @@ class ServerOptions(Options):
         if serverurl and serverurl.strip().upper() == 'AUTO':
             serverurl = None
 
-        # find uid from "user" option
+        # user logon options
         user = get(section, 'user', None)
-        if user is not None:
-            self.parse_warnings.append("%s: user option not implemented!" % program_name)
-        #   uid = None
-        #else:
-        #   uid = name_to_uid(user)
+        pwd=get(section, 'pwd', None)
 
         umask = get(section, 'umask', None)
         if umask is not None:
@@ -974,6 +973,8 @@ class ServerOptions(Options):
             pconfig = klass(
                 self,
                 name=expand(process_name, expansions, 'process_name'),
+                user=user,
+                pwd=pwd,
                 command=command,
                 directory=directory,
                 umask=umask,
@@ -1382,11 +1383,11 @@ class ServerOptions(Options):
         except KeyError:
             raise IOError('pid (%s)' % pid)
         pipes = {
-            'stdin': helpers.InputStream(process.stdin),
-            'stdout': helpers.OutputStream(process.stdout)
+            'stdin': psutil.InputStream(process.stdin),
+            'stdout': psutil.OutputStream(process.stdout)
         }
         if stderr:
-            pipes['stderr'] = helpers.OutputStream(process.stderr)
+            pipes['stderr'] = psutil.OutputStream(process.stderr)
         else:
             pipes['stderr'] = None
         return pipes
@@ -1658,7 +1659,9 @@ class ProcessConfig(Config):
     optional_param_names = [
         'environment', 'serverurl',
         'cpupriority', 'cpuaffinity',
-        'systemjob'
+        'systemjob',
+        'user',
+        'pwd'
     ]
 
     def __init__(self, options, **params):

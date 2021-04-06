@@ -15,13 +15,12 @@ from supervisor.compat import maxint
 from supervisor.compat import as_bytes
 from supervisor.compat import as_string
 from supervisor.compat import PY2
-from supervisor import events, helpers
+from supervisor import events
 from supervisor.compat import StringIO
 from supervisor.compat import unicode
 
 from supervisor.datatypes import RestartUnconditionally
 from supervisor.dispatchers import EventListenerStates
-from supervisor.helpers import DummyPopen
 from supervisor.medusa import asyncore_25 as asyncore
 from supervisor.options import (
     ProcessException,
@@ -29,6 +28,9 @@ from supervisor.options import (
     signame,
     decode_wait_status
 )
+from supervisor.psutil.subproc import LoginSTARTUPINFO
+from supervisor.psutil import DummyPopen
+from supervisor.psutil import subproc
 from supervisor.socket_manager import SocketManager
 from supervisor.states import (
     ProcessStates,
@@ -393,6 +395,8 @@ class Subprocess(object):
     def execute(cls, filename, argv, **kwargs):
         """Runs a new process and returns its reference"""
         redirect_stderr = kwargs.pop('redirect_stderr', False)
+        user = kwargs.pop('user', None)
+        pwd = kwargs.pop('pwd', None)
         kwargs.update(dict(
             # Prevents the supervisor from inheriting the signal when expected by the process.
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
@@ -406,7 +410,16 @@ class Subprocess(object):
             kwargs['stderr'] = subprocess.STDOUT
         else:
             kwargs['stderr'] = subprocess.PIPE
-        proc = helpers.Popen(argv, **kwargs)
+        # user session
+        if user and pwd:
+            kwargs['startupinfo'] = LoginSTARTUPINFO(
+                user, pwd, None,
+                startupinfo=kwargs.get('startupinfo')
+            )
+            subproc_open = subproc.WPopen
+        else:
+            subproc_open = subproc.Popen
+        proc = subproc_open(argv, **kwargs)
         if proc.pid <= 0:
             raise OSError('failure initializing new process ' + ' '.join(argv))
         return proc
@@ -476,7 +489,9 @@ class Subprocess(object):
                 kwargs = dict(
                     env=env,
                     cwd=self.config.directory,
-                    redirect_stderr=self.config.redirect_stderr
+                    redirect_stderr=self.config.redirect_stderr,
+                    user=self.config.user,
+                    pwd=self.config.pwd
                 )
                 self.process = self.execute(filename, argv, **kwargs)
         except OSError as why:
