@@ -137,7 +137,7 @@ class WPopen(Popen):
 		:return: tuple (str - domain, str - username)
 		"""
 		try:
-			domain, username = username.split('\\')
+			domain, username = [s for s in username.split('\\') if s]
 		except ValueError:
 			domain = None
 		return domain, username
