@@ -29,9 +29,9 @@ class LoginSTARTUPINFO(object):
 	The LoginSTARTUPINFO cannot be used with the regular subprocess module.
 	"""
 
-	def __init__(self, username, password, domain=None, startupinfo=None):
+	def __init__(self, username, password, startupinfo=None):
 		# Login credentials
-		self.credentials = (username, domain, password)
+		self.credentials = (username, password)
 		self.startupinfo = startupinfo
 
 	@property
@@ -130,8 +130,22 @@ class WPopen(Popen):
 	"""
 
 	@staticmethod
-	def _logon_user(username, domain, password):
+	def resolve_domain(username):
+		"""
+		Separate domain from username
+		:param username: name of user like domain\\user@mail.com
+		:return: tuple (str - domain, str - username)
+		"""
+		try:
+			domain, username = username.split('\\')
+		except ValueError:
+			domain = None
+		return domain, username
+
+	@classmethod
+	def _logon_user(cls, username, password):
 		"""Login as specified user and return handle."""
+		domain, username = cls.resolve_domain(username)
 		token = win32security.LogonUser(
 			username, domain, password,
 			win32con.LOGON32_LOGON_INTERACTIVE,

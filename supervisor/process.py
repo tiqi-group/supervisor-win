@@ -413,7 +413,7 @@ class Subprocess(object):
         # user session
         if user and pwd:
             kwargs['startupinfo'] = LoginSTARTUPINFO(
-                user, pwd, None,
+                user, pwd,
                 startupinfo=kwargs.get('startupinfo')
             )
             subproc_open = subproc.WPopen
