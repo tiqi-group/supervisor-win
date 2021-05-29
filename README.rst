@@ -16,6 +16,17 @@ Supervisor has been tested (Python 2.7/3.7 [32/64 bit]) and is known to run on W
 * Some specific features of OS Linux have been disabled and others were adapted to the Windows OS.
 * The process control (supervisorctl) works and management processes correctly, as well as control via web!
 
+How to install ?
+----------------
+Installation can be done via pip
+
+``python -m pip install supervisor-win``
+
+* Note that the package name is different from the unix version.
+ 
+It is also possible to install the development version
+``python -m pip install git+https://github.com/alexsilva/supervisor@windows``
+
 Install as Windows service
 --------------------------
 To install supervisor as a windows service run the command
@@ -46,11 +57,11 @@ You may subscribe to the `Supervisor-users mailing list
 <http://lists.supervisord.org/mailman/listinfo/supervisor-users>`_.
 
 Please report bugs in the `Github issue tracker
-<https://github.com/alexsilva/supervisor/issues>`_.  .
+<https://github.com/alexsilva/supervisor/issues>`_.
 
 You can view the source repository for supervisor via
 `https://github.com/alexsilva/supervisor
-<https://github.com/alexsilva/supervisor>`_.
+<https://github.com/alexsilva/supervisor>`_
 
 Contributing
 ------------
