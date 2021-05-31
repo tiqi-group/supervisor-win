@@ -1836,8 +1836,7 @@ class ServerOptionsTests(unittest.TestCase):
         group = options.process_group_configs[0]
         self.assertEqual(group.name, 'cmd')
         proc = group.process_configs[0]
-        self.assertEqual(proc.command,
-            os.path.join(here, '/bin/from/supervisord/section'))
+        self.assertEqual(proc.command, '/bin/from/supervisord/section')
 
     def test_options_program_section_expands_env_from_program_sect(self):
         instance = self._makeOne()
@@ -1862,8 +1861,7 @@ class ServerOptionsTests(unittest.TestCase):
         group = options.process_group_configs[0]
         self.assertEqual(group.name, 'cmd')
         proc = group.process_configs[0]
-        self.assertEqual(proc.command,
-            os.path.join(here, '/bin/from/program/section'))
+        self.assertEqual(proc.command, '/bin/from/program/section')
 
     def test_options_program_section_expands_here(self):
         instance = self._makeOne()

@@ -822,8 +822,8 @@ class SubprocessTests(unittest.TestCase):
         instance = self._makeOne(config)
         from supervisor.states import ProcessStates
         instance.state = ProcessStates.STOPPED
-        instance.signal(signal.SIGWINCH)
-        self.assertEqual(options.logger.data[0], "attempted to send test sig SIGWINCH "
+        instance.signal(signal.SIGTERM)
+        self.assertEqual(options.logger.data[0], "attempted to send test sig SIGTERM "
                                                  "but it wasn't running")
         self.assertEqual(len(options.kills), 0)
 
