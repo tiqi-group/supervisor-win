@@ -148,7 +148,7 @@ class TailFProducerTests(unittest.TestCase):
             tmpfile.flush()
 
             result = producer.more()
-            self.assertEqual(result, '==> File truncated <==\n')
+            self.assertEqual(result, b'==> File truncated <==\n')
 
     def test_handle_more_fd_closed(self):
         request = DummyRequest('/logtail/foo', None, None, None)
