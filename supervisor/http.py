@@ -677,7 +677,7 @@ class tail_f_producer(object):
         try:
             if bytes_added < 0:
                 self.sz = 0
-                return "==> File truncated <==\n"
+                return b"==> File truncated <==\n"
             if bytes_added > 0:
                 self.file.seek(-bytes_added, os.SEEK_END)
                 bytes = self.file.read(bytes_added)
