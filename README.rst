@@ -25,6 +25,7 @@ Installation can be done via pip
 * Note that the package name is different from the unix version.
  
 It is also possible to install the development version
+
 ``python -m pip install git+https://github.com/alexsilva/supervisor@windows``
 
 Install as Windows service
