@@ -107,6 +107,7 @@ class Options(object):
         self.attr_priorities = {}
         self.require_configfile = require_configfile
         self.add(None, None, "h", "help", self.help)
+        self.add(None, None, "?", None, self.help)
         self.add("configfile", None, "c:", "configuration=")
 
         here = os.path.dirname(os.path.dirname(sys.argv[0]))
@@ -411,8 +412,6 @@ class ServerOptions(Options):
     passwdfile = None
     nodaemon = None
     silent = None
-    environment = None
-    serverurl = None
     httpservers = ()
     unlink_pidfile = False
     unlink_socketfiles = False
@@ -648,6 +647,11 @@ class ServerOptions(Options):
         environ_str = get('environment', '')
         environ_str = expand(environ_str, expansions, 'environment')
         section.environment = dict_of_key_value_pairs(environ_str)
+
+        # extend expansions for global from [supervisord] environment definition
+        for k, v in section.environment.items():
+            self.environ_expansions['ENV_%s' % k ] = v
+
         # Process rpcinterface plugins before groups to allow custom events to
         # be registered.
         section.rpcinterface_factories = self.get_plugins(
@@ -914,6 +918,10 @@ class ServerOptions(Options):
 
             environment = dict_of_key_value_pairs(
                 expand(environment_str, expansions, 'environment'))
+
+            # extend expansions for process from [program:x] environment definition
+            for k, v in environment.items():
+                expansions['ENV_%s' % k] = v
 
             directory = get(section, 'directory', None)
             if directory is not None:
@@ -1280,6 +1288,16 @@ class ServerOptions(Options):
     def stat(self, filename):
         return os.stat(filename)
 
+    def write(self, fd, data):
+        try:
+            return os.write(fd if type(fd) is int else fd.fileno(), as_bytes(data))
+        except OSError:
+            if fd == 1 and self.stdout is None or not self.stdout.isatty():
+                self.logger.info(data.rstrip())
+            elif fd == 2 and self.stderr is None or not self.stderr.isatty():
+                self.logger.error(data.rstrip())
+            return 0
+
     @raise_not_implemented
     def execve(self, filename, argv, **kwargs):
         """dummy"""
@@ -1336,17 +1354,6 @@ class ServerOptions(Options):
             if hasattr(handler, 'reopen'):
                 handler.reopen()
 
-    def read_stream(self, stream):
-        """
-        The work of this method is to read the data stream of a process, but without blocking
-        the work of the supervisor. A buffer of data is being read in a thread and when the total
-        data is reached is given in return for one of the Dispatcher objects responsible.
-        """
-        return stream.read()
-
-    def write_stream(self, stream, buffer):
-        return stream.write(buffer)
-
     def readfd(self, fd):
         try:
             data = os.read(fd, 2 << 16) # 128K
@@ -1355,19 +1362,6 @@ class ServerOptions(Options):
                 raise
             data = b''
         return data
-
-    def write(self, fd, data):
-        try:
-            return os.write(fd if type(fd) is int else fd.fileno(), as_bytes(data))
-        except OSError:
-            if fd == 1 and self.stdout is None or not self.stdout.isatty():
-                self.logger.info(data.rstrip())
-            elif fd == 2 and self.stderr is None or not self.stderr.isatty():
-                self.logger.error(data.rstrip())
-            return 0
-
-    def process_environment(self):
-        os.environ.update(self.environment or {})
 
     def chdir(self, dir):
         """dummy interface only"""
@@ -1403,6 +1397,17 @@ class ServerOptions(Options):
             fd = pipes.get(fdname)
             if fd is not None:
                 self.close_fd(fd)
+
+    def read_stream(self, stream):
+        """
+        The work of this method is to read the data stream of a process, but without blocking
+        the work of the supervisor. A buffer of data is being read in a thread and when the total
+        data is reached is given in return for one of the Dispatcher objects responsible.
+        """
+        return stream.read()
+
+    def write_stream(self, stream, buffer):
+        return stream.write(buffer)
 
 
 class ClientOptions(Options):

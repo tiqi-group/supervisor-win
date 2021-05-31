@@ -47,7 +47,7 @@ class LogtailHandlerTests(HandlerTests, unittest.TestCase):
         handler = self._makeOne(supervisord)
         request = DummyRequest('/logtail/process1', None, None, None)
         handler.handle_request(request)
-        self.assertEqual(request._error, 410)
+        self.assertEqual(request._error, 404)
 
     def test_handle_request_stdout_logfile_missing(self):
         options = DummyOptions()
@@ -56,7 +56,7 @@ class LogtailHandlerTests(HandlerTests, unittest.TestCase):
         handler = self._makeOne(supervisord)
         request = DummyRequest('/logtail/foo', None, None, None)
         handler.handle_request(request)
-        self.assertEqual(request._error, 410)
+        self.assertEqual(request._error, 404)
 
     def test_handle_request(self):
         fd, tfilename = tempfile.mkstemp()
@@ -89,7 +89,7 @@ class MainLogTailHandlerTests(HandlerTests, unittest.TestCase):
         handler = self._makeOne(supervisor)
         request = DummyRequest('/mainlogtail', None, None, None)
         handler.handle_request(request)
-        self.assertEqual(request._error, 410)
+        self.assertEqual(request._error, 404)
 
     def test_handle_request_stdout_logfile_missing(self):
         supervisor = DummySupervisor()
@@ -97,7 +97,7 @@ class MainLogTailHandlerTests(HandlerTests, unittest.TestCase):
         request = DummyRequest('/mainlogtail', None, None, None)
         handler = self._makeOne(supervisor)
         handler.handle_request(request)
-        self.assertEqual(request._error, 410)
+        self.assertEqual(request._error, 404)
 
     def test_handle_request(self):
         supervisor = DummySupervisor()

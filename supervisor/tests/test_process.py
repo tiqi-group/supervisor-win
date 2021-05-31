@@ -9,7 +9,6 @@ import unittest
 
 from supervisor.compat import as_bytes
 from supervisor.compat import maxint
-from supervisor.psutil import DummyPopen
 from supervisor.options import BadCommand
 from supervisor.process import Subprocess
 from supervisor.tests.base import DummyDispatcher
@@ -239,7 +238,8 @@ class SubprocessTests(unittest.TestCase):
 
     def test_spawn_fail_make_pipes_emfile(self):
         options = DummyOptions()
-        options.make_pipes_error = errno.EMFILE
+        options.make_pipes_exception = OSError(errno.EMFILE,
+                                               os.strerror(errno.EMFILE))
         config = DummyPConfig(options, 'good', '/good/filename')
         instance = self._makeOne(config)
         from supervisor.states import ProcessStates
@@ -264,7 +264,8 @@ class SubprocessTests(unittest.TestCase):
 
     def test_spawn_fail_make_pipes_other(self):
         options = DummyOptions()
-        options.make_pipes_error = 1
+        options.make_pipes_exception = OSError(errno.EPERM,
+                                               os.strerror(errno.EPERM))
         config = DummyPConfig(options, 'good', '/good/filename')
         instance = self._makeOne(config)
         from supervisor.states import ProcessStates
@@ -357,7 +358,8 @@ class SubprocessTests(unittest.TestCase):
     def test_spawn_as_child_execv_fail_oserror(self):
         options = DummyOptions()
         options.forkpid = 0
-        options.execv_error = 1
+        options.execv_exception = OSError(errno.EPERM,
+                                          os.strerror(errno.EPERM))
         config = DummyPConfig(options, 'good', '/good/filename')
         instance = self._makeOne(config)
         result = instance.spawn()
@@ -374,7 +376,7 @@ class SubprocessTests(unittest.TestCase):
     def test_spawn_as_child_execv_fail_runtime_error(self):
         options = DummyOptions()
         options.forkpid = 0
-        options.execv_error = 2
+        options.execv_exception = RuntimeError(errno.ENOENT)
         config = DummyPConfig(options, 'good', '/good/filename')
         instance = self._makeOne(config)
         result = instance.spawn()
@@ -513,7 +515,8 @@ class SubprocessTests(unittest.TestCase):
         options.forkpid = 1
         instance.spawn()
         stdin_fd = instance.pipes['stdin']
-        instance.dispatchers[stdin_fd].flush_error = errno.EPIPE
+        instance.dispatchers[stdin_fd].flush_exception = OSError(errno.EPIPE,
+                                                    os.strerror(errno.EPIPE))
         self.assertRaises(OSError, instance.write, sent)
 
     def _dont_test_spawn_and_kill(self):
@@ -652,30 +655,6 @@ class SubprocessTests(unittest.TestCase):
                          'Attempted to kill test with sig SIGTERM but it wasn\'t running')
         self.assertFalse(instance.killing)
 
-    def test_kill_error(self):
-        options = DummyOptions()
-        config = DummyPConfig(options, 'test', '/test')
-        options.kill_error = 1
-        instance = self._makeOne(config)
-        L = []
-        from supervisor.states import ProcessStates
-        from supervisor import events
-        events.subscribe(events.ProcessStateEvent, lambda x: L.append(x))
-        instance.pid = 11
-        instance.state = ProcessStates.RUNNING
-        instance.kill(signal.SIGTERM)
-        self.assertEqual(options.logger.data[0], 'killing test (pid 11) with '
-                                                 'signal SIGTERM')
-        self.assertTrue(options.logger.data[1].startswith(
-            'unknown problem killing test'))
-        self.assertTrue('Traceback' in options.logger.data[1])
-        self.assertFalse(instance.killing)
-        self.assertEqual(len(L), 2)
-        event1 = L[0]
-        event2 = L[1]
-        self.assertEqual(event1.__class__, events.ProcessStateStoppingEvent)
-        self.assertEqual(event2.__class__, events.ProcessStateUnknownEvent)
-
     def test_kill_from_starting(self):
         options = DummyOptions()
         config = DummyPConfig(options, 'test', '/test')
@@ -713,6 +692,57 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(len(L), 1)
         event = L[0]
         self.assertEqual(event.__class__, events.ProcessStateStoppingEvent)
+
+    def test_kill_from_running_error(self):
+        options = DummyOptions()
+        config = DummyPConfig(options, 'test', '/test')
+        options.kill_exception = OSError(errno.EPERM,
+                                         os.strerror(errno.EPERM))
+        instance = self._makeOne(config)
+        L = []
+        from supervisor.states import ProcessStates
+        from supervisor import events
+        events.subscribe(events.ProcessStateEvent, lambda x: L.append(x))
+        instance.pid = 11
+        instance.state = ProcessStates.RUNNING
+        instance.kill(signal.SIGTERM)
+        self.assertEqual(options.logger.data[0], 'killing test (pid 11) with '
+                         'signal SIGTERM')
+        self.assertTrue(options.logger.data[1].startswith(
+            'unknown problem killing test'))
+        self.assertTrue('Traceback' in options.logger.data[1])
+        self.assertFalse(instance.killing)
+        self.assertEqual(instance.pid, 11) # unchanged
+        self.assertEqual(instance.state, ProcessStates.UNKNOWN)
+        self.assertEqual(len(L), 2)
+        event1 = L[0]
+        event2 = L[1]
+        self.assertEqual(event1.__class__, events.ProcessStateStoppingEvent)
+        self.assertEqual(event2.__class__, events.ProcessStateUnknownEvent)
+
+    def test_kill_from_running_error_ESRCH(self):
+        options = DummyOptions()
+        config = DummyPConfig(options, 'test', '/test')
+        options.kill_exception = OSError(errno.ESRCH,
+                                         os.strerror(errno.ESRCH))
+        instance = self._makeOne(config)
+        L = []
+        from supervisor.states import ProcessStates
+        from supervisor import events
+        events.subscribe(events.ProcessStateEvent, lambda x: L.append(x))
+        instance.pid = 11
+        instance.state = ProcessStates.RUNNING
+        instance.kill(signal.SIGTERM)
+        self.assertEqual(options.logger.data[0], 'killing test (pid 11) with '
+                                                 'signal SIGTERM')self.assertEqual(options.logger.data[1], 'unable to signal test (pid 11), '
+            'it probably just exited on its own: %s' %
+            str(options.kill_exception))
+        self.assertTrue(instance.killing)
+        self.assertEqual(instance.pid, 11) # unchanged
+        self.assertEqual(instance.state, ProcessStates.STOPPING)
+        self.assertEqual(len(L), 1)
+        event1 = L[0]
+        self.assertEqual(event1.__class__, events.ProcessStateStoppingEvent)
 
     def test_kill_from_stopping(self):
         options = DummyOptions()
@@ -785,7 +815,18 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(event.extra_values, [('pid', 11)])
         self.assertEqual(event.from_state, ProcessStates.RUNNING)
 
-    def test_signal(self):
+    def test_signal_from_stopped(self):
+        options = DummyOptions()
+        config = DummyPConfig(options, 'test', '/test')
+        instance = self._makeOne(config)
+        from supervisor.states import ProcessStates
+        instance.state = ProcessStates.STOPPED
+        instance.signal(signal.SIGWINCH)
+        self.assertEqual(options.logger.data[0], "attempted to send test sig SIGWINCH "
+                                                 "but it wasn't running")
+        self.assertEqual(len(options.kills), 0)
+
+    def test_signal_from_running(self):
         options = DummyOptions()
 
         killedpid = []
@@ -811,7 +852,7 @@ class SubprocessTests(unittest.TestCase):
 
         self.assertEqual(options.logger.data[0], 'sending test (pid 11) sig SIGTERM')
 
-    def test_signal_stopped(self):
+    def test_signal_from_running_error_ESRCH(self):
         options = DummyOptions()
 
         killedpid = []
@@ -824,9 +865,10 @@ class SubprocessTests(unittest.TestCase):
         options.kill = kill  # don't actually start killing random processes...
 
         config = DummyPConfig(options, 'test', '/test')
+        options.kill_exception = OSError(errno.ESRCH,
+                                         os.strerror(errno.ESRCH))
         instance = self._makeOne(config)
-        instance.pid = None
-
+        L = []
         from supervisor.states import ProcessStates
         instance.state = ProcessStates.STOPPED
 
@@ -835,12 +877,11 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(options.logger.data[0], "attempted to send test sig SIGABRT "
                                                  "but it wasn't running")
 
-        self.assertEqual(killedpid, [])
-
-    def test_signal_error(self):
+    def test_signal_from_running_error(self):
         options = DummyOptions()
         config = DummyPConfig(options, 'test', '/test')
-        options.kill_error = 1
+        options.kill_exception = OSError(errno.EPERM,
+                                         os.strerror(errno.EPERM))
         instance = self._makeOne(config)
         L = []
         from supervisor.states import ProcessStates
@@ -855,6 +896,8 @@ class SubprocessTests(unittest.TestCase):
             'unknown problem sending sig test (11)'))
         self.assertTrue('Traceback' in options.logger.data[1])
         self.assertFalse(instance.killing)
+        self.assertEqual(instance.state, ProcessStates.UNKNOWN)
+        self.assertEqual(instance.pid, 11) # unchanged
         self.assertEqual(len(L), 1)
         event = L[0]
         self.assertEqual(event.__class__, events.ProcessStateUnknownEvent)
@@ -1934,7 +1977,8 @@ class EventListenerPoolTests(ProcessGroupBaseTests):
         gconfig = DummyPGroupConfig(options, pconfigs=[pconfig1])
         pool = self._makeOne(gconfig)
         process1 = pool.processes['process1']
-        process1.write_error = errno.EPIPE
+        process1.write_exception = OSError(errno.EPIPE,
+                                           os.strerror(errno.EPIPE))
         process1.listener_state = EventListenerStates.READY
         event = DummyEvent()
         pool._acceptEvent(event)

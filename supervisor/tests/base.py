@@ -1,10 +1,11 @@
 _NOW = 1151365354
 _TIMEFORMAT = '%b %d %I:%M %p'
 
+import errno
+import functools
 import os
 import sys
 import tempfile
-from functools import total_ordering
 
 from supervisor.compat import Fault
 from supervisor.compat import as_bytes
@@ -57,12 +58,16 @@ class TempFileOpen(object):
 
 
 class DummyOptions:
-    make_pipes_error = None
-    fork_error = None
-    execv_error = None
-    kill_error = None
-    minfds = 5
     loglevel = 20
+    minfds = 5
+
+    chdir_exception = None
+    fork_exception = None
+    execv_exception = None
+    kill_exception = None
+    make_pipes_exception = None
+    remove_exception = None
+    write_exception = None
 
     def __init__(self):
         tempdir = tempfile.gettempdir()
@@ -109,10 +114,9 @@ class DummyOptions:
         self.setuid_msg = None
         self.privsdropped = None
         self.logs_reopened = False
-        self.environment_processed = False
         self.write_accept = None
         self.write_error = None
-        self.tempfile_name = os.path.join(tempdir, 'foo\\bar')
+        self.tempfile_name = os.path.join(tempdir, 'foo', 'bar')
         self.remove_error = None
         self.removed = []
         self.existing = []
@@ -123,7 +127,6 @@ class DummyOptions:
         self.parse_infos = []
         self.serverurl = 'http://localhost:9001'
         self.changed_directory = False
-        self.chdir_error = None
         self.umaskset = None
         self.poller = DummyPoller(self)
         self.silent = False
@@ -195,8 +198,8 @@ class DummyOptions:
         return self.waitpid_return
 
     def kill(self, pid, sig):
-        if self.kill_error:
-            raise OSError(self.kill_error)
+        if self.kill_exception is not None:
+            raise self.kill_exception
         self.kills[pid] = sig
 
     def stat(self, filename):
@@ -221,8 +224,8 @@ class DummyOptions:
             raise NotFound('bad filename')
 
     def make_pipes(self, pid, stderr=True):
-        if self.make_pipes_error:
-            raise OSError(self.make_pipes_error)
+        if self.make_pipes_exception is not None:
+            raise self.make_pipes_exception
         pipes = {'stdin': sys.stdin, 'stdout': sys.stdout}
         if stderr:
             pipes['stderr'] = sys.stderr
@@ -231,8 +234,8 @@ class DummyOptions:
         return pipes
 
     def write(self, fd, chars):
-        if self.write_error:
-            raise OSError(self.write_error)
+        if self.write_exception is not None:
+            raise self.write_exception
         if self.write_accept:
             chars = chars[self.write_accept]
         data = self.written.setdefault(fd, '')
@@ -241,8 +244,8 @@ class DummyOptions:
         return len(chars)
 
     def fork(self):
-        if self.fork_error:
-            raise OSError(self.fork_error)
+        if self.fork_exception is not None:
+            raise self.fork_exception
         return self.forkpid
 
     def close_fd(self, fd):
@@ -265,11 +268,8 @@ class DummyOptions:
 
     def execve(self, filename, argv, environment):
         self.execve_called = True
-        if self.execv_error:
-            if self.execv_error == 1:
-                raise OSError(self.execv_error)
-            else:
-                raise RuntimeError(self.execv_error)
+        if self.execv_exception is not None:
+            raise self.execv_exception
         self.execv_args = (filename, argv)
         self.execv_environment = environment
 
@@ -284,16 +284,13 @@ class DummyOptions:
     def reopenlogs(self):
         self.logs_reopened = True
 
-    def process_environment(self):
-        self.environment_processed = True
-
     def mktempfile(self, prefix, suffix, dir):
         return self.tempfile_name
 
     def remove(self, path):
         import os
-        if self.remove_error:
-            raise os.error(self.remove_error)
+        if self.remove_exception is not None:
+            raise self.remove_exception
         self.removed.append(path)
 
     def exists(self, path):
@@ -307,8 +304,8 @@ class DummyOptions:
         return open(name, mode)
 
     def chdir(self, dir):
-        if self.chdir_error:
-            raise OSError(self.chdir_error)
+        if self.chdir_exception is not None:
+            raise self.chdir_exception
         self.changed_directory = True
 
     def setumask(self, mask):
@@ -436,8 +433,10 @@ class DummySocketManager:
         return DummySocket(self._config.fd)
 
 
-@total_ordering
+@functools.total_ordering
 class DummyProcess(object):
+    write_exception = None
+
     # Initial state; overridden by instance variables
     pid = 0  # Subprocess pid; 0 when not running
     laststart = 0  # Last time the subprocess was started; 0 if never
@@ -490,7 +489,6 @@ class DummyProcess(object):
         self.input_fd_drained = None
         self.output_fd_drained = None
         self.transitioned = False
-        self.write_error = None
 
     def reopenlogs(self):
         self.logs_reopened = True
@@ -558,8 +556,8 @@ class DummyProcess(object):
         self.input_fd_drained = fd
 
     def write(self, chars):
-        if self.write_error:
-            raise OSError(self.write_error)
+        if self.write_exception is not None:
+            raise self.write_exception
         self.stdin_buffer += chars
 
     def transition(self):
@@ -1118,7 +1116,7 @@ class DummyFCGIGroupConfig(DummyPGroupConfig):
         self.socket_config = socket_config
 
 
-@total_ordering
+@functools.total_ordering
 class DummyProcessGroup(object):
     def __init__(self, config):
         self.config = config
@@ -1185,13 +1183,14 @@ class PopulatedDummySupervisor(DummySupervisor):
 
 
 class DummyDispatcher:
+    flush_exception = None
+
     write_event_handled = False
     read_event_handled = False
     error_handled = False
     logs_reopened = False
     logs_removed = False
     closed = False
-    flush_error = None
     flushed = False
 
     def __init__(self, readable=False, writable=False, error=False):
@@ -1234,8 +1233,8 @@ class DummyDispatcher:
         self.closed = True
 
     def flush(self):
-        if self.flush_error:
-            raise OSError(self.flush_error)
+        if self.flush_exception:
+            raise self.flush_exception
         self.flushed = True
 
 

@@ -1,22 +1,21 @@
 import errno
+import functools
 import os
 import shlex
-import subprocess
 import time
 import traceback
 import signal
-from functools import total_ordering
 import win32api
 import win32job
 import win32process
 import win32con
+import subprocess
 
 from supervisor.compat import maxint
 from supervisor.compat import as_bytes
 from supervisor.compat import as_string
 from supervisor.compat import PY2
 from supervisor import events
-from supervisor.compat import StringIO
 from supervisor.compat import unicode
 
 from supervisor.datatypes import RestartUnconditionally
@@ -131,7 +130,7 @@ class ProcessCpuHandler(object):
         return pHandle
 
 
-@total_ordering
+@functools.total_ordering
 class Subprocess(object):
     """A class to manage a subprocess."""
 
@@ -567,7 +566,8 @@ class Subprocess(object):
         self.change_state(ProcessStates.FATAL)
 
     def kill(self, sig):
-        """Send a signal to the subprocess.  This may or may not kill it.
+        """Send a signal to the subprocess with the intention to kill
+        it (to make it exit).  This may or may not actually kill it.
 
         Return None if the signal was sent, or an error message string
         if an error occurred or if the subprocess is not running.
@@ -629,7 +629,17 @@ class Subprocess(object):
             pid = -self.pid
 
         try:
-            options.kill(pid, sig)
+            try:
+                options.kill(pid, sig)
+            except OSError as exc:
+                if exc.errno == errno.ESRCH:
+                    msg = ("unable to signal %s (pid %s), it probably just exited "
+                           "on its own: %s" % (processname, self.pid, str(exc)))
+                    options.logger.debug(msg)
+                    # we could change the state here but we intentionally do
+                    # not.  we will do it during normal SIGCHLD processing.
+                    return None
+                raise
         except:
             tb = traceback.format_exc()
             tb = as_string(tb, errors='ignore')
@@ -637,7 +647,6 @@ class Subprocess(object):
                                                           self.pid, tb)
             options.logger.critical(msg)
             self.change_state(ProcessStates.UNKNOWN)
-            self.pid = 0
             self.killing = False
             self.delay = 0
             return msg
@@ -671,6 +680,16 @@ class Subprocess(object):
         )
         try:
             options.kill(self.pid, sig)
+        except OSError as exc:
+            if exc.errno == errno.ESRCH:
+                msg = ("unable to signal %s (pid %s), it probably just now exited "
+                       "on its own: %s" % (processname, self.pid,
+                                           str(exc)))
+                options.logger.debug(msg)
+                # we could change the state here but we intentionally do
+                # not.  we will do it during normal SIGCHLD processing.
+                return None
+            raise
         except ValueError as e:  # signal not supported
             msg = 'problem sending sig %s (%s): %s' % (
                 self.config.name, self.pid, str(e))
@@ -685,7 +704,6 @@ class Subprocess(object):
                 processname, self.pid, tb)
             options.logger.critical(msg)
             self.change_state(ProcessStates.UNKNOWN)
-            self.pid = 0
             return msg
 
         return None
@@ -955,7 +973,7 @@ class FastCGISubprocess(Subprocess):
             options.close_fd(i)
 
 
-@total_ordering
+@functools.total_ordering
 class ProcessGroupBase(object):
     def __init__(self, config):
         self.config = config

@@ -90,7 +90,6 @@ class Supervisor(object):
         try:
             for config in self.options.process_group_configs:
                 self.add_process_group(config)
-            self.options.process_environment()
             self.options.openhttpservers(self)
             self.options.setsignals()
             if not self.options.nodaemon and self.options.first:
@@ -120,9 +119,8 @@ class Supervisor(object):
             self.options.job_handler = None
         return self.options.job_handler
 
-    def diff_to_active(self, new=None):
-        if not new:
-            new = self.options.process_group_configs
+    def diff_to_active(self):
+        new = self.options.process_group_configs
         cur = [group.config for group in self.process_groups.values()]
 
         curdict = dict(zip([cfg.name for cfg in cur], cur))
