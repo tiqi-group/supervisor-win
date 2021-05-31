@@ -734,11 +734,12 @@ class SubprocessTests(unittest.TestCase):
         instance.state = ProcessStates.RUNNING
         instance.kill(signal.SIGTERM)
         self.assertEqual(options.logger.data[0], 'killing test (pid 11) with '
-                                                 'signal SIGTERM')self.assertEqual(options.logger.data[1], 'unable to signal test (pid 11), '
+                                                 'signal SIGTERM')
+        self.assertEqual(options.logger.data[1], 'unable to signal test (pid 11), '
             'it probably just exited on its own: %s' %
             str(options.kill_exception))
         self.assertTrue(instance.killing)
-        self.assertEqual(instance.pid, 11) # unchanged
+        self.assertEqual(instance.pid, 11)  # unchanged
         self.assertEqual(instance.state, ProcessStates.STOPPING)
         self.assertEqual(len(L), 1)
         event1 = L[0]
