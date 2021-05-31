@@ -23,6 +23,10 @@ import supervisor.medusa.http_date as http_date
 import supervisor.medusa.producers as producers
 import supervisor.medusa.logger as logger
 from supervisor.medusa.counter import counter
+try:
+    from urllib import unquote, splitquery
+except ImportError:
+    from urllib.parse import unquote, splitquery
 
 from supervisor.compat import urllib
 
