@@ -412,6 +412,7 @@ class ServerOptions(Options):
     passwdfile = None
     nodaemon = None
     silent = None
+    serverurl = None
     httpservers = ()
     unlink_pidfile = False
     unlink_socketfiles = False
