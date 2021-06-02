@@ -54,9 +54,6 @@ Windows specific documentation can be found `here <https://github.com/alexsilva/
 Mailing list, Reporting Bugs, and Viewing the Source Repository
 ---------------------------------------------------------------
 
-You may subscribe to the `Supervisor-users mailing list
-<http://lists.supervisord.org/mailman/listinfo/supervisor-users>`_.
-
 Please report bugs in the `Github issue tracker
 <https://github.com/alexsilva/supervisor/issues>`_.
 
