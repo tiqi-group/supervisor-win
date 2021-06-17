@@ -5,7 +5,7 @@ To install the service on a terminal, as an administrator, run the command line:
 python -m supervisor.services install -c "{path}\supervisord.conf"
 """
 from __future__ import print_function
-
+import unicodedata
 import argparse
 import logging.handlers
 import os
@@ -139,6 +139,19 @@ class SupervisorService(SupervisorServiceFramework):
         self.supervisor_conf = self.get_config()
 
     @staticmethod
+    def slugify(value):
+        """
+        Converts to lowercase, removes non-word characters (alphanumerics and
+        underscores) and converts spaces to hyphens. Also strips leading and
+        trailing whitespace.
+        """
+        from supervisor.compat import as_string
+        value = as_string(value, errors='ignore')
+        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+        value = re.sub(r'[^\w\s-]', '', value.lower())
+        return re.sub(r'[-\s]+', '-', value).strip('-_')
+
+    @staticmethod
     def get_logger():
         """interface to create logger"""
         return logging.getLogger(__name__)
@@ -161,7 +174,7 @@ class SupervisorService(SupervisorServiceFramework):
         else:  # or to python home
             config_dir = os.getcwd()
 
-        log_path = os.path.join(config_dir, self._svc_name_.lower() + "-service.log")
+        log_path = os.path.join(config_dir, self.slugify(self._svc_name_) + "-service.log")
         hdl = logging.handlers.RotatingFileHandler(log_path,
                                                    maxBytes=1024 ** 2,
                                                    backupCount=3)
