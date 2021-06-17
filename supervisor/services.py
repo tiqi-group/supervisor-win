@@ -321,6 +321,11 @@ def get_config_args(argv):
     return options, args, argv
 
 
+def _stdout_isatty():
+    """attached to terminal"""
+    return sys.stdout is not None and sys.stdout.isatty()
+
+
 def run(cls=SupervisorService):
     """Run the configured service"""
     # service must be starting...
@@ -328,7 +333,7 @@ def run(cls=SupervisorService):
     # any unhandled exceptions and print statements.
     print("supervisor service is starting...")
     print("(execute this script with '-h' or '--help' if that isn't what you want)")
-    if sys.stdout is None or not sys.stdout.isatty():
+    if not _stdout_isatty():
         # By default, the service does not start a console and this
         # causes side effects in sending signals to the subprocess.
         # Manually starts when an output terminal is not detected.
@@ -336,8 +341,8 @@ def run(cls=SupervisorService):
     servicemanager.Initialize()
     servicemanager.PrepareToHostSingle(cls)
     # Now ask the service manager to fire things up for us...
+    # this api close sys.stdout
     servicemanager.StartServiceCtrlDispatcher()
-    print("supervisor service done!")
 
 
 def installer(argv):
@@ -423,5 +428,9 @@ def patch_sys_path():
 
 
 if __name__ == '__main__':
+    if not _stdout_isatty():
+        logger = logging.getLogger(__name__)
+        sys.stdout = StreamHandler(logger.info)
+        sys.stderr = StreamHandler(logger.error)
     patch_sys_path()
     main(sys.argv)
