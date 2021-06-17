@@ -133,6 +133,9 @@ class SupervisorService(SupervisorServiceFramework):
         self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
         socket.setdefaulttimeout(60)
         self.initialize()
+        # handle output
+        self.lstdout = StreamHandler(self.logger.info)
+        self.lstderr = StreamHandler(self.logger.error)
 
     def initialize(self):
         self.logger = self.get_logger()
@@ -186,7 +189,6 @@ class SupervisorService(SupervisorServiceFramework):
         if supervisor_conf_exc is not None:
             self.logger.error("* The service needs to be reinstalled")
             self.logger.error(supervisor_conf_exc)
-            logging.shutdown()
             exit(-1)
         return supervisor_conf
 
@@ -222,23 +224,21 @@ class SupervisorService(SupervisorServiceFramework):
     def SvcStop(self):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         # Supervisor process stop event
-        stdout = StreamHandler(self.logger.info)
-        stderr = StreamHandler(self.logger.error)
         try:
-            self.stopping(stdout, stderr)
+            self.stopping(self.lstdout, self.lstderr)
             self.logger.info("supervisorctl shutdown")
             from supervisor import supervisorctl
             supervisorctl.main(("-c", self.supervisor_conf, "shutdown"),
-                               stdout=stdout, stderr=stderr)
+                               stdout=self.lstdout,
+                               stderr=self.lstderr)
         except SystemExit:
             pass  # normal exit
         except Exception as exc:
             self.stopping_failed(exc)
             self.logger.exception("supervisorctl shutdown execution failed")
         finally:
-            logging.shutdown()
-            stderr.close()
-            stdout.close()
+            self.lstderr.close()
+            self.lstdout.close()
             win32event.SetEvent(self.hWaitStop)
 
     def SvcDoRun(self):
@@ -252,21 +252,20 @@ class SupervisorService(SupervisorServiceFramework):
     # noinspection PyBroadException
     def main(self):
         """Starts running the supervisor"""
-        stdout = StreamHandler(self.logger.info)
-        stderr = StreamHandler(self.logger.error)
         try:
-            self.starting(stdout, stderr)
+            self.starting(self.lstdout, self.lstderr)
             from supervisor import supervisord
             self.logger.info("supervisor starting...")
             supervisord.main(("-c", self.supervisor_conf),
-                             stdout=stdout, stderr=stderr)
+                             stdout=self.lstdout,
+                             stderr=self.lstderr)
             self.logger.info("supervisor shutdown")
         except Exception as exc:
             self.starting_failed(exc)
             self.logger.exception("supervisor starting failed")
         finally:
-            stdout.close()
-            stderr.close()
+            self.lstderr.close()
+            self.lstdout.close()
 
 
 def parse_args_config(options, argv):
