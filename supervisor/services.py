@@ -409,21 +409,15 @@ def main(argv):
 
 def patch_sys_path():
     # supervisor{dir}/supervisor{package}
-    local_dir = os.path.dirname(__file__)
-
+    package_dir = os.path.dirname(__file__)
     # removes supervisor package directory from path
-    local_path_index = None
-    for index, path in enumerate(sys.path):
-        if re.match(re.escape(path), local_dir, re.U | re.I):
-            local_path_index = index
-            break
-    if local_path_index is not None:
-        sys.path.pop(local_path_index)
-
+    for path in list(sys.path):
+        if re.match("^" + re.escape(path) + "$", package_dir, re.U | re.I):
+            sys.path.remove(path)
     try:
         import supervisor
     except ImportError:
-        sys.path.append(os.path.abspath(os.path.join(local_dir, '..')))
+        sys.path.append(os.path.abspath(os.path.join(package_dir, '..')))
 
 
 if __name__ == '__main__':
