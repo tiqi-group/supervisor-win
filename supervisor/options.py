@@ -1948,7 +1948,7 @@ def tailFile(filename, offset, length):
                 data = f.read(length)
 
             offset = sz
-            return [as_string(data), offset, overflow]
+            return [as_string(data, errors='replace'), offset, overflow]
     except (OSError, IOError):
         return ['', offset, False]
 
