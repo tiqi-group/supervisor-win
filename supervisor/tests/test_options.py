@@ -1726,13 +1726,13 @@ class ServerOptionsTests(unittest.TestCase, IncludeTestsMixin):
         [program:foo]
         command = /bin/foo
         stopsignal = %d
-        """ % signal.SIGQUIT)
+        """ % signal.SIGTERM)
         from supervisor.options import UnhosedConfigParser
         config = UnhosedConfigParser()
         config.read_string(text)
         pconfigs = instance.processes_from_section(config, 'program:foo', 'bar')
         self.assertEqual(instance.parse_warnings, [])
-        self.assertEqual(pconfigs[0].stopsignal, signal.SIGQUIT)
+        self.assertEqual(pconfigs[0].stopsignal, signal.SIGTERM)
 
     def test_options_with_environment_expansions(self):
         text = lstrip("""\
