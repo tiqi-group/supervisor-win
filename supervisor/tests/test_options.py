@@ -287,11 +287,11 @@ class IncludeTestsMixin(object):
         [supervisorctl]
 
         [include]
-        files=nonexistent/*
+        files=nonexistent\\*
         """)
         instance.read_config(StringIO(text))
         self.assertEqual(instance.parse_warnings,
-                         ['No file matches via include "./nonexistent/*"'])
+                         ['No file matches via include ".\\nonexistent\\*"'])
 
     def test_read_config_include_reads_files_in_sorted_order(self):
         dirname = tempfile.mkdtemp()
@@ -305,7 +305,7 @@ class IncludeTestsMixin(object):
         [supervisorctl]
 
         [include]
-        files=%s/conf.d/*.conf
+        files=%s\\conf.d\\*.conf
         """ % dirname)
         with open(supervisord_conf, 'w') as f:
             f.write(text)
