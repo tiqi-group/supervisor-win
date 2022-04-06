@@ -430,7 +430,7 @@ class Options(object):
                     try:
                         parser.read(filename)
                     except ConfigParser.ParsingError as why:
-                        raise ValueError(str(why))
+                        raise ValueError(str(why).replace(os.sep * 2, os.sep))
                     else:
                         parser.expand_here(
                             os.path.abspath(os.path.dirname(filename))
