@@ -536,7 +536,6 @@ class ClientOptionsTests(unittest.TestCase, IncludeTestsMixin):
         instance.realize(args=['--serverurl', 'unix:///dev/null'])
         self.assertEqual(instance.serverurl, 'unix:///dev/null')
 
-
     def test_read_config_include_reads_extra_files(self):
         dirname = tempfile.mkdtemp()
         conf_d = os.path.join(dirname, "conf.d")
@@ -545,7 +544,7 @@ class ClientOptionsTests(unittest.TestCase, IncludeTestsMixin):
         supervisord_conf = os.path.join(dirname, "supervisord.conf")
         text = lstrip("""\
         [include]
-        files=%s/conf.d/*.conf %s/conf.d/*.ini
+        files=%s\\conf.d\\*.conf %s\\conf.d\\*.ini
         """ % (dirname, dirname))
         with open(supervisord_conf, 'w') as f:
             f.write(text)
@@ -565,7 +564,7 @@ class ClientOptionsTests(unittest.TestCase, IncludeTestsMixin):
             shutil.rmtree(dirname, ignore_errors=True)
         options = instance.configroot.supervisorctl
         history_file = os.path.join(conf_d, 'sc_history')
-        self.assertEqual(options.serverurl, 'unix://' + conf_d + '/supervisord.sock')
+        self.assertEqual(options.serverurl, 'unix://' + conf_d + '\\supervisord.sock')
         self.assertEqual(options.history_file, history_file)
         msg = 'Included extra file "%s" during parsing' % conf_file
         self.assertTrue(msg in instance.parse_infos)
