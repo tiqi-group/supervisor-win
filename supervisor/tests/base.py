@@ -1,11 +1,9 @@
 _NOW = 1151365354
 _TIMEFORMAT = '%b %d %I:%M %p'
 
-import errno
 import functools
-import os
-import sys
 import tempfile
+import os
 
 from supervisor.compat import Fault
 from supervisor.compat import as_bytes
@@ -224,6 +222,7 @@ class DummyOptions:
             raise NotFound('bad filename')
 
     def make_pipes(self, pid, stderr=True):
+        import sys
         if self.make_pipes_exception is not None:
             raise self.make_pipes_exception
         pipes = {'stdin': sys.stdin, 'stdout': sys.stdout}
@@ -288,7 +287,6 @@ class DummyOptions:
         return self.tempfile_name
 
     def remove(self, path):
-        import os
         if self.remove_exception is not None:
             raise self.remove_exception
         self.removed.append(path)

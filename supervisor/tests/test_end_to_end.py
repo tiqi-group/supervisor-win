@@ -2,8 +2,8 @@
 from __future__ import unicode_literals
 
 import os
-import sys
 import signal
+import sys
 import unittest
 import pkg_resources
 from supervisor.compat import xmlrpclib
@@ -19,6 +19,22 @@ else:
 
 
 class EndToEndTests(BaseTestCase):
+
+    def test_issue_291a_percent_signs_in_original_env_are_preserved(self):
+        """When an environment variable whose value contains a percent sign is
+        present in the environment before supervisord starts, the value is
+        passed to the child without the percent sign being mangled."""
+        key = "SUPERVISOR_TEST_1441B"
+        val = "foo_%s_%_%%_%%%_%2_bar"
+        filename = pkg_resources.resource_filename(__name__, 'fixtures/issue-291a.conf')
+        args = ['-m', 'supervisor.supervisord', '-c', filename]
+        try:
+            os.environ[key] = val
+            supervisord = pexpect.spawn(sys.executable, args, encoding='utf-8')
+            self.addCleanup(supervisord.kill, signal.SIGINT)
+            supervisord.expect_exact(key + "=" + val)
+        finally:
+            del os.environ[key]
 
     def test_issue_550(self):
         """When an environment variable is set in the [supervisord] section,
@@ -150,6 +166,15 @@ class EndToEndTests(BaseTestCase):
         except pexpect.ExceptionPexpect:
             seen = False
         self.assertTrue(seen)
+
+    def test_issue_986_command_string_with_double_percent(self):
+        """A percent sign can be used in a command= string without being
+        expanded if it is escaped by a second percent sign."""
+        filename = pkg_resources.resource_filename(__name__, 'fixtures/issue-986.conf')
+        args = ['-m', 'supervisor.supervisord', '-c', filename]
+        supervisord = pexpect.spawn(sys.executable, args, encoding='utf-8')
+        self.addCleanup(supervisord.kill, signal.SIGINT)
+        supervisord.expect_exact('dhcrelay -d -q -a %h:%p %P -i Vlan1000 192.168.0.1')
 
     def test_issue_1054(self):
         """When run on Python 3, the 'supervisorctl avail' command
@@ -320,7 +345,7 @@ class EndToEndTests(BaseTestCase):
         self.addCleanup(bash.kill, signal.SIGINT)
         bash.expect('spewage 2', timeout=30)
 
-    def test_issue_1481_pidproxy_cmd_with_no_args(self):
+    def test_issue_1418_pidproxy_cmd_with_no_args(self):
         """When pidproxy is given a command to run that has no arguments, it
         runs that command."""
         args = ['-m', 'supervisor.pidproxy', 'nonexistent-pidfile', "/bin/echo"]
@@ -329,7 +354,7 @@ class EndToEndTests(BaseTestCase):
         pidproxy.expect(pexpect.EOF)
         self.assertEqual(pidproxy.before.strip(), "")
 
-    def test_issue_1481_pidproxy_cmd_with_args(self):
+    def test_issue_1418_pidproxy_cmd_with_args(self):
         """When pidproxy is given a command to run that has arguments, it
         runs that command."""
         args = ['-m', 'supervisor.pidproxy', 'nonexistent-pidfile', "/bin/echo", "1", "2"]
@@ -337,6 +362,63 @@ class EndToEndTests(BaseTestCase):
         self.addCleanup(pidproxy.kill, signal.SIGINT)
         pidproxy.expect(pexpect.EOF)
         self.assertEqual(pidproxy.before.strip(), "1 2")
+
+    def test_issue_1483a_identifier_default(self):
+        """When no identifier is supplied on the command line or in the config
+        file, the default is used."""
+        filename = pkg_resources.resource_filename(__name__, 'fixtures/issue-1483a.conf')
+        args = ['-m', 'supervisor.supervisord', '-c', filename]
+        supervisord = pexpect.spawn(sys.executable, args, encoding='utf-8')
+        self.addCleanup(supervisord.kill, signal.SIGINT)
+        supervisord.expect_exact('supervisord started with pid')
+
+        from supervisor.compat import xmlrpclib
+        from supervisor.xmlrpc import SupervisorTransport
+        transport = SupervisorTransport('', '', 'unix:///tmp/issue-1483a.sock')
+        try:
+            server = xmlrpclib.ServerProxy('http://transport.ignores.host/RPC2', transport)
+            ident = server.supervisor.getIdentification()
+        finally:
+            transport.close()
+        self.assertEqual(ident, "supervisor")
+
+    def test_issue_1483b_identifier_from_config_file(self):
+        """When the identifier is supplied in the config file only, that
+        identifier is used instead of the default."""
+        filename = pkg_resources.resource_filename(__name__, 'fixtures/issue-1483b.conf')
+        args = ['-m', 'supervisor.supervisord', '-c', filename]
+        supervisord = pexpect.spawn(sys.executable, args, encoding='utf-8')
+        self.addCleanup(supervisord.kill, signal.SIGINT)
+        supervisord.expect_exact('supervisord started with pid')
+
+        from supervisor.compat import xmlrpclib
+        from supervisor.xmlrpc import SupervisorTransport
+        transport = SupervisorTransport('', '', 'unix:///tmp/issue-1483b.sock')
+        try:
+            server = xmlrpclib.ServerProxy('http://transport.ignores.host/RPC2', transport)
+            ident = server.supervisor.getIdentification()
+        finally:
+            transport.close()
+        self.assertEqual(ident, "from_config_file")
+
+    def test_issue_1483c_identifier_from_command_line(self):
+        """When an identifier is supplied in both the config file and on the
+        command line, the one from the command line is used."""
+        filename = pkg_resources.resource_filename(__name__, 'fixtures/issue-1483c.conf')
+        args = ['-m', 'supervisor.supervisord', '-c', filename, '-i', 'from_command_line']
+        supervisord = pexpect.spawn(sys.executable, args, encoding='utf-8')
+        self.addCleanup(supervisord.kill, signal.SIGINT)
+        supervisord.expect_exact('supervisord started with pid')
+
+        from supervisor.compat import xmlrpclib
+        from supervisor.xmlrpc import SupervisorTransport
+        transport = SupervisorTransport('', '', 'unix:///tmp/issue-1483c.sock')
+        try:
+            server = xmlrpclib.ServerProxy('http://transport.ignores.host/RPC2', transport)
+            ident = server.supervisor.getIdentification()
+        finally:
+            transport.close()
+        self.assertEqual(ident, "from_command_line")
 
 def test_suite():
     return unittest.findTestCases(sys.modules[__name__])

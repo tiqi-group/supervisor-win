@@ -22,7 +22,9 @@ if py_version < (2, 7):
 elif (3, 0) < py_version < (3, 4):
     raise RuntimeError('On Python 3, Supervisor requires Python 3.4 or later')
 
-requires = ['pywin32==228']
+# pkg_resource is used in several places
+requires = ["setuptools", "pywin32==228"]
+
 tests_require = []
 if py_version < (3, 3):
     tests_require.append('mock<4.0.0.dev0')
@@ -35,9 +37,11 @@ testing_extras = tests_require + [
 from setuptools import setup, find_packages
 here = os.path.abspath(os.path.dirname(__file__))
 try:
-    README = open(os.path.join(here, 'README.rst')).read()
-    CHANGES = open(os.path.join(here, 'CHANGES.rst')).read()
-except:
+    with open(os.path.join(here, 'README.rst'), 'r') as f:
+        README = f.read()
+    with open(os.path.join(here, 'CHANGES.rst'), 'r') as f:
+        CHANGES = f.read()
+except Exception:
     README = """\
 Supervisor is a client/server system that allows its users to
 control a number of processes on WINDOWS operating systems. """
@@ -64,7 +68,8 @@ CLASSIFIERS = [
 ]
 
 version_txt = os.path.join(here, 'supervisor/version.txt')
-supervisor_version = open(version_txt).read().strip()
+with open(version_txt, 'r') as f:
+    supervisor_version = f.read().strip()
 
 dist = setup(
     name='supervisor-win',

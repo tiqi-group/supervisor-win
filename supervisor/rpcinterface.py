@@ -16,6 +16,7 @@ from supervisor.datatypes import (
 
 from supervisor.options import readFile
 from supervisor.options import tailFile
+from supervisor.options import BadCommand
 from supervisor.options import NotExecutable
 from supervisor.options import NotFound
 from supervisor.options import NoPermission
@@ -337,7 +338,7 @@ class SupervisorNamespaceRPCInterface(object):
             filename, argv = process.get_execv_args()
         except NotFound as why:
             raise RPCError(Faults.NO_FILE, why.args[0])
-        except (NotExecutable, NoPermission) as why:
+        except (BadCommand, NotExecutable, NoPermission) as why:
             raise RPCError(Faults.NOT_EXECUTABLE, why.args[0])
 
         if process.get_state() in RUNNING_STATES:
@@ -611,6 +612,8 @@ class SupervisorNamespaceRPCInterface(object):
             inuse = gconfig.name in self.supervisord.process_groups
             for pconfig in gconfig.process_configs:
                 d = {'autostart': pconfig.autostart,
+                     'directory': pconfig.directory,
+                     'uid': pconfig.uid,
                      'command': pconfig.command,
                      'exitcodes': pconfig.exitcodes,
                      'group': gconfig.name,
@@ -627,7 +630,7 @@ class SupervisorNamespaceRPCInterface(object):
                      'stdout_logfile': pconfig.stdout_logfile,
                      'stdout_logfile_backups': pconfig.stdout_logfile_backups,
                      'stdout_logfile_maxbytes': pconfig.stdout_logfile_maxbytes,
-                     #'stdout_syslog': pconfig.stdout_syslog,
+                     # 'stdout_syslog': pconfig.stdout_syslog,
                      'stopsignal': int(pconfig.stopsignal), # enum on py3
                      'stopwaitsecs': pconfig.stopwaitsecs,
                      'stderr_capture_maxbytes': pconfig.stderr_capture_maxbytes,
@@ -635,7 +638,8 @@ class SupervisorNamespaceRPCInterface(object):
                      'stderr_logfile': pconfig.stderr_logfile,
                      'stderr_logfile_backups': pconfig.stderr_logfile_backups,
                      'stderr_logfile_maxbytes': pconfig.stderr_logfile_maxbytes,
-                     #'stderr_syslog': pconfig.stderr_syslog,
+                     # 'stderr_syslog': pconfig.stderr_syslog,
+                     'serverurl': pconfig.serverurl,
                     }
                 # no support for these types in xml-rpc
                 d.update((k, 'auto') for k, v in d.items() if v is Automatic)
@@ -971,9 +975,11 @@ class SupervisorNamespaceRPCInterface(object):
 
         return True
 
+
 def _total_seconds(timedelta):
     return ((timedelta.days * 86400 + timedelta.seconds) * 10**6 +
                 timedelta.microseconds) / 10**6
+
 
 def make_allfunc(processes, predicate, func, **extra_kwargs):
     """ Return a closure representing a function that calls a
@@ -1067,12 +1073,15 @@ def make_allfunc(processes, predicate, func, **extra_kwargs):
 def isRunning(process):
     return process.get_state() in RUNNING_STATES
 
+
 def isNotRunning(process):
     return not isRunning(process)
+
 
 def isSignallable(process):
     if process.get_state() in SIGNALLABLE_STATES:
         return True
+
 
 # this is not used in code but referenced via an entry point in the conf file
 def make_main_rpcinterface(supervisord):

@@ -109,6 +109,9 @@ class Options(object):
         self.add(None, None, "h", "help", self.help)
         self.add(None, None, "?", None, self.help)
         self.add("configfile", None, "c:", "configuration=")
+        self.parse_criticals = []
+        self.parse_warnings = []
+        self.parse_infos = []
 
         here = os.path.dirname(os.path.dirname(sys.argv[0]))
         searchpaths = [os.path.join(here, 'etc', 'supervisord.conf'),
@@ -130,6 +133,7 @@ class Options(object):
         for path in self.searchpaths:
             if os.path.exists(path):
                 config = path
+                self.stdout.write("Chose default config file: %s\n" % config)
                 break
         if config is None and self.require_configfile:
             self.usage('No config file found at default paths (%s); '
@@ -400,6 +404,46 @@ class Options(object):
             # this causes a DeprecationWarning on setuptools >= 11.3
             return ep.load(False)
 
+    def read_include_config(self, fp, parser, expansions):
+        if parser.has_section('include'):
+            parser.expand_here(self.here)
+            if not parser.has_option('include', 'files'):
+                raise ValueError(".ini file has [include] section, but no "
+                "files setting")
+            files = parser.get('include', 'files')
+            files = expand(files, expansions, 'include.files')
+            files = files.split()
+            if hasattr(fp, 'name'):
+                base = os.path.dirname(os.path.abspath(fp.name))
+            else:
+                base = '.'
+            for pattern in files:
+                pattern = os.path.join(base, pattern)
+                filenames = glob.glob(pattern)
+                if not filenames:
+                    self.parse_warnings.append(
+                        'No file matches via include "%s"' % pattern)
+                    continue
+                for filename in sorted(filenames):
+                    self.parse_infos.append(
+                        'Included extra file "%s" during parsing' % filename)
+                    try:
+                        parser.read(filename)
+                    except ConfigParser.ParsingError as why:
+                        raise ValueError(str(why))
+                    else:
+                        parser.expand_here(
+                            os.path.abspath(os.path.dirname(filename))
+                        )
+
+    def _log_parsing_messages(self, logger):
+        for msg in self.parse_criticals:
+            logger.critical(msg)
+        for msg in self.parse_warnings:
+            logger.warn(msg)
+        for msg in self.parse_infos:
+            logger.info(msg)
+
 
 class ServerOptions(Options):
     user = None
@@ -464,9 +508,6 @@ class ServerOptions(Options):
         # subprocess history by pid
         self.pidhistory = {}
         self.process_group_configs = []
-        self.parse_criticals = []
-        self.parse_warnings = []
-        self.parse_infos = []
         self.signal_receiver = SignalReceiver()
         self.poller = poller.Poller(self)
 
@@ -531,8 +572,6 @@ class ServerOptions(Options):
         # self.serverurl may still be None if no servers at all are
         # configured in the config file
 
-        self.identifier = section.identifier
-
     def process_config(self, do_usage=True):
         Options.process_config(self, do_usage=do_usage)
 
@@ -575,36 +614,8 @@ class ServerOptions(Options):
         expansions = {'here': self.here,
                       'host_node_name':host_node_name}
         expansions.update(self.environ_expansions)
-        if parser.has_section('include'):
-            parser.expand_here(self.here)
-            if not parser.has_option('include', 'files'):
-                raise ValueError(".ini file has [include] section, but no "
-                                 "files setting")
-            files = parser.get('include', 'files')
-            files = expand(files, expansions, 'include.files')
-            files = files.split()
-            if hasattr(fp, 'name'):
-                base = os.path.dirname(os.path.abspath(fp.name))
-            else:
-                base = '.'
-            for pattern in files:
-                pattern = os.path.join(base, pattern)
-                filenames = glob.glob(pattern)
-                if not filenames:
-                    self.parse_warnings.append(
-                        'No file matches via include "%s"' % pattern)
-                    continue
-                for filename in sorted(filenames):
-                    self.parse_infos.append(
-                        'Included extra file "%s" during parsing' % filename)
-                    try:
-                        parser.read(filename)
-                    except ConfigParser.ParsingError as why:
-                        raise ValueError(str(why))
-                    else:
-                        parser.expand_here(
-                            os.path.abspath(os.path.dirname(filename))
-                        )
+
+        self.read_include_config(fp, parser, expansions)
 
         sections = parser.sections()
         if 'supervisord' not in sections:
@@ -806,10 +817,8 @@ class ServerOptions(Options):
         groups.sort()
         return groups
 
-    def parse_fcgi_socket(self, sock,
-                          proc_uid=None,
-                          socket_owner=None,
-                          socket_mode=None):
+    def parse_fcgi_socket(self, sock, proc_uid=None, socket_owner=None, socket_mode=None,
+                          socket_backlog=None):
         if socket_owner is not None or socket_mode is not None:
             raise ValueError("socket_owner and socket_mode params should"
                              + " only be used with a Unix domain socket")
@@ -1258,12 +1267,7 @@ class ServerOptions(Options):
             maxbytes=self.logfile_maxbytes,
             backups=self.logfile_backups,
         )
-        for msg in self.parse_criticals:
-            self.logger.critical(msg)
-        for msg in self.parse_warnings:
-            self.logger.warn(msg)
-        for msg in self.parse_infos:
-            self.logger.info(msg)
+        self._log_parsing_messages(self.logger)
 
     def make_http_servers(self, supervisord):
         from supervisor.http import make_http_servers
@@ -1457,6 +1461,11 @@ class ClientOptions(Options):
         if not self.args:
             self.interactive = 1
 
+        format = '%(levelname)s: %(message)s\n'
+        logger = loggers.getLogger()
+        loggers.handle_stdout(logger, format)
+        self._log_parsing_messages(logger)
+
     def read_config(self, fp):
         section = self.configroot.supervisorctl
         need_close = False
@@ -1477,8 +1486,11 @@ class ClientOptions(Options):
             parser.read_file(fp)
         except AttributeError:
             parser.readfp(fp)
+
         if need_close:
             fp.close()
+        self.read_include_config(fp, parser, parser.expansions)
+
         sections = parser.sections()
         if not 'supervisorctl' in sections:
             raise ValueError('.ini file does not include supervisorctl section')
@@ -1564,11 +1576,11 @@ class UnhosedConfigParser(ConfigParser.RawConfigParser):
             return self.readfp(StringIO(string))
 
     def read(self, filenames, **kwargs):
-        '''Attempt to read and parse a list of filenames, returning a list
+        """Attempt to read and parse a list of filenames, returning a list
         of filenames which were successfully parsed.  This is a method of
         RawConfigParser that is overridden to build self.section_to_file,
         which is a mapping of section names to the files they came from.
-        '''
+        """
         if isinstance(filenames, basestring):  # RawConfigParser compat
             filenames = [filenames]
 

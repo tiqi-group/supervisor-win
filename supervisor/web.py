@@ -10,6 +10,7 @@ from supervisor import templating
 
 from supervisor.compat import urllib
 from supervisor.compat import urlparse
+from supervisor.compat import as_bytes
 from supervisor.compat import as_string
 from supervisor.compat import as_bytes
 from supervisor.compat import PY2
