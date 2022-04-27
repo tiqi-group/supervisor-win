@@ -389,9 +389,18 @@ def installer(argv):
     win32serviceutil.HandleCommandLine(SupervisorService, argv=srv_argv)
 
 
+def handle_system_io():
+    """When the process does not have input/output, we must control it in the logger"""
+    logger = logging.getLogger(__name__)
+    sys.stdout = StreamHandler(logger.info)
+    sys.stderr = StreamHandler(logger.error)
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv
+    if not _stdout_isatty():
+        handle_system_io()
     # starts in the main python directory.
     os.chdir(os.path.dirname(sys.executable))
     try:
@@ -423,9 +432,5 @@ def patch_sys_path():
 
 
 if __name__ == '__main__':
-    if not _stdout_isatty():
-        logger = logging.getLogger(__name__)
-        sys.stdout = StreamHandler(logger.info)
-        sys.stderr = StreamHandler(logger.error)
     patch_sys_path()
     main(sys.argv)
