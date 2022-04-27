@@ -389,7 +389,9 @@ def installer(argv):
     win32serviceutil.HandleCommandLine(SupervisorService, argv=srv_argv)
 
 
-def main(argv):
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
     # starts in the main python directory.
     os.chdir(os.path.dirname(sys.executable))
     try:
