@@ -394,8 +394,11 @@ def installer(argv):
 def handle_system_io():
     """When the process does not have input/output, we must control it in the logger"""
     logger = logging.getLogger(__name__)
-    sys.stdout = StreamHandler(logger.info)
-    sys.stderr = StreamHandler(logger.error)
+    stream = StreamHandler(logger.info)
+    if sys.stdout is None:
+        sys.stdout = stream
+    if sys.stderr is None:
+        sys.stderr = stream
 
 
 def main(argv=None):
