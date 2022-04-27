@@ -273,24 +273,26 @@ def parse_args_config(options, argv):
     index = 0
     while True:
         try:
-            varg = argv[index]
-            last_index = index
+            narg, varg = argv[index], None
             index += 1
         except IndexError:
             break
+        if narg.find("=") > -1:
+            narg, varg = narg.split("=", 1)
         for opts in options:
-            if any([varg == n for n in opts['args']]):
+            if narg in opts['args']:
                 index -= 1
                 name = argv.pop(index)
-                if name.find('=') > -1:
-                    args.extend(varg.split('='))
+                if varg is not None:
+                    args.extend((narg, varg))
+                elif name.find('=') > -1:
+                    args.extend(name.split('=', 1))
                 else:
                     args.append(name)
                     try:
                         args.append(argv.pop(index))
                     except IndexError:
                         break
-                index = last_index
     return args
 
 
