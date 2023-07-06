@@ -1,0 +1,85 @@
+[tool.poetry]
+name = "supervisor-win"
+version = "5.0.0"
+description = "A system for controlling process state under WINDOWS"
+authors = [
+  "Chris McDonough <chrism@plope.com>",
+  "Alex <alex@fabricadigital.com.br>",
+  "Mose Mueller <mosmuell@phys.ethz.ch>"
+]
+license = "BSD-derived (http://www.repoze.org/LICENSE.txt)"
+readme = "README.rst"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: No Input/Output (Daemon)",
+  "Intended Audience :: System Administrators",
+  "Natural Language :: English",
+  "Operating System :: Microsoft :: Windows",
+  "Topic :: System :: Boot",
+  "Topic :: System :: Monitoring",
+  "Topic :: System :: Systems Administration",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 2",
+  "Programming Language :: Python :: 2.7",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+]
+urls = {homepage = "http://supervisord.org/"}
+
+[tool.poetry.dependencies]
+python = ">=2.7,^3.9" 
+setuptools = "^50.3.2"
+pywin32 = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+supervisord = 'supervisor.supervisord:main'
+supervisor_service = 'supervisor.services:main'
+supervisorctl = 'supervisor.supervisorctl:main'
+echo_supervisord_conf = 'supervisor.confecho:main'
+pidproxy = 'supervisor.pidproxy:main'
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^6.1.1"
+pytest-cov = "^2.10.1"
+black = "^23.1.0"
+mypy = "^1.1.1"
+isort = "^5.12.0"
+flake8 = "^5.0.4"
+flake8-use-fstring = "^1.4"
+flake8-functions = "^0.0.7"
+flake8-comprehensions = "^3.11.1"
+flake8-pep585 = "^0.1.7"
+flake8-pep604 = "^0.1.0"
+flake8-eradicate = "^1.4.0"
+
+[tool.black]
+line-length = 88
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.tox
+  | venv
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+show_error_codes = 1
+disallow_untyped_defs = 1
+disallow_untyped_calls = 1
+disallow_incomplete_defs = 1
+check_untyped_defs = 1
+ignore_missing_imports = 0
