@@ -57,7 +57,7 @@ class PidProxy(object):
 
     def passtochild(self, sig, frame):
         try:
-            with open(self.pidfile, 'r') as f:
+            with open(self.pidfile, "r") as f:
                 pid = int(f.read().strip())
         except:
             print("Can't read child pidfile %s!" % self.pidfile)
@@ -72,5 +72,5 @@ def main():
     pp.go()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -33,6 +33,7 @@ import win32serviceutil
 
 class ConfigReg(object):
     """Saves the path to the supervisor.conf in the system registry"""
+
     _software_key = None
 
     def __init__(self, service_name):
@@ -55,11 +56,15 @@ class ConfigReg(object):
 
     def __setitem__(self, key, value):
         """Set value to registry"""
-        with winreg.CreateKey(self.software_key, self.service_config_dir_key) as srv_key:
+        with winreg.CreateKey(
+            self.software_key, self.service_config_dir_key
+        ) as srv_key:
             winreg.SetValue(srv_key, key, winreg.REG_SZ, value)
 
     def delete(self, key):
-        with winreg.CreateKey(self.software_key, self.service_config_dir_key) as srv_key:
+        with winreg.CreateKey(
+            self.software_key, self.service_config_dir_key
+        ) as srv_key:
             try:
                 winreg.DeleteKey(srv_key, key)
             except WindowsError:
@@ -95,14 +100,15 @@ class ConfigReg(object):
 
 class StreamHandler(StringIO):
     """Limited io"""
-    max_bytes = 1024 ** 2
+
+    max_bytes = 1024**2
 
     def __init__(self, writer):
         StringIO.__init__(self)
         self.writer = writer
 
     def write(self, s):
-        s = s.rstrip('\n')
+        s = s.rstrip("\n")
         if not s:
             return 0
         if self.tell() > self.max_bytes:
@@ -113,10 +119,10 @@ class StreamHandler(StringIO):
 
 class SupervisorServiceFramework(win32serviceutil.ServiceFramework):
     """Service base"""
+
     settings = ConfigReg("Supervisor Pyv{0.winver}".format(sys))
 
-    _svc_name_ = settings.get(settings.service_name_key,
-                              settings.service_name)
+    _svc_name_ = settings.get(settings.service_name_key, settings.service_name)
     _svc_display_name_ = _svc_name_ + " process monitor"
     _svc_description_ = "A process control system"
     _svc_deps_ = []
@@ -149,10 +155,15 @@ class SupervisorService(SupervisorServiceFramework):
         trailing whitespace.
         """
         from supervisor.compat import as_string
-        value = as_string(value, errors='ignore')
-        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
-        value = re.sub(r'[^\w\s-]', '', value.lower())
-        return re.sub(r'[-\s]+', '-', value).strip('-_')
+
+        value = as_string(value, errors="ignore")
+        value = (
+            unicodedata.normalize("NFKD", value)
+            .encode("ascii", "ignore")
+            .decode("ascii")
+        )
+        value = re.sub(r"[^\w\s-]", "", value.lower())
+        return re.sub(r"[-\s]+", "-", value).strip("-_")
 
     @staticmethod
     def get_logger():
@@ -177,10 +188,12 @@ class SupervisorService(SupervisorServiceFramework):
         else:  # or to python home
             config_dir = os.getcwd()
 
-        log_path = os.path.join(config_dir, self.slugify(self._svc_name_) + "-service.log")
-        hdl = logging.handlers.RotatingFileHandler(log_path,
-                                                   maxBytes=1024 ** 2,
-                                                   backupCount=3)
+        log_path = os.path.join(
+            config_dir, self.slugify(self._svc_name_) + "-service.log"
+        )
+        hdl = logging.handlers.RotatingFileHandler(
+            log_path, maxBytes=1024**2, backupCount=3
+        )
         hdl.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
         self.logger.setLevel(logging.INFO)
         self.logger.addHandler(hdl)
@@ -228,9 +241,12 @@ class SupervisorService(SupervisorServiceFramework):
             self.stopping(self.lstdout, self.lstderr)
             self.logger.info("supervisorctl shutdown")
             from supervisor import supervisorctl
-            supervisorctl.main(("-c", self.supervisor_conf, "shutdown"),
-                               stdout=self.lstdout,
-                               stderr=self.lstderr)
+
+            supervisorctl.main(
+                ("-c", self.supervisor_conf, "shutdown"),
+                stdout=self.lstdout,
+                stderr=self.lstderr,
+            )
         except SystemExit:
             pass  # normal exit
         except Exception as exc:
@@ -245,7 +261,7 @@ class SupervisorService(SupervisorServiceFramework):
         servicemanager.LogMsg(
             servicemanager.EVENTLOG_INFORMATION_TYPE,
             servicemanager.PYS_SERVICE_STARTED,
-            (self._svc_name_, '')
+            (self._svc_name_, ""),
         )
         self.main()
 
@@ -255,10 +271,11 @@ class SupervisorService(SupervisorServiceFramework):
         try:
             self.starting(self.lstdout, self.lstderr)
             from supervisor import supervisord
+
             self.logger.info("supervisor starting...")
-            supervisord.main(("-c", self.supervisor_conf),
-                             stdout=self.lstdout,
-                             stderr=self.lstderr)
+            supervisord.main(
+                ("-c", self.supervisor_conf), stdout=self.lstdout, stderr=self.lstderr
+            )
             self.logger.info("supervisor shutdown")
         except Exception as exc:
             self.starting_failed(exc)
@@ -280,13 +297,13 @@ def parse_args_config(options, argv):
         if narg.find("=") > -1:
             narg, varg = narg.split("=", 1)
         for opts in options:
-            if narg in opts['args']:
+            if narg in opts["args"]:
                 index -= 1
                 name = argv.pop(index)
                 if varg is not None:
                     args.extend((narg, varg))
-                elif name.find('=') > -1:
-                    args.extend(name.split('=', 1))
+                elif name.find("=") > -1:
+                    args.extend(name.split("=", 1))
                 else:
                     args.append(name)
                     try:
@@ -307,16 +324,23 @@ def check_existing_cmd(argv, *args):
 def get_config_args(argv):
     argv = list(argv)
     options = [
-        {'args': ('-h', '--help'),
-         'kwargs': {'required': False, 'action': 'store_true'}},
-        {'args': ('-c', '--config'),
-         'kwargs': {'type': argparse.FileType('r'),
-                    'help': 'full filepath to supervisor.conf',
-                    'required': check_existing_cmd(argv, 'install', 'update')}},
-        {'args': ('-sn', '--service-name'),
-         'kwargs': {'required': False, 'type': str}},
-        {'args': ('-sdn', '--service-display-name'),
-         'kwargs': {'required': False, 'type': str}},
+        {
+            "args": ("-h", "--help"),
+            "kwargs": {"required": False, "action": "store_true"},
+        },
+        {
+            "args": ("-c", "--config"),
+            "kwargs": {
+                "type": argparse.FileType("r"),
+                "help": "full filepath to supervisor.conf",
+                "required": check_existing_cmd(argv, "install", "update"),
+            },
+        },
+        {"args": ("-sn", "--service-name"), "kwargs": {"required": False, "type": str}},
+        {
+            "args": ("-sdn", "--service-display-name"),
+            "kwargs": {"required": False, "type": str},
+        },
     ]
     args = parse_args_config(options, argv)
     return options, args, argv
@@ -353,7 +377,7 @@ def installer(argv):
     # print(args, srv_argv, sep='\n')
     parser = argparse.ArgumentParser(add_help=False)
     for opts in options:
-        parser.add_argument(*opts['args'], **opts.get('kwargs', {}))
+        parser.add_argument(*opts["args"], **opts.get("kwargs", {}))
     options = parser.parse_args(args=args)
     if options.config:
         try:
@@ -371,7 +395,9 @@ def installer(argv):
     if options.service_name:
         settings[settings.service_name_key] = options.service_name
         SupervisorService.set_service_name(options.service_name)  # runtime only
-        SupervisorService.set_service_display_name(options.service_name + " process monitor")
+        SupervisorService.set_service_display_name(
+            options.service_name + " process monitor"
+        )
     # custom service display name
     if options.service_display_name:
         SupervisorService.set_service_display_name(options.service_display_name)
@@ -380,14 +406,15 @@ def installer(argv):
     filepath = os.path.dirname(argv[0])
     filename = os.path.basename(argv[0])
     name, extension = os.path.splitext(filename)
-    if not re.match(r"\.py[cod]*$", extension, re.I) and \
-            check_existing_cmd(srv_argv, 'install', 'update'):
-        executable = os.path.join(filepath, name + '.exe')
+    if not re.match(r"\.py[cod]*$", extension, re.I) and check_existing_cmd(
+        srv_argv, "install", "update"
+    ):
+        executable = os.path.join(filepath, name + ".exe")
         SupervisorService.set_setting("exe_name", executable)
-        SupervisorService.set_setting("exe_args", '')
-    elif check_existing_cmd(srv_argv, 'remove'):
-        settings.delete('exe_name')
-        settings.delete('exe_args')
+        SupervisorService.set_setting("exe_args", "")
+    elif check_existing_cmd(srv_argv, "remove"):
+        settings.delete("exe_name")
+        settings.delete("exe_args")
     win32serviceutil.HandleCommandLine(SupervisorService, argv=srv_argv)
 
 
@@ -416,10 +443,9 @@ def main(argv=None):
     except (SystemExit, KeyboardInterrupt):
         raise
     except Exception as exc:
-        print(" command execution failed ".center(35, '='))
+        print(" command execution failed ".center(35, "="))
         if isinstance(exc, WindowsError):
-            print("Administrator permission required!",
-                  file=sys.stderr)
+            print("Administrator permission required!", file=sys.stderr)
         traceback.print_exc(limit=3)
 
 
@@ -433,9 +459,9 @@ def patch_sys_path():
     try:
         import supervisor
     except ImportError:
-        sys.path.append(os.path.abspath(os.path.join(package_dir, '..')))
+        sys.path.append(os.path.abspath(os.path.join(package_dir, "..")))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     patch_sys_path()
     main(sys.argv)

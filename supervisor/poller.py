@@ -61,18 +61,16 @@ class SelectPoller(BasePoller):
         try:
             if len(self.readables) or len(self.writables):
                 r, w, x = self._select.select(
-                    self.readables,
-                    self.writables,
-                    [], timeout
+                    self.readables, self.writables, [], timeout
                 )
             else:
                 return [], []
         except select.error as err:
             if err.args[0] == errno.EINTR:
-                self.options.logger.blather('EINTR encountered in poll')
+                self.options.logger.blather("EINTR encountered in poll")
                 return [], []
             if err.args[0] == errno.EBADF:
-                self.options.logger.blather('EBADF encountered in poll')
+                self.options.logger.blather("EBADF encountered in poll")
                 self.unregister_all()
                 return [], []
             raise
@@ -85,18 +83,19 @@ class SelectPoller(BasePoller):
 
 class SocketSelectPoller(SelectPoller):
     """Socket select poller"""
+
     def poll(self, timeout):
         try:
             r, w = super(SocketSelectPoller, self).poll(timeout)
         except ValueError as err:
             if isinstance(err.args[0], basestring) and err.args[0].endswith("(-1)"):
-                self.options.logger.blather('ValueError(-1) encountered in poll')
+                self.options.logger.blather("ValueError(-1) encountered in poll")
                 self.unregister_all()
                 return [], []
             raise
         except socket.error as err:
             if err.args[0] == errno.EBADF:
-                self.options.logger.blather('EBADF encountered in poll')
+                self.options.logger.blather("EBADF encountered in poll")
                 self.unregister_all()
                 return [], []
             raise
@@ -159,7 +158,7 @@ class PollPoller(BasePoller):
             return self._poller.poll(timeout * 1000)
         except select.error as err:
             if err.args[0] == errno.EINTR:
-                self.options.logger.blather('EINTR encountered in poll')
+                self.options.logger.blather("EINTR encountered in poll")
                 return []
             raise
 
@@ -190,25 +189,27 @@ class KQueuePoller(BasePoller):
 
     def register_readable(self, fd):
         self.readables.add(fd)
-        kevent = select.kevent(fd, filter=select.KQ_FILTER_READ,
-                               flags=select.KQ_EV_ADD)
+        kevent = select.kevent(fd, filter=select.KQ_FILTER_READ, flags=select.KQ_EV_ADD)
         self._kqueue_control(fd, kevent)
 
     def register_writable(self, fd):
         self.writables.add(fd)
-        kevent = select.kevent(fd, filter=select.KQ_FILTER_WRITE,
-                               flags=select.KQ_EV_ADD)
+        kevent = select.kevent(
+            fd, filter=select.KQ_FILTER_WRITE, flags=select.KQ_EV_ADD
+        )
         self._kqueue_control(fd, kevent)
 
     def unregister_readable(self, fd):
-        kevent = select.kevent(fd, filter=select.KQ_FILTER_READ,
-                               flags=select.KQ_EV_DELETE)
+        kevent = select.kevent(
+            fd, filter=select.KQ_FILTER_READ, flags=select.KQ_EV_DELETE
+        )
         self.readables.discard(fd)
         self._kqueue_control(fd, kevent)
 
     def unregister_writable(self, fd):
-        kevent = select.kevent(fd, filter=select.KQ_FILTER_WRITE,
-                               flags=select.KQ_EV_DELETE)
+        kevent = select.kevent(
+            fd, filter=select.KQ_FILTER_WRITE, flags=select.KQ_EV_DELETE
+        )
         self.writables.discard(fd)
         self._kqueue_control(fd, kevent)
 
@@ -217,8 +218,9 @@ class KQueuePoller(BasePoller):
             self._kqueue.control([kevent], 0)
         except OSError as error:
             if error.errno == errno.EBADF:
-                self.options.logger.blather('EBADF encountered in kqueue. '
-                                            'Invalid file descriptor %s' % fd)
+                self.options.logger.blather(
+                    "EBADF encountered in kqueue. " "Invalid file descriptor %s" % fd
+                )
             else:
                 raise
 
@@ -229,7 +231,7 @@ class KQueuePoller(BasePoller):
             kevents = self._kqueue.control(None, self.max_events, timeout)
         except OSError as error:
             if error.errno == errno.EINTR:
-                self.options.logger.blather('EINTR encountered in poll')
+                self.options.logger.blather("EINTR encountered in poll")
                 return readables, writables
             raise
 
@@ -257,15 +259,15 @@ class KQueuePoller(BasePoller):
 
 
 def implements_poll():
-    return hasattr(select, 'poll')
+    return hasattr(select, "poll")
 
 
 def implements_kqueue():
-    return hasattr(select, 'kqueue')
+    return hasattr(select, "kqueue")
 
 
 def implements_select_poll():
-    return hasattr(select, 'select_poll')
+    return hasattr(select, "select_poll")
 
 
 if implements_kqueue():

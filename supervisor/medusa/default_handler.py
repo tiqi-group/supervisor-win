@@ -5,7 +5,7 @@
 #                                                All Rights Reserved.
 #
 
-RCS_ID = '$Id: default_handler.py,v 1.8 2002/08/01 18:15:45 akuchling Exp $'
+RCS_ID = "$Id: default_handler.py,v 1.8 2002/08/01 18:15:45 akuchling Exp $"
 
 # standard python modules
 import mimetypes
@@ -37,15 +37,12 @@ from supervisor.medusa.counter import counter
 
 
 class default_handler(object):
-    valid_commands = ['GET', 'HEAD']
+    valid_commands = ["GET", "HEAD"]
 
-    IDENT = 'Default HTTP Request Handler'
+    IDENT = "Default HTTP Request Handler"
 
     # Pathnames that are tried when a URI resolves to a directory name
-    directory_defaults = [
-        'index.html',
-        'default.html'
-    ]
+    directory_defaults = ["index.html", "default.html"]
 
     default_file_producer = producers.file_producer
 
@@ -61,11 +58,7 @@ class default_handler(object):
     hit_counter = 0
 
     def __repr__(self):
-        return '<%s (%s hits) at %x>' % (
-            self.IDENT,
-            self.hit_counter,
-            id(self)
-        )
+        return "<%s (%s hits) at %x>" % (self.IDENT, self.hit_counter, id(self))
 
     # always match, since this is a default
     def match(self, request):
@@ -82,18 +75,18 @@ class default_handler(object):
 
         path, params, query, fragment = request.split_uri()
 
-        if '%' in path:
+        if "%" in path:
             path = urllib.unquote(path)
 
         # strip off all leading slashes
-        while path and path[0] == '/':
+        while path and path[0] == "/":
             path = path[1:]
 
         if self.filesystem.isdir(path):
-            if path and path[-1] != '/':
-                request['Location'] = 'http://%s/%s/' % (
+            if path and path[-1] != "/":
+                request["Location"] = "http://%s/%s/" % (
                     request.channel.server.server_name,
-                    path
+                    path,
                 )
                 request.error(301)
                 return
@@ -102,8 +95,8 @@ class default_handler(object):
             # may want to move this into another method for that
             # purpose
             found = 0
-            if path and path[-1] != '/':
-                path += '/'
+            if path and path[-1] != "/":
+                path += "/"
             for default in self.directory_defaults:
                 p = path + default
                 if self.filesystem.isfile(p):
@@ -151,16 +144,16 @@ class default_handler(object):
                 self.cache_counter.increment()
                 return
         try:
-            file = self.filesystem.open(path, 'rb')
+            file = self.filesystem.open(path, "rb")
         except IOError:
             request.error(404)
             return
 
-        request['Last-Modified'] = http_date.build_http_date(mtime)
-        request['Content-Length'] = file_length
+        request["Last-Modified"] = http_date.build_http_date(mtime)
+        request["Content-Length"] = file_length
         self.set_content_type(path, request)
 
-        if request.command == 'GET':
+        if request.command == "GET":
             request.push(self.default_file_producer(file))
 
         self.file_counter.increment()
@@ -169,35 +162,35 @@ class default_handler(object):
     def set_content_type(self, path, request):
         typ, encoding = mimetypes.guess_type(path)
         if typ is not None:
-            request['Content-Type'] = typ
+            request["Content-Type"] = typ
         else:
             # TODO: test a chunk off the front of the file for 8-bit
             # characters, and use application/octet-stream instead.
-            request['Content-Type'] = 'text/plain'
+            request["Content-Type"] = "text/plain"
 
     def status(self):
         return producers.simple_producer(
-            '<li>%s' % html_repr(self)
-            + '<ul>'
-            + '  <li><b>Total Hits:</b> %s' % self.hit_counter
-            + '  <li><b>Files Delivered:</b> %s' % self.file_counter
-            + '  <li><b>Cache Hits:</b> %s' % self.cache_counter
-            + '</ul>'
+            "<li>%s" % html_repr(self)
+            + "<ul>"
+            + "  <li><b>Total Hits:</b> %s" % self.hit_counter
+            + "  <li><b>Files Delivered:</b> %s" % self.file_counter
+            + "  <li><b>Cache Hits:</b> %s" % self.cache_counter
+            + "</ul>"
         )
+
 
 # HTTP/1.0 doesn't say anything about the "; length=nnnn" addition
 # to this header.  I suppose its purpose is to avoid the overhead
 # of parsing dates...
 IF_MODIFIED_SINCE = re.compile(
-    'If-Modified-Since: ([^;]+)((; length=([0-9]+)$)|$)',
-    re.IGNORECASE
+    "If-Modified-Since: ([^;]+)((; length=([0-9]+)$)|$)", re.IGNORECASE
 )
 
-USER_AGENT = re.compile('User-Agent: (.*)', re.IGNORECASE)
+USER_AGENT = re.compile("User-Agent: (.*)", re.IGNORECASE)
 
 CONTENT_TYPE = re.compile(
-    r'Content-Type: ([^;]+)((; boundary=([A-Za-z0-9\'\(\)+_,./:=?-]+)$)|$)',
-    re.IGNORECASE
+    r"Content-Type: ([^;]+)((; boundary=([A-Za-z0-9\'\(\)+_,./:=?-]+)$)|$)",
+    re.IGNORECASE,
 )
 
 get_header = http_server.get_header
@@ -205,9 +198,9 @@ get_header_match = http_server.get_header_match
 
 
 def get_extension(path):
-    dirsep = path.rfind('/')
-    dotsep = path.rfind('.')
+    dirsep = path.rfind("/")
+    dotsep = path.rfind(".")
     if dotsep > dirsep:
-        return path[dotsep + 1:]
+        return path[dotsep + 1 :]
     else:
-        return ''
+        return ""

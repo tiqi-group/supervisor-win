@@ -35,13 +35,13 @@ class IntegerTests(unittest.TestCase):
         return datatypes.integer(arg)
 
     def test_converts_numeric(self):
-        self.assertEqual(self._callFUT('1'), 1)
+        self.assertEqual(self._callFUT("1"), 1)
 
     def test_converts_numeric_overflowing_int(self):
         self.assertEqual(self._callFUT(str(maxint + 1)), maxint + 1)
 
     def test_raises_for_non_numeric(self):
-        self.assertRaises(ValueError, self._callFUT, 'abc')
+        self.assertRaises(ValueError, self._callFUT, "abc")
 
 
 class BooleanTests(unittest.TestCase):
@@ -65,8 +65,7 @@ class BooleanTests(unittest.TestCase):
             self.assertEqual(self._callFUT(s), False)
 
     def test_braises_value_error_for_bad_value(self):
-        self.assertRaises(ValueError,
-                          self._callFUT, 'not-a-value')
+        self.assertRaises(ValueError, self._callFUT, "not-a-value")
 
 
 class ListOfStringsTests(unittest.TestCase):
@@ -74,17 +73,16 @@ class ListOfStringsTests(unittest.TestCase):
         return datatypes.list_of_strings(arg)
 
     def test_returns_empty_list_for_empty_string(self):
-        self.assertEqual(self._callFUT(''), [])
+        self.assertEqual(self._callFUT(""), [])
 
     def test_returns_list_of_strings_by_comma_split(self):
-        self.assertEqual(self._callFUT('foo,bar'), ['foo', 'bar'])
+        self.assertEqual(self._callFUT("foo,bar"), ["foo", "bar"])
 
     def test_returns_strings_with_whitespace_stripped(self):
-        self.assertEqual(self._callFUT(' foo , bar '), ['foo', 'bar'])
+        self.assertEqual(self._callFUT(" foo , bar "), ["foo", "bar"])
 
     def test_raises_value_error_when_comma_split_fails(self):
-        self.assertRaises(ValueError,
-                          self._callFUT, 42)
+        self.assertRaises(ValueError, self._callFUT, 42)
 
 
 class ListOfIntsTests(unittest.TestCase):
@@ -92,21 +90,19 @@ class ListOfIntsTests(unittest.TestCase):
         return datatypes.list_of_ints(arg)
 
     def test_returns_empty_list_for_empty_string(self):
-        self.assertEqual(self._callFUT(''), [])
+        self.assertEqual(self._callFUT(""), [])
 
     def test_returns_list_of_ints_by_comma_split(self):
-        self.assertEqual(self._callFUT('1,42'), [1, 42])
+        self.assertEqual(self._callFUT("1,42"), [1, 42])
 
     def test_returns_ints_even_if_whitespace_in_string(self):
-        self.assertEqual(self._callFUT(' 1 , 42 '), [1, 42])
+        self.assertEqual(self._callFUT(" 1 , 42 "), [1, 42])
 
     def test_raises_value_error_when_comma_split_fails(self):
-        self.assertRaises(ValueError,
-                          self._callFUT, 42)
+        self.assertRaises(ValueError, self._callFUT, 42)
 
     def test_raises_value_error_when_one_value_is_bad(self):
-        self.assertRaises(ValueError,
-                          self._callFUT, '1, bad, 42')
+        self.assertRaises(ValueError, self._callFUT, "1, bad, 42")
 
 
 class ListOfExitcodesTests(unittest.TestCase):
@@ -114,15 +110,15 @@ class ListOfExitcodesTests(unittest.TestCase):
         return datatypes.list_of_exitcodes(arg)
 
     def test_returns_list_of_ints_from_csv(self):
-        self.assertEqual(self._callFUT('1,2,3'), [1, 2, 3])
+        self.assertEqual(self._callFUT("1,2,3"), [1, 2, 3])
 
     def test_returns_list_of_ints_from_one(self):
-        self.assertEqual(self._callFUT('1'), [1])
+        self.assertEqual(self._callFUT("1"), [1])
 
     def test_raises_for_invalid_exitcode_values(self):
-        self.assertRaises(ValueError, self._callFUT, 'a,b,c')
-        self.assertRaises(ValueError, self._callFUT, '4000000001')
-        self.assertRaises(ValueError, self._callFUT, '-1,1')
+        self.assertRaises(ValueError, self._callFUT, "a,b,c")
+        self.assertRaises(ValueError, self._callFUT, "4000000001")
+        self.assertRaises(ValueError, self._callFUT, "-1,1")
 
 
 class DictOfKeyValuePairsTests(unittest.TestCase):
@@ -130,81 +126,80 @@ class DictOfKeyValuePairsTests(unittest.TestCase):
         return datatypes.dict_of_key_value_pairs(arg)
 
     def test_returns_empty_dict_for_empty_str(self):
-        actual = self._callFUT('')
+        actual = self._callFUT("")
         self.assertEqual({}, actual)
 
     def test_returns_dict_from_single_pair_str(self):
-        actual = self._callFUT('foo=bar')
-        expected = {'foo': 'bar'}
+        actual = self._callFUT("foo=bar")
+        expected = {"foo": "bar"}
         self.assertEqual(actual, expected)
 
     def test_returns_dict_from_multi_pair_str(self):
-        actual = self._callFUT('foo=bar,baz=qux')
-        expected = {'foo': 'bar', 'baz': 'qux'}
+        actual = self._callFUT("foo=bar,baz=qux")
+        expected = {"foo": "bar", "baz": "qux"}
         self.assertEqual(actual, expected)
 
     def test_returns_dict_even_if_whitespace(self):
-        actual = self._callFUT(' foo = bar , baz = qux ')
-        expected = {'foo': 'bar', 'baz': 'qux'}
+        actual = self._callFUT(" foo = bar , baz = qux ")
+        expected = {"foo": "bar", "baz": "qux"}
         self.assertEqual(actual, expected)
 
     def test_returns_dict_even_if_newlines(self):
-        actual = self._callFUT('foo\n=\nbar\n,\nbaz\n=\nqux')
-        expected = {'foo': 'bar', 'baz': 'qux'}
+        actual = self._callFUT("foo\n=\nbar\n,\nbaz\n=\nqux")
+        expected = {"foo": "bar", "baz": "qux"}
         self.assertEqual(actual, expected)
 
     def test_handles_commas_inside_apostrophes(self):
         actual = self._callFUT("foo='bar,baz',baz='q,ux'")
-        expected = {'foo': 'bar,baz', 'baz': 'q,ux'}
+        expected = {"foo": "bar,baz", "baz": "q,ux"}
         self.assertEqual(actual, expected)
 
     def test_handles_commas_inside_quotes(self):
         actual = self._callFUT('foo="bar,baz",baz="q,ux"')
-        expected = {'foo': 'bar,baz', 'baz': 'q,ux'}
+        expected = {"foo": "bar,baz", "baz": "q,ux"}
         self.assertEqual(actual, expected)
 
     def test_handles_newlines_inside_quotes(self):
         actual = datatypes.dict_of_key_value_pairs('foo="a\nb\nc"')
-        expected = {'foo': 'a\nb\nc'}
+        expected = {"foo": "a\nb\nc"}
         self.assertEqual(actual, expected)
 
     def test_handles_empty_inside_quotes(self):
         actual = datatypes.dict_of_key_value_pairs('foo=""')
-        expected = {'foo': ''}
+        expected = {"foo": ""}
         self.assertEqual(actual, expected)
 
     def test_handles_empty_inside_quotes_with_second_unquoted_pair(self):
         actual = datatypes.dict_of_key_value_pairs('foo="",bar=a')
-        expected = {'foo': '', 'bar': 'a'}
+        expected = {"foo": "", "bar": "a"}
         self.assertEqual(actual, expected)
 
     def test_handles_unquoted_non_alphanum(self):
         actual = self._callFUT(
-            'HOME=/home/auser,FOO=/.foo+(1.2)-_/,'
-            'SUPERVISOR_SERVER_URL=http://127.0.0.1:9001')
-        expected = {'HOME': '/home/auser', 'FOO': '/.foo+(1.2)-_/',
-                    'SUPERVISOR_SERVER_URL': 'http://127.0.0.1:9001'}
+            "HOME=/home/auser,FOO=/.foo+(1.2)-_/,"
+            "SUPERVISOR_SERVER_URL=http://127.0.0.1:9001"
+        )
+        expected = {
+            "HOME": "/home/auser",
+            "FOO": "/.foo+(1.2)-_/",
+            "SUPERVISOR_SERVER_URL": "http://127.0.0.1:9001",
+        }
         self.assertEqual(actual, expected)
 
     def test_allows_trailing_comma(self):
-        actual = self._callFUT('foo=bar,')
-        expected = {'foo': 'bar'}
+        actual = self._callFUT("foo=bar,")
+        expected = {"foo": "bar"}
         self.assertEqual(actual, expected)
 
     def test_raises_value_error_on_too_short(self):
-        self.assertRaises(ValueError,
-                          self._callFUT, 'foo')
-        self.assertRaises(ValueError,
-                          self._callFUT, 'foo=')
-        self.assertRaises(ValueError,
-                          self._callFUT, 'foo=bar,baz')
-        self.assertRaises(ValueError,
-                          self._callFUT, 'foo=bar,baz=')
+        self.assertRaises(ValueError, self._callFUT, "foo")
+        self.assertRaises(ValueError, self._callFUT, "foo=")
+        self.assertRaises(ValueError, self._callFUT, "foo=bar,baz")
+        self.assertRaises(ValueError, self._callFUT, "foo=bar,baz=")
 
     def test_raises_when_comma_is_missing(self):
-        kvp = 'KEY1=no-comma KEY2=ends-with-comma,'
-        self.assertRaises(ValueError,
-                          self._callFUT, kvp)
+        kvp = "KEY1=no-comma KEY2=ends-with-comma,"
+        self.assertRaises(ValueError, self._callFUT, kvp)
 
 
 class LogfileNameTests(unittest.TestCase):
@@ -218,7 +213,7 @@ class LogfileNameTests(unittest.TestCase):
 
     def test_returns_none_for_uppered_none_values(self):
         for thing in datatypes.LOGFILE_NONES:
-            if hasattr(thing, 'upper'):
+            if hasattr(thing, "upper"):
                 thing = thing.upper()
             actual = self._callFUT(thing)
             self.assertEqual(actual, None)
@@ -230,7 +225,7 @@ class LogfileNameTests(unittest.TestCase):
 
     def test_returns_automatic_for_uppered_auto_values(self):
         for thing in datatypes.LOGFILE_AUTOS:
-            if hasattr(thing, 'upper'):
+            if hasattr(thing, "upper"):
                 thing = thing.upper()
             actual = self._callFUT(thing)
             self.assertEqual(actual, datatypes.Automatic)
@@ -242,7 +237,7 @@ class LogfileNameTests(unittest.TestCase):
 
     def test_returns_syslog_for_uppered_syslog_values(self):
         for thing in datatypes.LOGFILE_SYSLOGS:
-            if hasattr(thing, 'upper'):
+            if hasattr(thing, "upper"):
                 thing = thing.upper()
             actual = self._callFUT(thing)
             self.assertEqual(actual, datatypes.Syslog)
@@ -251,7 +246,7 @@ class LogfileNameTests(unittest.TestCase):
         func = datatypes.existing_dirpath
         datatypes.existing_dirpath = lambda path: path
         try:
-            path = '/path/to/logfile/With/Case/Preserved'
+            path = "/path/to/logfile/With/Case/Preserved"
             actual = self._callFUT(path)
             self.assertEqual(actual, path)
         finally:
@@ -283,22 +278,22 @@ class OctalTypeTests(unittest.TestCase):
         return datatypes.octal_type(arg)
 
     def test_success(self):
-        self.assertEqual(self._callFUT('10'), 8)
+        self.assertEqual(self._callFUT("10"), 8)
 
     def test_raises_for_non_numeric(self):
         try:
-            self._callFUT('bad')
+            self._callFUT("bad")
             self.fail()
         except ValueError as e:
-            expected = 'bad can not be converted to an octal type'
+            expected = "bad can not be converted to an octal type"
             self.assertEqual(e.args[0], expected)
 
     def test_raises_for_unconvertable_numeric(self):
         try:
-            self._callFUT('1.2')
+            self._callFUT("1.2")
             self.fail()
         except ValueError as e:
-            expected = '1.2 can not be converted to an octal type'
+            expected = "1.2 can not be converted to an octal type"
             self.assertEqual(e.args[0], expected)
 
 
@@ -311,7 +306,7 @@ class ExistingDirectoryTests(unittest.TestCase):
         self.assertEqual(path, self._callFUT(path))
 
     def test_dir_does_not_exist(self):
-        path = os.path.join(os.path.dirname(__file__), 'nonexistent')
+        path = os.path.join(os.path.dirname(__file__), "nonexistent")
         try:
             self._callFUT(path)
             self.fail()
@@ -329,10 +324,11 @@ class ExistingDirectoryTests(unittest.TestCase):
             self.assertEqual(e.args[0], expected)
 
     def test_expands_home(self):
-        home = os.path.expanduser('~')
+        home = os.path.expanduser("~")
         if os.path.exists(home):
-            path = self._callFUT('~')
+            path = self._callFUT("~")
             self.assertEqual(home, path)
+
 
 class ExistingDirpathTests(unittest.TestCase):
     def _callFUT(self, arg):
@@ -342,34 +338,38 @@ class ExistingDirpathTests(unittest.TestCase):
         self.assertEqual(self._callFUT(__file__), __file__)
 
     def test_returns_dirpath_if_relative(self):
-        self.assertEqual(self._callFUT('foo'), 'foo')
+        self.assertEqual(self._callFUT("foo"), "foo")
 
     def test_raises_if_dir_does_not_exist(self):
-        path = os.path.join(os.path.dirname(__file__), 'nonexistent', 'foo')
+        path = os.path.join(os.path.dirname(__file__), "nonexistent", "foo")
         try:
             self._callFUT(path)
             self.fail()
         except ValueError as e:
-            expected = ('The directory named as part of the path %s '
-                        'does not exist' % path)
+            expected = (
+                "The directory named as part of the path %s " "does not exist" % path
+            )
             self.assertEqual(e.args[0], expected)
 
     def test_raises_if_exists_but_not_a_dir(self):
-        path = os.path.join(os.path.dirname(__file__),
-                            os.path.basename(__file__), 'foo')
+        path = os.path.join(
+            os.path.dirname(__file__), os.path.basename(__file__), "foo"
+        )
         try:
             self._callFUT(path)
             self.fail()
         except ValueError as e:
-            expected = ('The directory named as part of the path %s '
-                        'does not exist' % path)
+            expected = (
+                "The directory named as part of the path %s " "does not exist" % path
+            )
             self.assertEqual(e.args[0], expected)
 
     def test_expands_home(self):
-        home = os.path.expanduser('~')
+        home = os.path.expanduser("~")
         if os.path.exists(home):
-            path = self._callFUT(os.path.join('~', 'foo'))
-            self.assertEqual(os.path.join(home, 'foo'), path)
+            path = self._callFUT(os.path.join("~", "foo"))
+            self.assertEqual(os.path.join(home, "foo"), path)
+
 
 class LoggingLevelTests(unittest.TestCase):
     def _callFUT(self, arg):
@@ -377,11 +377,11 @@ class LoggingLevelTests(unittest.TestCase):
 
     def test_returns_level_from_name_case_insensitive(self):
         from supervisor.loggers import LevelsByName
+
         self.assertEqual(self._callFUT("wArN"), LevelsByName.WARN)
 
     def test_raises_for_bad_level_name(self):
-        self.assertRaises(ValueError,
-                          self._callFUT, "foo")
+        self.assertRaises(ValueError, self._callFUT, "foo")
 
 
 class UrlTests(unittest.TestCase):
@@ -389,11 +389,11 @@ class UrlTests(unittest.TestCase):
         return datatypes.url(arg)
 
     def test_accepts_urlparse_recognized_scheme_with_netloc(self):
-        good_url = 'http://localhost:9001'
+        good_url = "http://localhost:9001"
         self.assertEqual(self._callFUT(good_url), good_url)
 
     def test_rejects_urlparse_recognized_scheme_but_no_netloc(self):
-        bad_url = 'http://'
+        bad_url = "http://"
         self.assertRaises(ValueError, self._callFUT, bad_url)
 
     def test_accepts_unix_scheme_with_path(self):
@@ -417,52 +417,54 @@ class InetStreamSocketConfigTests(unittest.TestCase):
         return self._getTargetClass()(*args, **kw)
 
     def test_url(self):
-        conf = self._makeOne('127.0.0.1', 8675)
-        self.assertEqual(conf.url, 'tcp://127.0.0.1:8675')
+        conf = self._makeOne("127.0.0.1", 8675)
+        self.assertEqual(conf.url, "tcp://127.0.0.1:8675")
 
     def test___str__(self):
-        cfg = self._makeOne('localhost', 65531)
-        self.assertEqual(str(cfg), 'tcp://localhost:65531')
+        cfg = self._makeOne("localhost", 65531)
+        self.assertEqual(str(cfg), "tcp://localhost:65531")
 
     def test_repr(self):
-        conf = self._makeOne('127.0.0.1', 8675)
+        conf = self._makeOne("127.0.0.1", 8675)
         s = repr(conf)
-        self.assertTrue('supervisor.datatypes.InetStreamSocketConfig' in s)
-        self.assertTrue(s.endswith('for tcp://127.0.0.1:8675>'), s)
+        self.assertTrue("supervisor.datatypes.InetStreamSocketConfig" in s)
+        self.assertTrue(s.endswith("for tcp://127.0.0.1:8675>"), s)
 
     def test_addr(self):
-        conf = self._makeOne('127.0.0.1', 8675)
+        conf = self._makeOne("127.0.0.1", 8675)
         addr = conf.addr()
-        self.assertEqual(addr, ('127.0.0.1', 8675))
+        self.assertEqual(addr, ("127.0.0.1", 8675))
 
     def test_port_as_string(self):
-        conf = self._makeOne('localhost', '5001')
+        conf = self._makeOne("localhost", "5001")
         addr = conf.addr()
-        self.assertEqual(addr, ('localhost', 5001))
+        self.assertEqual(addr, ("localhost", 5001))
 
     def test_create_and_bind(self):
-        conf = self._makeOne('127.0.0.1', 8675)
+        conf = self._makeOne("127.0.0.1", 8675)
         sock = conf.create_and_bind()
         reuse = sock.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR)
         self.assertTrue(reuse)
-        self.assertEqual(conf.addr(), sock.getsockname())  # verifies that bind was called
+        self.assertEqual(
+            conf.addr(), sock.getsockname()
+        )  # verifies that bind was called
         sock.close()
 
     def test_same_urls_are_equal(self):
-        conf1 = self._makeOne('localhost', 5001)
-        conf2 = self._makeOne('localhost', 5001)
+        conf1 = self._makeOne("localhost", 5001)
+        conf2 = self._makeOne("localhost", 5001)
         self.assertTrue(conf1 == conf2)
         self.assertFalse(conf1 != conf2)
 
     def test_diff_urls_are_not_equal(self):
-        conf1 = self._makeOne('localhost', 5001)
-        conf2 = self._makeOne('localhost', 5002)
+        conf1 = self._makeOne("localhost", 5001)
+        conf2 = self._makeOne("localhost", 5002)
         self.assertTrue(conf1 != conf2)
         self.assertFalse(conf1 == conf2)
 
     def test_diff_objs_are_not_equal(self):
-        conf1 = self._makeOne('localhost', 5001)
-        conf2 = 'blah'
+        conf1 = self._makeOne("localhost", 5001)
+        conf2 = "blah"
         self.assertTrue(conf1 != conf2)
         self.assertFalse(conf1 == conf2)
 
@@ -472,29 +474,29 @@ class InetAddressTests(unittest.TestCase):
         return datatypes.inet_address(s)
 
     def test_no_port_number(self):
-        self.assertRaises(ValueError, self._callFUT, 'a:')
+        self.assertRaises(ValueError, self._callFUT, "a:")
 
     def test_bad_port_number(self):
-        self.assertRaises(ValueError, self._callFUT, 'a')
+        self.assertRaises(ValueError, self._callFUT, "a")
 
     def test_default_host(self):
-        host, port = self._callFUT('*:9001')
-        self.assertEqual(host, '')
+        host, port = self._callFUT("*:9001")
+        self.assertEqual(host, "")
         self.assertEqual(port, 9001)
 
     def test_hostname_and_port(self):
-        host, port = self._callFUT('localhost:9001')
-        self.assertEqual(host, 'localhost')
+        host, port = self._callFUT("localhost:9001")
+        self.assertEqual(host, "localhost")
         self.assertEqual(port, 9001)
 
     def test_ipv4_address_and_port(self):
-        host, port = self._callFUT('127.0.0.1:9001')
-        self.assertEqual(host, '127.0.0.1')
+        host, port = self._callFUT("127.0.0.1:9001")
+        self.assertEqual(host, "127.0.0.1")
         self.assertEqual(port, 9001)
 
     def test_ipv6_address_and_port(self):
-        host, port = self._callFUT('2001:db8:ff:55:0:0:0:138:9001')
-        self.assertEqual(host, '2001:db8:ff:55:0:0:0:138')
+        host, port = self._callFUT("2001:db8:ff:55:0:0:0:138:9001")
+        self.assertEqual(host, "2001:db8:ff:55:0:0:0:138")
         self.assertEqual(port, 9001)
 
 
@@ -506,9 +508,9 @@ class SocketAddressTests(unittest.TestCase):
         return self._getTargetClass()(s)
 
     def test_inet_socket(self):
-        addr = self._makeOne('localhost:8080')
+        addr = self._makeOne("localhost:8080")
         self.assertEqual(addr.family, socket.AF_INET)
-        self.assertEqual(addr.address, ('localhost', 8080))
+        self.assertEqual(addr.address, ("localhost", 8080))
 
 
 class SignalNumberTests(unittest.TestCase):
@@ -519,14 +521,14 @@ class SignalNumberTests(unittest.TestCase):
         self.assertEqual(self._callFUT(signal.SIGTERM), signal.SIGTERM)
 
     def test_converts_name(self):
-        self.assertEqual(self._callFUT(' term '), signal.SIGTERM)
+        self.assertEqual(self._callFUT(" term "), signal.SIGTERM)
 
     def test_converts_signame(self):
-        self.assertEqual(self._callFUT('SIGTERM'), signal.SIGTERM)
+        self.assertEqual(self._callFUT("SIGTERM"), signal.SIGTERM)
 
     def test_raises_for_bad_number(self):
         try:
-            self._callFUT('12345678')
+            self._callFUT("12345678")
             self.fail()
         except ValueError as e:
             expected = "value '12345678' is not a valid signal number"
@@ -534,7 +536,7 @@ class SignalNumberTests(unittest.TestCase):
 
     def test_raises_for_bad_name(self):
         try:
-            self._callFUT('BADSIG')
+            self._callFUT("BADSIG")
             self.fail()
         except ValueError as e:
             expected = "value 'BADSIG' is not a valid signal name"
@@ -555,13 +557,13 @@ class AutoRestartTests(unittest.TestCase):
             self.assertFalse(self._callFUT(s))
 
     def test_converts_unexpected(self):
-        for s in ('unexpected', 'UNEXPECTED'):
+        for s in ("unexpected", "UNEXPECTED"):
             result = self._callFUT(s)
             self.assertEqual(result, datatypes.RestartWhenExitUnexpected)
 
     def test_raises_for_bad_value(self):
         try:
-            self._callFUT('bad')
+            self._callFUT("bad")
             self.fail()
         except ValueError as e:
             self.assertEqual(e.args[0], "invalid 'autorestart' value 'bad'")
@@ -572,16 +574,16 @@ class ProfileOptionsTests(unittest.TestCase):
         return datatypes.profile_options(arg)
 
     def test_empty(self):
-        sort_options, callers = self._callFUT('')
+        sort_options, callers = self._callFUT("")
         self.assertEqual([], sort_options)
         self.assertFalse(callers)
 
     def test_without_callers(self):
-        sort_options, callers = self._callFUT('CUMULATIVE,calls')
-        self.assertEqual(['cumulative', 'calls'], sort_options)
+        sort_options, callers = self._callFUT("CUMULATIVE,calls")
+        self.assertEqual(["cumulative", "calls"], sort_options)
         self.assertFalse(callers)
 
     def test_with_callers(self):
-        sort_options, callers = self._callFUT('cumulative, callers')
-        self.assertEqual(['cumulative'], sort_options)
+        sort_options, callers = self._callFUT("cumulative, callers")
+        self.assertEqual(["cumulative"], sort_options)
         self.assertTrue(callers)

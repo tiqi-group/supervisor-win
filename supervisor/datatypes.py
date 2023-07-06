@@ -14,11 +14,13 @@ from supervisor.loggers import getLevelNumByDescription
 
 def process_or_group_name(name):
     """Ensures that a process or group name is not created with
-       characters that break the eventlistener protocol or web UI URLs"""
+    characters that break the eventlistener protocol or web UI URLs"""
     s = str(name).strip()
-    for character in ' :/':
+    for character in " :/":
         if character in s:
-            raise ValueError("Invalid name: %r because of character: %r" % (name, character))
+            raise ValueError(
+                "Invalid name: %r because of character: %r" % (name, character)
+            )
     return s
 
 
@@ -29,8 +31,8 @@ def integer(value):
         return long(value)  # why does this help ValueError? (CM)
 
 
-TRUTHY_STRINGS = ('yes', 'true', 'on', '1')
-FALSY_STRINGS = ('no', 'false', 'off', '0')
+TRUTHY_STRINGS = ("yes", "true", "on", "1")
+FALSY_STRINGS = ("no", "false", "off", "0")
 
 
 def boolean(s):
@@ -48,7 +50,7 @@ def list_of_strings(arg):
     if not arg:
         return []
     try:
-        return [x.strip() for x in arg.split(',')]
+        return [x.strip() for x in arg.split(",")]
     except:
         raise ValueError("not a valid list of strings: " + repr(arg))
 
@@ -75,11 +77,11 @@ def list_of_exitcodes(arg):
 
 
 def dict_of_key_value_pairs(arg):
-    """ parse KEY=val,KEY2=val2 into {'KEY':'val', 'KEY2':'val2'}
-        Quotes can be used to allow commas in the value
+    """parse KEY=val,KEY2=val2 into {'KEY':'val', 'KEY2':'val2'}
+    Quotes can be used to allow commas in the value
     """
     lexer = shlex.shlex(str(arg))
-    lexer.wordchars += '/.+-():'
+    lexer.wordchars += "/.+-():"
 
     tokens = list(lexer)
     tokens_len = len(tokens)
@@ -87,11 +89,10 @@ def dict_of_key_value_pairs(arg):
     D = {}
     i = 0
     while i < tokens_len:
-        k_eq_v = tokens[i:i + 3]
-        if len(k_eq_v) != 3 or k_eq_v[1] != '=':
-            raise ValueError(
-                "Unexpected end of key/value pairs in value '%s'" % arg)
-        D[k_eq_v[0]] = k_eq_v[2].strip('\'"')
+        k_eq_v = tokens[i : i + 3]
+        if len(k_eq_v) != 3 or k_eq_v[1] != "=":
+            raise ValueError("Unexpected end of key/value pairs in value '%s'" % arg)
+        D[k_eq_v[0]] = k_eq_v[2].strip("'\"")
         i += 4
     return D
 
@@ -106,17 +107,18 @@ class Automatic(object):
 
 class Syslog(object):
     """TODO deprecated; remove this special 'syslog' filename in the future"""
+
     pass
 
 
-Automatic = Automatic('auto')
-LOGFILE_NONES = ('none', 'off', None)
-LOGFILE_AUTOS = (Automatic, 'auto')
-LOGFILE_SYSLOGS = (Syslog, 'syslog')
+Automatic = Automatic("auto")
+LOGFILE_NONES = ("none", "off", None)
+LOGFILE_AUTOS = (Automatic, "auto")
+LOGFILE_SYSLOGS = (Syslog, "syslog")
 
 
 def logfile_name(val):
-    if hasattr(val, 'lower'):
+    if hasattr(val, "lower"):
         coerced = val.lower()
     else:
         coerced = val
@@ -142,20 +144,22 @@ class RangeCheckedConversion(object):
     def __call__(self, value):
         v = self._conversion(value)
         if self._min is not None and v < self._min:
-            raise ValueError("%s is below lower bound (%s)"
-                             % (repr(v), repr(self._min)))
+            raise ValueError(
+                "%s is below lower bound (%s)" % (repr(v), repr(self._min))
+            )
         if self._max is not None and v > self._max:
-            raise ValueError("%s is above upper bound (%s)"
-                             % (repr(v), repr(self._max)))
+            raise ValueError(
+                "%s is above upper bound (%s)" % (repr(v), repr(self._max))
+            )
         return v
 
 
-port_number = RangeCheckedConversion(integer, min=1, max=0xffff).__call__
+port_number = RangeCheckedConversion(integer, min=1, max=0xFFFF).__call__
 
 
 def inet_address(s):
     # returns (host, port) tuple
-    host = ''
+    host = ""
     if ":" in s:
         host, s = s.rsplit(":", 1)
         if not s:
@@ -167,8 +171,8 @@ def inet_address(s):
             port = port_number(s)
         except ValueError:
             raise ValueError("not a valid port number: %r " % s)
-    if not host or host == '*':
-        host = ''
+    if not host or host == "*":
+        host = ""
     return host, port
 
 
@@ -184,16 +188,15 @@ class SocketAddress(object):
 
 
 class SocketConfig(object):
-    """ Abstract base class which provides a uniform abstraction
-    for TCP vs Unix sockets """
-    url = ''  # socket url
+    """Abstract base class which provides a uniform abstraction
+    for TCP vs Unix sockets"""
+
+    url = ""  # socket url
     addr = None  # socket addr
-    backlog = None # socket listen backlog
+    backlog = None  # socket listen backlog
 
     def __repr__(self):
-        return '<%s at %s for %s>' % (self.__class__,
-                                      id(self),
-                                      self.url)
+        return "<%s at %s for %s>" % (self.__class__, id(self), self.url)
 
     def __str__(self):
         return str(self.url)
@@ -221,7 +224,7 @@ class SocketConfig(object):
 
 
 class InetStreamSocketConfig(SocketConfig):
-    """ TCP socket config helper """
+    """TCP socket config helper"""
 
     host = None  # host name or ip to bind to
     port = None  # integer port to bind to
@@ -229,9 +232,9 @@ class InetStreamSocketConfig(SocketConfig):
     def __init__(self, host, port, **kwargs):
         self.host = host.lower()
         self.port = port_number(port)
-        self.url = 'tcp://%s:%d' % (self.host, self.port)
-        self.backlog = kwargs.get('backlog', None)
-        self.so_reuse_addr = kwargs.get('so_reuse_addr', True)
+        self.url = "tcp://%s:%d" % (self.host, self.port)
+        self.backlog = kwargs.get("backlog", None)
+        self.so_reuse_addr = kwargs.get("so_reuse_addr", True)
 
     def addr(self):
         return self.host, self.port
@@ -251,26 +254,26 @@ class InetStreamSocketConfig(SocketConfig):
 
 @raise_not_implemented
 def colon_separated_user_group(arg):
-    """ Find a user ID and group ID from a string like 'user:group'.  Returns
-        a tuple (uid, gid).  If the string only contains a user like 'user'
-        then (uid, -1) will be returned.  Raises ValueError if either
-        the user or group can't be resolved to valid IDs on the system. """
+    """Find a user ID and group ID from a string like 'user:group'.  Returns
+    a tuple (uid, gid).  If the string only contains a user like 'user'
+    then (uid, -1) will be returned.  Raises ValueError if either
+    the user or group can't be resolved to valid IDs on the system."""
     pass
 
 
 @raise_not_implemented
 def name_to_uid(name):
-    """ Find a user ID from a string containing a user name or ID.
-        Raises ValueError if the string can't be resolved to a valid
-        user ID on the system. """
+    """Find a user ID from a string containing a user name or ID.
+    Raises ValueError if the string can't be resolved to a valid
+    user ID on the system."""
     pass
 
 
 @raise_not_implemented
 def name_to_gid(name):
-    """ Find a group ID from a string containing a group name or ID.
-        Raises ValueError if the string can't be resolved to a valid
-        group ID on the system. """
+    """Find a group ID from a string containing a group name or ID.
+    Raises ValueError if the string can't be resolved to a valid
+    group ID on the system."""
     pass
 
 
@@ -284,14 +287,14 @@ def octal_type(arg):
     try:
         return int(arg, 8)
     except (TypeError, ValueError):
-        raise ValueError('%s can not be converted to an octal type' % arg)
+        raise ValueError("%s can not be converted to an octal type" % arg)
 
 
 def existing_directory(v):
     nv = os.path.expanduser(v)
     if os.path.isdir(nv):
         return nv
-    raise ValueError('%s is not an existing directory' % v)
+    raise ValueError("%s is not an existing directory" % v)
 
 
 def existing_dirpath(v):
@@ -302,15 +305,14 @@ def existing_dirpath(v):
         return nv
     if os.path.isdir(dir):
         return nv
-    raise ValueError('The directory named as part of the path %s '
-                     'does not exist' % v)
+    raise ValueError("The directory named as part of the path %s " "does not exist" % v)
 
 
 def logging_level(value):
     s = str(value).lower()
     level = getLevelNumByDescription(s)
     if level is None:
-        raise ValueError('bad logging level name %r' % value)
+        raise ValueError("bad logging level name %r" % value)
     return level
 
 
@@ -332,14 +334,18 @@ class SuffixMultiplier(object):
     def __call__(self, v):
         v = v.lower()
         for s, m in self._d.items():
-            if v[-self._keysz:] == s:
-                return int(v[:-self._keysz]) * m
+            if v[-self._keysz :] == s:
+                return int(v[: -self._keysz]) * m
         return int(v) * self._default
 
 
-byte_size = SuffixMultiplier({'kb': 1024,
-                              'mb': 1024 * 1024,
-                              'gb': 1024 * 1024 * long(1024), })
+byte_size = SuffixMultiplier(
+    {
+        "kb": 1024,
+        "mb": 1024 * 1024,
+        "gb": 1024 * 1024 * long(1024),
+    }
+)
 
 
 def url(value):
@@ -355,6 +361,7 @@ win_sig_pattern = re.compile("WM_(?!NULL)")
 SIGNUMS = [getattr(signal, k) for k in dir(signal) if sig_pattern.match(k)]
 SIGNUMS += [-getattr(win32con, k) for k in dir(win32con) if win_sig_pattern.match(k)]
 
+
 def signal_number(value):
     try:
         num = int(value)
@@ -366,12 +373,12 @@ def signal_number(value):
                 num = -num
         else:
             if not sig_pattern.match(name):
-                name = 'SIG' + name
+                name = "SIG" + name
             num = getattr(signal, name, None)
         if num is None:
-            raise ValueError('value %r is not a valid signal name' % value)
+            raise ValueError("value %r is not a valid signal name" % value)
     if num not in SIGNUMS:
-        raise ValueError('value %r is not a valid signal number' % value)
+        raise ValueError("value %r is not a valid signal number" % value)
     return num
 
 
@@ -390,10 +397,9 @@ def auto_restart(value):
         computed_value = RestartUnconditionally
     elif value in FALSY_STRINGS:
         computed_value = False
-    elif value == 'unexpected':
+    elif value == "unexpected":
         computed_value = RestartWhenExitUnexpected
-    if computed_value not in (RestartWhenExitUnexpected,
-                              RestartUnconditionally, False):
+    if computed_value not in (RestartWhenExitUnexpected, RestartUnconditionally, False):
         raise ValueError("invalid 'autorestart' value %r" % value)
     return computed_value
 
@@ -403,7 +409,7 @@ def profile_options(value):
     sort_options = []
     callers = False
     for thing in options:
-        if thing != 'callers':
+        if thing != "callers":
             sort_options.append(thing)
         else:
             callers = True

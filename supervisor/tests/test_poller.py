@@ -18,6 +18,7 @@ SkipTestCase = object
 class BasePollerTests(unittest.TestCase):
     def _makeOne(self, options):
         from supervisor.poller import BasePoller
+
         return BasePoller(options)
 
     def test_register_readable(self):
@@ -50,7 +51,6 @@ class BasePollerTests(unittest.TestCase):
 
 
 class SelectPollerTests(unittest.TestCase):
-
     def _makeOne(self, options):
         return SelectPoller(options)
 
@@ -91,8 +91,7 @@ class SelectPollerTests(unittest.TestCase):
         self.assertEqual(list(poller.writables), [8])
 
     def test_poll_returns_readables_and_writables(self):
-        _select = DummySelect(result={'readables': [6],
-                                      'writables': [8]})
+        _select = DummySelect(result={"readables": [6], "writables": [8]})
         poller = self._makeOne(DummyOptions())
         poller._select = _select
         poller.register_readable(6)
@@ -109,7 +108,7 @@ class SelectPollerTests(unittest.TestCase):
         poller._select = _select
         poller.register_readable(6)
         poller.poll(1)
-        self.assertEqual(options.logger.data[0], 'EINTR encountered in poll')
+        self.assertEqual(options.logger.data[0], "EINTR encountered in poll")
 
     def test_poll_ignores_ebadf(self):
         _select = DummySelect(error=errno.EBADF)
@@ -118,7 +117,7 @@ class SelectPollerTests(unittest.TestCase):
         poller._select = _select
         poller.register_readable(6)
         poller.poll(1)
-        self.assertEqual(options.logger.data[0], 'EBADF encountered in poll')
+        self.assertEqual(options.logger.data[0], "EBADF encountered in poll")
         self.assertEqual(list(poller.readables), [])
         self.assertEqual(list(poller.writables), [])
 
@@ -138,7 +137,6 @@ else:
 
 
 class KQueuePollerTests(KQueuePollerTestsBase):
-
     def _makeOne(self, options):
         return KQueuePoller(options)
 
@@ -193,9 +191,13 @@ class KQueuePollerTests(KQueuePollerTestsBase):
         self.assertWriteEventDeleted(kqueue.registered_kevents[3], 8)
 
     def test_poll_returns_readables_and_writables(self):
-        kqueue = DummyKQueue(result=[(6, select.KQ_FILTER_READ),
-                                     (7, select.KQ_FILTER_READ),
-                                     (8, select.KQ_FILTER_WRITE)])
+        kqueue = DummyKQueue(
+            result=[
+                (6, select.KQ_FILTER_READ),
+                (7, select.KQ_FILTER_READ),
+                (8, select.KQ_FILTER_WRITE),
+            ]
+        )
         poller = self._makeOne(DummyOptions())
         poller._kqueue = kqueue
         poller.register_readable(6)
@@ -212,7 +214,7 @@ class KQueuePollerTests(KQueuePollerTestsBase):
         poller._kqueue = kqueue
         poller.register_readable(6)
         poller.poll(1000)
-        self.assertEqual(options.logger.data[0], 'EINTR encountered in poll')
+        self.assertEqual(options.logger.data[0], "EINTR encountered in poll")
 
     def test_register_readable_and_writable_ignores_ebadf(self):
         _kqueue = DummyKQueue(raise_errno_register=errno.EBADF)
@@ -221,10 +223,14 @@ class KQueuePollerTests(KQueuePollerTestsBase):
         poller._kqueue = _kqueue
         poller.register_readable(6)
         poller.register_writable(7)
-        self.assertEqual(options.logger.data[0],
-                         'EBADF encountered in kqueue. Invalid file descriptor 6')
-        self.assertEqual(options.logger.data[1],
-                         'EBADF encountered in kqueue. Invalid file descriptor 7')
+        self.assertEqual(
+            options.logger.data[0],
+            "EBADF encountered in kqueue. Invalid file descriptor 6",
+        )
+        self.assertEqual(
+            options.logger.data[1],
+            "EBADF encountered in kqueue. Invalid file descriptor 7",
+        )
 
     def test_register_uncaught_exception(self):
         _kqueue = DummyKQueue(raise_errno_register=errno.ENOMEM)
@@ -288,6 +294,7 @@ class KQueuePollerTests(KQueuePollerTestsBase):
         self.assertEqual(kevent.filter, filter)
         self.assertEqual(kevent.flags, flags)
 
+
 if implements_poll():
     PollerPollTestsBase = unittest.TestCase
 else:
@@ -295,7 +302,6 @@ else:
 
 
 class PollerPollTests(PollerPollTestsBase):
-
     def _makeOne(self, options):
         return PollPoller(options)
 
@@ -315,10 +321,14 @@ class PollerPollTests(PollerPollTestsBase):
         self.assertEqual(select_poll.registered_as_writable, [6])
 
     def test_poll_returns_readables_and_writables(self):
-        select_poll = DummySelectPoll(result=[(6, select.POLLIN),
-                                              (7, select.POLLPRI),
-                                              (8, select.POLLOUT),
-                                              (9, select.POLLHUP)])
+        select_poll = DummySelectPoll(
+            result=[
+                (6, select.POLLIN),
+                (7, select.POLLPRI),
+                (8, select.POLLOUT),
+                (9, select.POLLHUP),
+            ]
+        )
         poller = self._makeOne(DummyOptions())
         poller._poller = select_poll
         poller.register_readable(6)
@@ -336,7 +346,7 @@ class PollerPollTests(PollerPollTestsBase):
         poller._poller = select_poll
         poller.register_readable(9)
         poller.poll(1000)
-        self.assertEqual(options.logger.data[0], 'EINTR encountered in poll')
+        self.assertEqual(options.logger.data[0], "EINTR encountered in poll")
 
     def test_poll_uncaught_exception(self):
         select_poll = DummySelectPoll(error=errno.EBADF)
@@ -347,8 +357,9 @@ class PollerPollTests(PollerPollTestsBase):
         self.assertRaises(select.error, poller.poll, 1000)
 
     def test_poll_ignores_and_unregisters_closed_fd(self):
-        select_poll = DummySelectPoll(result=[(6, select.POLLNVAL),
-                                              (7, select.POLLPRI)])
+        select_poll = DummySelectPoll(
+            result=[(6, select.POLLNVAL), (7, select.POLLPRI)]
+        )
         poller = self._makeOne(DummyOptions())
         poller._poller = select_poll
         poller.register_readable(6)
@@ -365,8 +376,8 @@ class DummySelect(object):
 
     def __init__(self, result=None, error=None):
         result = result or {}
-        self.readables = result.get('readables', [])
-        self.writables = result.get('writables', [])
+        self.readables = result.get("readables", [])
+        self.writables = result.get("writables", [])
         self.error = error
 
     def select(self, r, w, x, timeout):
@@ -393,7 +404,9 @@ class DummySelectPoll(object):
         elif eventmask == select.POLLOUT:
             self.registered_as_writable.append(fd)
         else:
-            raise ValueError("Registered a fd on unknown eventmask: '{0}'".format(eventmask))
+            raise ValueError(
+                "Registered a fd on unknown eventmask: '{0}'".format(eventmask)
+            )
 
     def unregister(self, fd):
         self.unregistered.append(fd)
@@ -427,7 +440,8 @@ class DummyKQueue(object):
         self.registered_kevents.extend(kevents)
 
     def raise_error(self, err):
-        if not err: return
+        if not err:
+            return
         ex = OSError()
         ex.errno = err
         raise ex
@@ -437,12 +451,14 @@ class DummyKQueue(object):
 
     def assert_max_events_on_poll(self, max_events):
         assert max_events == KQueuePoller.max_events, (
-                "`max_events` parameter of `kqueue.control() should be %d"
-                % KQueuePoller.max_events)
+            "`max_events` parameter of `kqueue.control() should be %d"
+            % KQueuePoller.max_events
+        )
 
     def assert_max_events_on_register(self, max_events):
-        assert max_events == 0, (
-            "`max_events` parameter of `kqueue.control()` should be 0 on register")
+        assert (
+            max_events == 0
+        ), "`max_events` parameter of `kqueue.control()` should be 0 on register"
 
 
 class FakeKEvent(object):
@@ -455,5 +471,5 @@ def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
 
 
-if __name__ == '__main__':
-    unittest.main(defaultTest='test_suite')
+if __name__ == "__main__":
+    unittest.main(defaultTest="test_suite")

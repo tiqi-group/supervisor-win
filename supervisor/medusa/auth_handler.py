@@ -5,7 +5,7 @@
 #                                                All Rights Reserved.
 #
 
-RCS_ID = '$Id: auth_handler.py,v 1.6 2002/11/25 19:40:23 akuchling Exp $'
+RCS_ID = "$Id: auth_handler.py,v 1.6 2002/11/25 19:40:23 akuchling Exp $"
 
 # support for 'basic' authentication.
 
@@ -30,7 +30,8 @@ class auth_handler(object):
     around access to the resources normally served up by another handler.
     does anyone support digest authentication? (rfc2069)
     """
-    def __init__(self, dict, handler, realm='default'):
+
+    def __init__(self, dict, handler, realm="default"):
         self.authorizer = dictionary_authorizer(dict)
         self.handler = handler
         self.realm = realm
@@ -47,15 +48,15 @@ class auth_handler(object):
 
         if scheme:
             scheme = scheme.lower()
-            if scheme == 'basic':
+            if scheme == "basic":
                 cookie = get_header(AUTHORIZATION, request.header, 2)
                 try:
                     decoded = as_string(decodestring(as_bytes(cookie)))
                 except:
-                    sys.stderr.write('malformed authorization info <%s>\n' % cookie)
+                    sys.stderr.write("malformed authorization info <%s>\n" % cookie)
                     request.error(400)
                     return
-                auth_info = decoded.split(':', 1)
+                auth_info = decoded.split(":", 1)
                 if self.authorizer.authorize(auth_info):
                     self.pass_count.increment()
                     request.auth_info = auth_info
@@ -65,7 +66,7 @@ class auth_handler(object):
             # elif scheme == 'digest':
             #       print 'digest: ',AUTHORIZATION.group(2)
             else:
-                sys.stderr.write('unknown/unsupported auth method: %s\n' % scheme)
+                sys.stderr.write("unknown/unsupported auth method: %s\n" % scheme)
                 self.handle_unauthorized(request)
         else:
             # list both?  prefer one or the other?
@@ -82,18 +83,18 @@ class auth_handler(object):
         # to ignore the file data we're not interested in.
         self.fail_count.increment()
         request.channel.set_terminator(None)
-        request['Connection'] = 'close'
-        request['WWW-Authenticate'] = 'Basic realm="%s"' % self.realm
+        request["Connection"] = "close"
+        request["WWW-Authenticate"] = 'Basic realm="%s"' % self.realm
         request.error(401)
 
     def make_nonce(self, request):
         """A digest-authentication <nonce>, constructed as suggested in RFC 2069"""
         ip = request.channel.server.ip
         now = str(long(time.time()))
-        if now[-1:] == 'L':
+        if now[-1:] == "L":
             now = now[:-1]
         private_key = str(id(self))
-        nonce = ':'.join([ip, now, private_key])
+        nonce = ":".join([ip, now, private_key])
         return self.apply_hash(nonce)
 
     def apply_hash(self, s):
@@ -108,15 +109,13 @@ class auth_handler(object):
         # Thanks to mwm@contessa.phone.net (Mike Meyer)
         r = [
             producers.simple_producer(
-                '<li>Authorization Extension : '
-                '<b>Unauthorized requests:</b> %s<ul>' % self.fail_count
+                "<li>Authorization Extension : "
+                "<b>Unauthorized requests:</b> %s<ul>" % self.fail_count
             )
         ]
-        if hasattr(self.handler, 'status'):
+        if hasattr(self.handler, "status"):
             r.append(self.handler.status())
-        r.append(
-            producers.simple_producer('</ul>')
-        )
+        r.append(producers.simple_producer("</ul>"))
         return producers.composite_producer(r)
 
 
@@ -134,6 +133,6 @@ class dictionary_authorizer(object):
 
 AUTHORIZATION = re.compile(
     # scheme  challenge
-    'Authorization: ([^ ]+) (.*)',
-    re.IGNORECASE
+    "Authorization: ([^ ]+) (.*)",
+    re.IGNORECASE,
 )

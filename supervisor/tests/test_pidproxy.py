@@ -1,9 +1,11 @@
 import os
 import unittest
 
+
 class PidProxyTests(unittest.TestCase):
     def _getTargetClass(self):
         from supervisor.pidproxy import PidProxy
+
         return PidProxy
 
     def _makeOne(self, *arg, **kw):

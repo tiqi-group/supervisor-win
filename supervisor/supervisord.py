@@ -114,8 +114,12 @@ class Supervisor(object):
         """
         try:
             from supervisor.process import ProcessJobHandler
+
             self.options.job_handler = ProcessJobHandler(os.getpid())
-        except (ImportError, Exception):  # Supervisor can not stop due to execution failure
+        except (
+            ImportError,
+            Exception,
+        ):  # Supervisor can not stop due to execution failure
             self.options.job_handler = None
         return self.options.job_handler
 
@@ -129,8 +133,7 @@ class Supervisor(object):
         added = [cand for cand in new if cand.name not in curdict]
         removed = [cand for cand in cur if cand.name not in newdict]
 
-        changed = [cand for cand in new
-                   if cand != curdict.get(cand.name, cand)]
+        changed = [cand for cand in new if cand != curdict.get(cand.name, cand)]
 
         return added, changed, removed
 
@@ -140,7 +143,7 @@ class Supervisor(object):
             config.after_setuid()
             self.process_groups[name] = config.make_group()
             events.notify(events.ProcessGroupAddedEvent(name))
-            self.options.logger.info('process group added: \'%s\'' % name)
+            self.options.logger.info("process group added: '%s'" % name)
             return True
         return False
 
@@ -150,7 +153,7 @@ class Supervisor(object):
         self.process_groups[name].before_remove()
         del self.process_groups[name]
         events.notify(events.ProcessGroupRemovedEvent(name))
-        self.options.logger.info('process group removed: \'%s\'' % name)
+        self.options.logger.info("process group removed: '%s'" % name)
         return True
 
     def get_process_map(self):
@@ -170,12 +173,14 @@ class Supervisor(object):
             now = time.time()
             if now > (self.lastshutdownreport + 3):  # every 3 secs
                 names = [as_string(p.config.name) for p in unstopped]
-                namestr = ', '.join(names)
-                self.options.logger.info('waiting for %s to die' % namestr)
+                namestr = ", ".join(names)
+                self.options.logger.info("waiting for %s to die" % namestr)
                 self.lastshutdownreport = now
                 for proc in unstopped:
                     state = getProcessStateDescription(proc.get_state())
-                    self.options.logger.blather('%s state: %s' % (proc.config.name, state))
+                    self.options.logger.blather(
+                        "%s state: %s" % (proc.config.name, state)
+                    )
         return unstopped
 
     def ordered_stop_groups_phase_1(self):
@@ -251,8 +256,8 @@ class Supervisor(object):
                     try:
                         dispatcher = combined_map[fd]
                         self.options.logger.blather(
-                            'read event caused by %(dispatcher)s',
-                            dispatcher=dispatcher)
+                            "read event caused by %(dispatcher)s", dispatcher=dispatcher
+                        )
                         dispatcher.handle_read_event()
                     except asyncore.ExitNow:
                         raise
@@ -264,8 +269,9 @@ class Supervisor(object):
                     try:
                         dispatcher = combined_map[fd]
                         self.options.logger.blather(
-                            'write event caused by %(dispatcher)s',
-                            dispatcher=dispatcher)
+                            "write event caused by %(dispatcher)s",
+                            dispatcher=dispatcher,
+                        )
                         dispatcher.handle_write_event()
                     except asyncore.ExitNow:
                         raise
@@ -292,8 +298,8 @@ class Supervisor(object):
                 continue
 
     def tick(self, now=None):
-        """ Send one or more 'tick' events when the timeslice related to
-        the period for the event type rolls over """
+        """Send one or more 'tick' events when the timeslice related to
+        the period for the event type rolls over"""
         if now is None:
             # now won't be None in unit tests
             now = time.time()
@@ -316,7 +322,7 @@ class Supervisor(object):
             subprocess = self.options.get_pid_history(pid)
         except KeyError:
             _, msg = decode_wait_status(sts)
-            self.options.logger.info('reaped unknown pid %s (%s)' % (pid, msg))
+            self.options.logger.info("reaped unknown pid %s (%s)" % (pid, msg))
         else:
             subprocess.finish(pid, sts)
             self.options.remove_pid_history(pid)
@@ -329,14 +335,20 @@ class Supervisor(object):
         sig = self.options.get_signal()
         if sig:
             if sig in (signal.SIGTERM, signal.SIGINT):
-                self.options.logger.warn('received %s indicating exit request' % signame(sig))
+                self.options.logger.warn(
+                    "received %s indicating exit request" % signame(sig)
+                )
                 self.options.mood = SupervisorStates.SHUTDOWN
             elif sig == signal.SIGABRT:
                 if self.options.mood == SupervisorStates.SHUTDOWN:
                     self.options.logger.warn(
-                        'ignored %s indicating restart request (shutdown in progress)' % signame(sig))
+                        "ignored %s indicating restart request (shutdown in progress)"
+                        % signame(sig)
+                    )
                 else:
-                    self.options.logger.warn('received %s indicating restart request' % signame(sig))
+                    self.options.logger.warn(
+                        "received %s indicating restart request" % signame(sig)
+                    )
                     self.options.mood = SupervisorStates.RESTARTING
             # elif sig == signal.SIGCHLD:
             #     self.options.logger.debug('received %s indicating a child quit' % signame(sig))
@@ -346,7 +358,9 @@ class Supervisor(object):
             #     for group in self.process_groups.values():
             #         group.reopenlogs()
             else:
-                self.options.logger.blather('received %s indicating nothing' % signame(sig))
+                self.options.logger.blather(
+                    "received %s indicating nothing" % signame(sig)
+                )
 
     def get_state(self):
         return self.options.mood
@@ -371,19 +385,18 @@ def profile(cmd, globals, locals, sort_order, callers):  # pragma: no cover
         stats = pstats.Stats(fn)
         stats.strip_dirs()
         # calls,time,cumulative and cumulative,calls,time are useful
-        stats.sort_stats(*sort_order or ('cumulative', 'calls', 'time'))
+        stats.sort_stats(*sort_order or ("cumulative", "calls", "time"))
         if callers:
-            stats.print_callers(.3)
+            stats.print_callers(0.3)
         else:
-            stats.print_stats(.3)
+            stats.print_stats(0.3)
     finally:
         os.close(fd)
         os.remove(fn)
 
 
 # Main program
-def main(args=None, test=False,
-         stdout=None, stderr=None):
+def main(args=None, test=False, stdout=None, stderr=None):
     # assert os.name == "posix", "This code makes Unix-specific assumptions"
     # if we hup, restart by making a new Supervisor()
     first = True
@@ -400,7 +413,7 @@ def main(args=None, test=False,
         try:
             if options.profile_options:
                 sort_order, callers = options.profile_options
-                profile('go(options)', globals(), locals(), sort_order, callers)
+                profile("go(options)", globals(), locals(), sort_order, callers)
             else:
                 go(options)
         finally:
@@ -416,7 +429,7 @@ def go(options):  # pragma: no cover
     try:
         d.main()
     except asyncore.ExitNow:
-        d.options.logger.info('exit now...')
+        d.options.logger.info("exit now...")
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -10,6 +10,7 @@ VERSION = "$Id: xmlrpc_handler.py,v 1.6 2004/04/21 14:09:24 akuchling Exp $"
 from supervisor.compat import as_string
 
 import supervisor.medusa.http_server as http_server
+
 try:
     import xmlrpclib
 except ImportError:
@@ -21,13 +22,13 @@ import sys
 class xmlrpc_handler(object):
     def match(self, request):
         # Note: /RPC2 is not required by the spec, so you may override this method.
-        if request.uri[:5] == '/RPC2':
+        if request.uri[:5] == "/RPC2":
             return 1
         else:
             return 0
 
     def handle_request(self, request):
-        if request.command == 'POST':
+        if request.command == "POST":
             request.collector = collector(self, request)
         else:
             request.error(400)
@@ -52,7 +53,7 @@ class xmlrpc_handler(object):
             request.error(500)
         else:
             # got a valid XML RPC response
-            request['Content-Type'] = 'text/xml'
+            request["Content-Type"] = "text/xml"
             request.push(response)
             request.done()
 
@@ -71,7 +72,7 @@ class collector(object):
         self.data = []
 
         # make sure there's a content-length header
-        cl = request.get_header('content-length')
+        cl = request.get_header("content-length")
 
         if not cl:
             request.error(411)
@@ -85,21 +86,22 @@ class collector(object):
 
     def found_terminator(self):
         # set the terminator back to the default
-        self.request.channel.set_terminator(b'\r\n\r\n')
+        self.request.channel.set_terminator(b"\r\n\r\n")
         # convert the data back to text for processing
-        data = as_string(b''.join(self.data))
+        data = as_string(b"".join(self.data))
         self.handler.continue_request(data, self.request)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
+
     class rpc_demo(xmlrpc_handler):
         def call(self, method, params):
             print('method="%s" params=%s' % (method, params))
             return "Sure, that works"
 
-
     import supervisor.medusa.asyncore_25 as asyncore
 
-    hs = http_server.http_server('', 8000)
+    hs = http_server.http_server("", 8000)
     rpc = rpc_demo()
     hs.install_handler(rpc)
 

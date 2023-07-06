@@ -46,7 +46,7 @@ class LevelsByDescription(object):
 def _levelNumbers():
     bynumber = {}
     for name, number in LevelsByName.__dict__.items():
-        if not name.startswith('_'):
+        if not name.startswith("_"):
             bynumber[number] = name
     return bynumber
 
@@ -60,9 +60,9 @@ def getLevelNumByDescription(description):
 
 
 class Handler(object):
-    fmt = '%(message)s'
+    fmt = "%(message)s"
     level = LevelsByName.INFO
-    encoding = 'UTF-8'
+    encoding = "UTF-8"
 
     def __init__(self, stream=None):
         self.stream = stream
@@ -84,7 +84,7 @@ class Handler(object):
 
     def close(self):
         if not self.closed:
-            if hasattr(self.stream, 'fileno'):
+            if hasattr(self.stream, "fileno"):
                 try:
                     fd = self.stream.fileno()
                 except (IOError, ValueError):
@@ -100,14 +100,14 @@ class Handler(object):
     def emit(self, record):
         try:
             msg = self.fmt % record.asdict()
-            if hasattr(self.stream, 'encoding'):
-                self.stream.write(as_string(msg,
-                                            encoding=self.encoding,
-                                            errors='ignore'))
+            if hasattr(self.stream, "encoding"):
+                self.stream.write(
+                    as_string(msg, encoding=self.encoding, errors="ignore")
+                )
             else:
-                self.stream.write(as_bytes(msg,
-                                           encoding=self.encoding,
-                                           errors='ignore'))
+                self.stream.write(
+                    as_bytes(msg, encoding=self.encoding, errors="ignore")
+                )
             self.flush()
         except:
             self.handleError()
@@ -123,7 +123,7 @@ class StreamHandler(Handler):
         Handler.__init__(self, strm)
 
     def remove(self):
-        if hasattr(self.stream, 'clear'):
+        if hasattr(self.stream, "clear"):
             self.stream.clear()
 
     def reopen(self):
@@ -131,7 +131,7 @@ class StreamHandler(Handler):
 
 
 class BoundIO(object):
-    def __init__(self, maxbytes, buf=b''):
+    def __init__(self, maxbytes, buf=b""):
         self.maxbytes = maxbytes
         self.buf = buf
 
@@ -151,11 +151,11 @@ class BoundIO(object):
         return self.buf
 
     def clear(self):
-        self.buf = b''
+        self.buf = b""
+
 
 class FileHandler(Handler):
-    """File handler which supports reopening of logs.
-    """
+    """File handler which supports reopening of logs."""
 
     def __init__(self, filename, mode="ab"):
         Handler.__init__(self, self._openfile(filename, mode))
@@ -166,9 +166,7 @@ class FileHandler(Handler):
         """opens a file in standard encoding
         :rtype: file
         """
-        return codecs.open(filename, mode,
-                           encoding=self.encoding,
-                           buffering=1024 * 2)
+        return codecs.open(filename, mode, encoding=self.encoding, buffering=1024 * 2)
 
     def reopen(self):
         self.close()
@@ -185,8 +183,7 @@ class FileHandler(Handler):
 
 
 class RotatingFileHandler(FileHandler):
-    def __init__(self, filename, mode='ab', maxBytes=512 * 1024 * 1024,
-                 backupCount=10):
+    def __init__(self, filename, mode="ab", maxBytes=512 * 1024 * 1024, backupCount=10):
         """
         Open the specified file and use it as the stream for logging.
 
@@ -208,7 +205,7 @@ class RotatingFileHandler(FileHandler):
         If maxBytes is zero, rollover never occurs.
         """
         if maxBytes > 0:
-            mode = 'ab'  # doesn't make sense otherwise!
+            mode = "ab"  # doesn't make sense otherwise!
         super(RotatingFileHandler, self).__init__(filename, mode)
         self._disable_inheritance_filehandler()  # fix file used by others process
         self.maxBytes = maxBytes
@@ -219,9 +216,8 @@ class RotatingFileHandler(FileHandler):
     def _disable_inheritance_filehandler(self):
         """Disable file handlers inheritance by child processes"""
         win32api.SetHandleInformation(
-            msvcrt.get_osfhandle(self.stream.fileno()),
-            win32con.HANDLE_FLAG_INHERIT,
-            0)
+            msvcrt.get_osfhandle(self.stream.fileno()), win32con.HANDLE_FLAG_INHERIT, 0
+        )
 
     def emit(self, record):
         """
@@ -284,7 +280,7 @@ class RotatingFileHandler(FileHandler):
             except:
                 pass
             finally:
-                self.stream = self._openfile(self.baseFilename, 'wb')
+                self.stream = self._openfile(self.baseFilename, "wb")
 
 
 class LogRecord(object):
@@ -299,13 +295,16 @@ class LogRecord(object):
             now = time.time()
             msecs = (now - long(now)) * 1000
             part1 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now))
-            asctime = '%s,%03d' % (part1, msecs)
+            asctime = "%s,%03d" % (part1, msecs)
             levelname = LOG_LEVELS_BY_NUM[self.level]
-            msg = as_string(self.msg, errors='ignore')
+            msg = as_string(self.msg, errors="ignore")
             if self.kw:
                 msg = msg % self.kw
-            self.dictrepr = {'message': as_string(msg, errors='ignore'), 'levelname': levelname,
-                             'asctime': asctime}
+            self.dictrepr = {
+                "message": as_string(msg, errors="ignore"),
+                "levelname": levelname,
+                "asctime": asctime,
+            }
         return self.dictrepr
 
 
@@ -382,9 +381,9 @@ class SyslogHandler(Handler):
     def emit(self, record):
         try:
             params = record.asdict()
-            message = params['message']
-            for line in message.rstrip('\n').split('\n'):
-                params['message'] = line
+            message = params["message"]
+            for line in message.rstrip("\n").split("\n"):
+                params["message"] = line
                 msg = self.fmt % params
                 try:
                     self._syslog(msg)
@@ -434,13 +433,13 @@ def handle_syslog(logger, fmt):
 def handle_file(logger, filename, fmt, rotating=False, maxbytes=0, backups=0):
     """Attach a new file handler to an existing Logger. If the filename
     is the magic name of 'syslog' then make it a syslog handler instead."""
-    if filename == 'syslog': # TODO remove this
+    if filename == "syslog":  # TODO remove this
         handler = SyslogHandler()
     else:
         if rotating is False:
             handler = FileHandler(filename)
         else:
-            handler = RotatingFileHandler(filename, 'a', maxbytes, backups)
+            handler = RotatingFileHandler(filename, "a", maxbytes, backups)
     handler.setFormat(fmt)
     handler.setLevel(logger.level)
     logger.addHandler(handler)

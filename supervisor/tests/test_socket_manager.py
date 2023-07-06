@@ -16,7 +16,6 @@ from supervisor.datatypes import InetStreamSocketConfig
 
 
 class Subject:
-
     def __init__(self):
         self.value = 5
 
@@ -28,12 +27,12 @@ class Subject:
 
 
 class ProxyTest(unittest.TestCase):
-
     def setUp(self):
         self.on_deleteCalled = False
 
     def _getTargetClass(self):
         from supervisor.socket_manager import Proxy
+
         return Proxy
 
     def _makeOne(self, *args, **kw):
@@ -55,7 +54,6 @@ class ProxyTest(unittest.TestCase):
 
 
 class ReferenceCounterTest(unittest.TestCase):
-
     def setUp(self):
         self.running = False
 
@@ -67,6 +65,7 @@ class ReferenceCounterTest(unittest.TestCase):
 
     def _getTargetClass(self):
         from supervisor.socket_manager import ReferenceCounter
+
         return ReferenceCounter
 
     def _makeOne(self, *args, **kw):
@@ -94,12 +93,12 @@ class ReferenceCounterTest(unittest.TestCase):
 
 
 class SocketManagerTest(unittest.TestCase):
-
     def tearDown(self):
         gc_collect()
 
     def _getTargetClass(self):
         from supervisor.socket_manager import SocketManager
+
         return SocketManager
 
     def _makeOne(self, *args, **kw):
@@ -109,7 +108,10 @@ class SocketManagerTest(unittest.TestCase):
         conf = DummySocketConfig(2)
         sock_manager = self._makeOne(conf)
         expected = "<%s at %s for %s>" % (
-            sock_manager.__class__, id(sock_manager), conf.url)
+            sock_manager.__class__,
+            id(sock_manager),
+            conf.url,
+        )
         self.assertEqual(repr(sock_manager), expected)
 
     def test_get_config(self):
@@ -118,18 +120,18 @@ class SocketManagerTest(unittest.TestCase):
         self.assertEqual(conf, sock_manager.config())
 
     def test_tcp_w_hostname(self):
-        conf = InetStreamSocketConfig('localhost', 51041)
+        conf = InetStreamSocketConfig("localhost", 51041)
         sock_manager = self._makeOne(conf)
         self.assertEqual(sock_manager.socket_config, conf)
         sock = sock_manager.get_socket()
-        self.assertEqual(sock.getsockname(), ('127.0.0.1', 51041))
+        self.assertEqual(sock.getsockname(), ("127.0.0.1", 51041))
 
     def test_tcp_w_ip(self):
-        conf = InetStreamSocketConfig('127.0.0.1', 51041)
+        conf = InetStreamSocketConfig("127.0.0.1", 51041)
         sock_manager = self._makeOne(conf)
         self.assertEqual(sock_manager.socket_config, conf)
         sock = sock_manager.get_socket()
-        self.assertEqual(sock.getsockname(), ('127.0.0.1', 51041))
+        self.assertEqual(sock.getsockname(), ("127.0.0.1", 51041))
 
     def test_socket_lifecycle(self):
         conf = DummySocketConfig(2)
@@ -181,12 +183,12 @@ class SocketManagerTest(unittest.TestCase):
         # socket open
         sock = sock_manager.get_socket()
         self.assertEqual(len(logger.data), 1)
-        self.assertEqual('Creating socket %s' % repr(conf), logger.data[0])
+        self.assertEqual("Creating socket %s" % repr(conf), logger.data[0])
         # socket close
         del sock
         gc_collect()
         self.assertEqual(len(logger.data), 2)
-        self.assertEqual('Closing socket %s' % repr(conf), logger.data[1])
+        self.assertEqual("Closing socket %s" % repr(conf), logger.data[1])
 
     def test_prepare_socket(self):
         conf = DummySocketConfig(1)
@@ -212,7 +214,7 @@ class SocketManagerTest(unittest.TestCase):
         self.assertEqual(sock.listen_backlog, socket.SOMAXCONN)
 
     def test_tcp_socket_already_taken(self):
-        conf = InetStreamSocketConfig('127.0.0.1', 51041, so_reuse_addr=False)
+        conf = InetStreamSocketConfig("127.0.0.1", 51041, so_reuse_addr=False)
         sock_manager = self._makeOne(conf)
         sock = sock_manager.get_socket()
         sock_manager2 = self._makeOne(conf)
@@ -220,14 +222,14 @@ class SocketManagerTest(unittest.TestCase):
         del sock
 
     def test_close_requires_prepared_socket(self):
-        conf = InetStreamSocketConfig('127.0.0.1', 51041)
+        conf = InetStreamSocketConfig("127.0.0.1", 51041)
         sock_manager = self._makeOne(conf)
         self.assertFalse(sock_manager.is_prepared())
         try:
             sock_manager._close()
             self.fail()
         except Exception as e:
-            self.assertEqual(e.args[0], 'Socket has not been prepared')
+            self.assertEqual(e.args[0], "Socket has not been prepared")
 
 
 def gc_collect():
@@ -241,5 +243,5 @@ def test_suite():
     return unittest.findTestCases(sys.modules[__name__])
 
 
-if __name__ == '__main__':
-    unittest.main(defaultTest='test_suite')
+if __name__ == "__main__":
+    unittest.main(defaultTest="test_suite")

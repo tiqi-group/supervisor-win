@@ -23,12 +23,14 @@ def clear():
 
 
 class Event(object):
-    """ Abstract event type """
+    """Abstract event type"""
+
     pass
 
 
 class ProcessLogEvent(Event):
-    """ Abstract """
+    """Abstract"""
+
     channel = None
 
     def __init__(self, process, pid, data):
@@ -37,36 +39,41 @@ class ProcessLogEvent(Event):
         self.data = data
 
     def payload(self):
-        groupname = ''
+        groupname = ""
         if self.process.group is not None:
             groupname = self.process.group.config.name
         try:
             data = as_string(self.data)
         except UnicodeDecodeError:
-            data = 'Undecodable: %r' % self.data
+            data = "Undecodable: %r" % self.data
         # On Python 2, stuff needs to be in Unicode before invoking the
         # % operator, otherwise implicit encodings to ASCII can cause
         # failures
-        fmt = as_string('processname:%s groupname:%s pid:%s channel:%s\n%s')
-        result = fmt % (as_string(self.process.config.name),
-                        as_string(groupname), self.pid,
-                        as_string(self.channel), data)
+        fmt = as_string("processname:%s groupname:%s pid:%s channel:%s\n%s")
+        result = fmt % (
+            as_string(self.process.config.name),
+            as_string(groupname),
+            self.pid,
+            as_string(self.channel),
+            data,
+        )
         return result
 
 
 class ProcessLogStdoutEvent(ProcessLogEvent):
-    channel = 'stdout'
+    channel = "stdout"
 
 
 class ProcessLogStderrEvent(ProcessLogEvent):
-    channel = 'stderr'
+    channel = "stderr"
 
 
 class ProcessCommunicationEvent(Event):
-    """ Abstract """
+    """Abstract"""
+
     # event mode tokens
-    BEGIN_TOKEN = b'<!--XSUPERVISOR:BEGIN-->'
-    END_TOKEN = b'<!--XSUPERVISOR:END-->'
+    BEGIN_TOKEN = b"<!--XSUPERVISOR:BEGIN-->"
+    END_TOKEN = b"<!--XSUPERVISOR:END-->"
 
     def __init__(self, process, pid, data):
         self.process = process
@@ -74,26 +81,27 @@ class ProcessCommunicationEvent(Event):
         self.data = data
 
     def payload(self):
-        groupname = ''
+        groupname = ""
         if self.process.group is not None:
             groupname = self.process.group.config.name
         try:
             data = as_string(self.data)
         except UnicodeDecodeError:
-            data = 'Undecodable: %r' % self.data
-        return 'processname:%s groupname:%s pid:%s\n%s' % (
+            data = "Undecodable: %r" % self.data
+        return "processname:%s groupname:%s pid:%s\n%s" % (
             self.process.config.name,
             groupname,
             self.pid,
-            data)
+            data,
+        )
 
 
 class ProcessCommunicationStdoutEvent(ProcessCommunicationEvent):
-    channel = 'stdout'
+    channel = "stdout"
 
 
 class ProcessCommunicationStderrEvent(ProcessCommunicationEvent):
-    channel = 'stderr'
+    channel = "stderr"
 
 
 class RemoteCommunicationEvent(Event):
@@ -102,14 +110,14 @@ class RemoteCommunicationEvent(Event):
         self.data = data
 
     def payload(self):
-        return 'type:%s\n%s' % (self.type, self.data)
+        return "type:%s\n%s" % (self.type, self.data)
 
 
 class SupervisorStateChangeEvent(Event):
-    """ Abstract class """
+    """Abstract class"""
 
     def payload(self):
-        return ''
+        return ""
 
 
 class SupervisorRunningEvent(SupervisorStateChangeEvent):
@@ -127,7 +135,8 @@ class EventRejectedEvent(object):  # purposely does not subclass Event
 
 
 class ProcessStateEvent(Event):
-    """ Abstract class, never raised directly """
+    """Abstract class, never raised directly"""
+
     frm = None
     to = None
 
@@ -140,13 +149,16 @@ class ProcessStateEvent(Event):
         self.extra_values = self.get_extra_values()
 
     def payload(self):
-        groupname = ''
+        groupname = ""
         if self.process.group is not None:
             groupname = self.process.group.config.name
-        L = [('processname', self.process.config.name), ('groupname', groupname),
-             ('from_state', getProcessStateDescription(self.from_state))]
+        L = [
+            ("processname", self.process.config.name),
+            ("groupname", groupname),
+            ("from_state", getProcessStateDescription(self.from_state)),
+        ]
         L.extend(self.extra_values)
-        s = ' '.join(['%s:%s' % (name, val) for (name, val) in L])
+        s = " ".join(["%s:%s" % (name, val) for (name, val) in L])
         return s
 
     def get_extra_values(self):
@@ -163,7 +175,7 @@ class ProcessStateUnknownEvent(ProcessStateEvent):
 
 class ProcessStateStartingOrBackoffEvent(ProcessStateEvent):
     def get_extra_values(self):
-        return [('tries', int(self.process.backoff))]
+        return [("tries", int(self.process.backoff))]
 
 
 class ProcessStateBackoffEvent(ProcessStateStartingOrBackoffEvent):
@@ -176,22 +188,22 @@ class ProcessStateStartingEvent(ProcessStateStartingOrBackoffEvent):
 
 class ProcessStateExitedEvent(ProcessStateEvent):
     def get_extra_values(self):
-        return [('expected', int(self.expected)), ('pid', self.process.pid)]
+        return [("expected", int(self.expected)), ("pid", self.process.pid)]
 
 
 class ProcessStateRunningEvent(ProcessStateEvent):
     def get_extra_values(self):
-        return [('pid', self.process.pid)]
+        return [("pid", self.process.pid)]
 
 
 class ProcessStateStoppingEvent(ProcessStateEvent):
     def get_extra_values(self):
-        return [('pid', self.process.pid)]
+        return [("pid", self.process.pid)]
 
 
 class ProcessStateStoppedEvent(ProcessStateEvent):
     def get_extra_values(self):
-        return [('pid', self.process.pid)]
+        return [("pid", self.process.pid)]
 
 
 class ProcessGroupEvent(Event):
@@ -199,7 +211,7 @@ class ProcessGroupEvent(Event):
         self.group = group
 
     def payload(self):
-        return 'groupname:%s\n' % self.group
+        return "groupname:%s\n" % self.group
 
 
 class ProcessGroupAddedEvent(ProcessGroupEvent):
@@ -211,14 +223,14 @@ class ProcessGroupRemovedEvent(ProcessGroupEvent):
 
 
 class TickEvent(Event):
-    """ Abstract """
+    """Abstract"""
 
     def __init__(self, when, supervisord):
         self.when = when
         self.supervisord = supervisord
 
     def payload(self):
-        return 'when:%s' % self.when
+        return "when:%s" % self.when
 
 
 class Tick5Event(TickEvent):

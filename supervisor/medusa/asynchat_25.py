@@ -63,8 +63,8 @@ class async_chat(asyncore.dispatcher):
     ac_out_buffer_size = 4096
 
     def __init__(self, conn=None, map=None):
-        self.ac_in_buffer = b''
-        self.ac_out_buffer = b''
+        self.ac_in_buffer = b""
+        self.ac_out_buffer = b""
         self.producer_fifo = fifo()
         asyncore.dispatcher.__init__(self, conn, map)
 
@@ -106,13 +106,13 @@ class async_chat(asyncore.dispatcher):
             if not terminator:
                 # no terminator, collect it all
                 self.collect_incoming_data(self.ac_in_buffer)
-                self.ac_in_buffer = b''
+                self.ac_in_buffer = b""
             elif isinstance(terminator, int) or isinstance(terminator, long):
                 # numeric terminator
                 n = terminator
                 if lb < n:
                     self.collect_incoming_data(self.ac_in_buffer)
-                    self.ac_in_buffer = b''
+                    self.ac_in_buffer = b""
                     self.terminator -= lb
                 else:
                     self.collect_incoming_data(self.ac_in_buffer[:n])
@@ -134,7 +134,7 @@ class async_chat(asyncore.dispatcher):
                     if index > 0:
                         # don't bother reporting the empty string (source of subtle bugs)
                         self.collect_incoming_data(self.ac_in_buffer[:index])
-                    self.ac_in_buffer = self.ac_in_buffer[index + terminator_len:]
+                    self.ac_in_buffer = self.ac_in_buffer[index + terminator_len :]
                     # This does the Right Thing if the terminator is changed here.
                     self.found_terminator()
                 else:
@@ -149,7 +149,7 @@ class async_chat(asyncore.dispatcher):
                     else:
                         # no prefix, collect it all
                         self.collect_incoming_data(self.ac_in_buffer)
-                        self.ac_in_buffer = b''
+                        self.ac_in_buffer = b""
 
     def handle_write(self):
         self.initiate_send()
@@ -175,9 +175,9 @@ class async_chat(asyncore.dispatcher):
         # return len(self.ac_out_buffer) or len(self.producer_fifo) or (not self.connected)
         # this is about twice as fast, though not as clear.
         return not (
-            (self.ac_out_buffer == b'') and
-            self.producer_fifo.is_empty() and
-            self.connected
+            (self.ac_out_buffer == b"")
+            and self.producer_fifo.is_empty()
+            and self.connected
         )
 
     def close_when_done(self):
@@ -231,8 +231,8 @@ class async_chat(asyncore.dispatcher):
 
     def discard_buffers(self):
         # Emergencies only!
-        self.ac_in_buffer = b''
-        self.ac_out_buffer = b''
+        self.ac_in_buffer = b""
+        self.ac_out_buffer = b""
         while self.producer_fifo:
             self.producer_fifo.pop()
 
@@ -244,12 +244,12 @@ class simple_producer(object):
 
     def more(self):
         if len(self.data) > self.buffer_size:
-            result = self.data[:self.buffer_size]
-            self.data = self.data[self.buffer_size:]
+            result = self.data[: self.buffer_size]
+            self.data = self.data[self.buffer_size :]
             return result
         else:
             result = self.data
-            self.data = b''
+            self.data = b""
             return result
 
 
@@ -293,6 +293,7 @@ class fifo(object):
 # old python:   18307/s
 # re:        12820/s
 # regex:     14035/s
+
 
 def find_prefix_at_end(haystack, needle):
     l = len(needle) - 1

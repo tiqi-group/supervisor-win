@@ -8,13 +8,19 @@ class _Stream(object):
         self.value = value
         self.obj = obj
 
-    def encode(self, encoding='utf8', errors=None):
-        return self.value if isinstance(self.value, self.obj) else \
-            self.value.encode(encoding, errors)
+    def encode(self, encoding="utf8", errors=None):
+        return (
+            self.value
+            if isinstance(self.value, self.obj)
+            else self.value.encode(encoding, errors)
+        )
 
-    def decode(self, encoding='utf8', errors=None):
-        return self.value if isinstance(self.value, self.obj) else \
-            self.value.decode(encoding, errors)
+    def decode(self, encoding="utf8", errors=None):
+        return (
+            self.value
+            if isinstance(self.value, self.obj)
+            else self.value.decode(encoding, errors)
+        )
 
 
 PY2 = sys.version_info[0] == 2
@@ -27,24 +33,26 @@ if PY2:  # pragma: no cover
     unichr = unichr
     basestring = basestring
 
-    def as_bytes(s, encoding='utf-8', errors='strict'):
+    def as_bytes(s, encoding="utf-8", errors="strict"):
         return _Stream(s, str).encode(encoding=encoding, errors=errors)
 
-    def as_string(s, encoding='utf-8', errors='strict'):
+    def as_string(s, encoding="utf-8", errors="strict"):
         return _Stream(s, unicode).decode(encoding=encoding, errors=errors)
 
     def is_text_stream(stream):
         try:
             if isinstance(stream, file):
-                return 'b' not in stream.mode
+                return "b" not in stream.mode
         except NameError:  # python 3
             pass
 
         try:
             import _io
+
             return isinstance(stream, _io._TextIOBase)
         except ImportError:
             import io
+
             return isinstance(stream, io.TextIOWrapper)
 
 else:  # pragma: no cover
@@ -57,15 +65,17 @@ else:  # pragma: no cover
         def __init__(self, string, encoding, errors):
             str.__init__(self, string)
 
-    def as_bytes(s, encoding='utf-8', errors='strict'):
+    def as_bytes(s, encoding="utf-8", errors="strict"):
         return _Stream(s, bytes).encode(encoding=encoding, errors=errors)
 
-    def as_string(s, encoding='utf-8', errors='strict'):
+    def as_string(s, encoding="utf-8", errors="strict"):
         return _Stream(s, str).decode(encoding=encoding, errors=errors)
 
     def is_text_stream(stream):
         import _io
+
         return isinstance(stream, _io._TextIOBase)
+
 
 try:  # pragma: no cover
     import xmlrpc.client as xmlrpclib
@@ -87,11 +97,14 @@ except ImportError:  # pragma: no cover
 try:  # pragma: no cover
     import syslog
 except ImportError:  # pragma: no cover
+
     class syslog(object):
         """dummy log"""
+
         @staticmethod
         def syslog(*args):
             pass
+
 
 try:  # pragma: no cover
     import ConfigParser
@@ -108,7 +121,7 @@ try:  # pragma: no cover
 except ImportError:  # pragma: no cover
     from sys import maxsize as maxint
 
-try: # pragma: no cover
+try:  # pragma: no cover
     import http.client as httplib
 except ImportError:  # pragma: no cover
     import httplib
@@ -138,32 +151,35 @@ try:  # pragma: no cover
 except ImportError:  # pragma: no cover
     import _thread as thread
 
-try: # pragma: no cover
+try:  # pragma: no cover
     from types import StringTypes
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     StringTypes = (str,)
 
-try: # pragma: no cover
+try:  # pragma: no cover
     from html import escape
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     from cgi import escape
 
-try: # pragma: no cover
+try:  # pragma: no cover
     from subprocess import SubprocessError
 except ImportError:
+
     class SubprocessError(Exception):
         pass
-try: # pragma: no cover
+
+
+try:  # pragma: no cover
     import html.entities as htmlentitydefs
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     import htmlentitydefs
 
-try: # pragma: no cover
+try:  # pragma: no cover
     from html.parser import HTMLParser
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     from HTMLParser import HTMLParser
 
-try: # pragma: no cover
+try:  # pragma: no cover
     import queue
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     import Queue as queue
