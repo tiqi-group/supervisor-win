@@ -29,7 +29,6 @@ urls = {homepage = "http://supervisord.org/"}
 
 [tool.poetry.dependencies]
 python = "^3.9" 
-setuptools = "^50.3.2"
 pywin32 = "*"
 
 [build-system]
