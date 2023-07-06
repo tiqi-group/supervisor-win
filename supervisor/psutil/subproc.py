@@ -115,12 +115,45 @@ class Popen(subprocess.Popen):
 
     def taskkill(self):
         """Kill process group"""
-        output = subprocess.check_output(
-            ["taskkill", "/PID", str(self.pid), "/F", "/T"]
+        import psutil
+
+        # Checking if the process exists
+        if not psutil.pid_exists(self.pid):
+            return f"Process with PID {self.pid} does not exist. Skipping."
+
+        parent = psutil.Process(self.pid)
+        status_messages: list[str] = []
+
+        # Getting children of the process
+        children = parent.children(recursive=True)
+
+        if not children:
+            return (
+                f"Process with PID {self.pid} does not have any child "
+                "processes. Skipping."
+            )
+
+        [child.kill() for child in children]
+
+        # Collecting status messages
+        gone, still_alive = psutil.wait_procs(
+            children,
+            timeout=5,
+            callback=lambda proc: status_messages.append(
+                f"SUCCESS: The process with PID {proc.pid} (child process of "
+                f"PID {self.pid}) has been terminated."
+            ),
         )
-        return as_string(
-            output, encoding=sys.getfilesystemencoding(), errors="ignore"
-        ).strip()
+
+        if still_alive:
+            for child in still_alive:
+                status_messages.append(
+                    f"WARNING: Process with PID {child.pid} survived kill "
+                    "attempt. Consider increasing timeout."
+                )
+
+        # Joining status messages
+        return "\n".join(status_messages)
 
 
 class WPopen(Popen):
